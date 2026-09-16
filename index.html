@@ -89,6 +89,27 @@ setTimeout(function(){
     letter-spacing:.12em;padding:8px 12px;border-radius:999px;white-space:nowrap}
   .sample-pill.pulse{animation:pillpulse .6s}
   @keyframes pillpulse{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+  /* ---- live connection pill: green pulsing LIVE vs amber OFFLINE ---- */
+  .sample-pill.live{background:#0e3b2e;color:#7ef0c1;border:1px solid rgba(126,240,193,.55)}
+  .sample-pill.offline{background:var(--amber);color:var(--amber-ink)}
+  .sample-pill .cdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px}
+  .sample-pill.live .cdot{background:#7ef0c1;box-shadow:0 0 8px #7ef0c1;animation:cdotpulse 1.6s infinite}
+  .sample-pill.offline .cdot{background:#7a4d00}
+  @keyframes cdotpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(.8)}}
+  @media(prefers-reduced-motion:reduce){.sample-pill.live .cdot{animation:none}}
+  #title small a{color:#7ef0c1;text-decoration:underline;text-underline-offset:3px}
+  /* ---- inspector: live task state chips + LIVE tag ---- */
+  #inspector .row .sv.live{color:#7ef0c1}
+  #inspector .chip{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.08em;
+    padding:2px 8px;border-radius:999px;margin:1px 4px 1px 0;white-space:nowrap;vertical-align:1px}
+  #inspector .chip.st-created{background:#233241;color:#9fb4c6}
+  #inspector .chip.st-assigned{background:#123a5c;color:#7cc4ff}
+  #inspector .chip.st-in_progress{background:#4a2f00;color:#ffc93c}
+  #inspector .chip.st-delivered{background:#3a235c;color:#c9a7ff}
+  #inspector .chip.st-verified{background:#0e3b2e;color:#7ef0c1}
+  #inspector .chip.st-cancelled,#inspector .chip.st-failed{background:#4a1212;color:#ff9d9d}
+  #inspector .ltask{display:block;font-size:11px;color:#dfeaf2;margin:2px 0;line-height:1.5}
+  #inspector .ltask .tid{color:#8fa9bc;font-family:monospace;font-size:10px}
   .hbtn{pointer-events:auto;min-width:48px;min-height:48px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.16);
     background:var(--plate);color:var(--ink);font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer;
     display:inline-flex;align-items:center;gap:8px;backdrop-filter:blur(8px)}
@@ -201,7 +222,7 @@ setTimeout(function(){
 <div id="hud">
   <div id="title"><h1>GEAR LEDGER</h1><small>CWI · AGENT DECK — 3D CONCEPT</small></div>
   <div id="topright">
-    <div class="sample-pill" id="samplepill">SAMPLE DATA</div>
+    <div class="sample-pill offline" id="samplepill"><span class="cdot"></span>OFFLINE · sample demo</div>
     <button class="hbtn" id="b-overview" title="Overview (Esc / 0)">⌂ <span class="lbl">Overview</span></button>
     <button class="hbtn" id="b-tour" title="Auto-tour (T)">▶ <span class="lbl">Auto-tour</span></button>
     <button class="hbtn" id="b-legend" title="Legend (L)">? <span class="lbl">Legend</span></button>
@@ -248,8 +269,9 @@ setTimeout(function(){
 
 <div class="sheet" id="info" role="dialog" aria-label="About">
   <button class="x" data-close="info" aria-label="Close">✕</button>
-  <h2>Concept mockup — not the live ledger.</h2>
-  <p>This 3D archipelago is a design concept for the CWI Gear Ledger. All figures are illustrative sample data, not live ledger values. Departments, agents, gear items, counts, routes, and timelines shown here are invented for the mockup and do not represent real CWI operations.</p>
+  <h2 id="info-h">Concept mockup — not the live ledger.</h2>
+  <p id="info-mode">This 3D archipelago is a design concept for the CWI Gear Ledger. All figures are illustrative sample data, not live ledger values.</p>
+  <p>Departments, agents, gear items, counts, routes, and timelines shown here are invented for the mockup and do not represent real CWI operations.</p>
   <p>In the live product, each figure would link to a signed, verifiable handoff record. Here, "View evidence" explains what that link would do.</p>
   <p>Built as a UX exploration — nothing here sends, posts, or signs anything.</p>
 </div>
@@ -264,8 +286,8 @@ setTimeout(function(){
 
 <div class="sheet" id="hint" role="dialog" aria-label="Welcome">
   <h2>Welcome to the Gear Ledger archipelago.</h2>
-  <p>Drag to orbit · Pinch or scroll to zoom · Tap an island to visit.<br>
-  Every number you see is SAMPLE data — a concept mockup, not the live ledger.</p>
+  <p>Drag to orbit · Pinch or scroll to zoom · Tap an island to visit.</p>
+  <p id="hint-mode">Every number you see is SAMPLE data — a concept mockup, not the live ledger.</p>
   <div class="row">
     <button class="ibtn" id="hint-explore">Start exploring</button>
     <button class="ibtn ghost" id="hint-tour">Take the auto-tour</button>
@@ -280,6 +302,7 @@ setTimeout(function(){
 <div id="toast"></div>
 <div id="focusring"></div>
 
+<script src="ledger-live.js"></script>
 <script type="importmap">
 {"imports":{
   "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -1145,23 +1168,70 @@ const arcAnims=[];
   dashT.wrapS=THREE.RepeatWrapping; dashT.repeat.set(6,1);
   const arcMat=new THREE.MeshBasicMaterial({map:dashT,color:0xB388FF,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false});
   const tokenMat=new THREE.MeshStandardMaterial({color:0x2A1A4A,emissive:0xB388FF,emissiveIntensity:1.8,roughness:.4});
+  /* SAMPLE arcs live in their own group so LIVE mode can swap them out. */
+  const sampleArcGroup=new THREE.Group(); group.add(sampleArcGroup);
   SAMPLE.arcs.forEach((arc,i)=>{
     const a=dockTops[i%4], b=dockTops[(i+1)%4];
     const mid=a.clone().add(b).multiplyScalar(.5); mid.y=8+Math.random()*2;
     const curve=new THREE.QuadraticBezierCurve3(a.clone(),mid,b.clone());
     const tube=new THREE.Mesh(new THREE.TubeGeometry(curve,40,.09,6),arcMat);
-    group.add(tube);
+    sampleArcGroup.add(tube);
     const token=new THREE.Group();
     token.add(new THREE.Mesh(new THREE.TorusGeometry(.34,.11,8,18),tokenMat));
     const hb=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.2,8),tokenMat);
     hb.rotation.x=Math.PI/2; token.add(hb);
-    group.add(token);
+    sampleArcGroup.add(token);
     arcAnims.push({curve,token,t:Math.random(),speed:.12+Math.random()*.08,spin:1+Math.random()});
     regSel(tube,'hands','ARC',arc.from+' → '+arc.to,[['Gear in transit',arc.units+' units'],['Day',arc.day+' of 30']]);
   });
   anims.push((t,dt)=>{ dashT.offset.x-=dt*.9;
     for(const a of arcAnims){ a.t=(a.t+dt*a.speed)%1;
       a.curve.getPoint(a.t,a.token.position); a.token.rotation.z+=dt*3*a.spin; } });
+  /* ---- LIVE arcs: rendered ONLY from real ledger task.handoff events. ---- */
+  const liveArcGroup=new THREE.Group(); liveArcGroup.visible=false; group.add(liveArcGroup);
+  const liveDashT=canvasTex(64,8,(g,w,h)=>{ g.fillStyle='#fff'; g.fillRect(0,0,32,h); });
+  liveDashT.wrapS=THREE.RepeatWrapping; liveDashT.repeat.set(6,1);
+  const liveArcMat=new THREE.MeshBasicMaterial({map:liveDashT,color:0x7EF0C1,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false});
+  const liveTokenMat=new THREE.MeshStandardMaterial({color:0x0B2536,emissive:0x7EF0C1,emissiveIntensity:1.8,roughness:.4});
+  const liveArcAnims=[]; const liveArcMeshes=[];
+  const AGENT_DOCK_ORDER=['agent:MUSE_CWI','agent:CWI_AandR','agent:CWI_Marketing','agent:CWI_Sync','agent:CWI_Radio','agent:CWI_Press','agent:CWI_Studio','agent:CWI_Data','agent:CWI_Affairs'];
+  function dockFor(agentId){
+    let i=AGENT_DOCK_ORDER.indexOf(agentId);
+    if(i<0){ i=0; const s=String(agentId||''); for(let k=0;k<s.length;k++) i+=s.charCodeAt(k); i%=AGENT_DOCK_ORDER.length; }
+    return dockTops[i%4];
+  }
+  function dropLiveArcMesh(m){
+    liveArcGroup.remove(m);
+    m.traverse(o=>{ if(o.geometry) o.geometry.dispose(); });
+    const hi=hitMeshes.indexOf(m); if(hi>=0) hitMeshes.splice(hi,1);
+    const si=selectables.findIndex(s=>s&&m.userData.sel===s); if(si>=0) selectables.splice(si,1);
+  }
+  window.__glBuildLiveArcs=function(handoffs,nameOf){
+    for(const m of liveArcMeshes.slice()) dropLiveArcMesh(m);
+    liveArcMeshes.length=0; liveArcAnims.length=0;
+    (handoffs||[]).slice(-6).forEach((h,k)=>{
+      const a=dockFor(h.from), b=dockFor(h.to);
+      if(!a||!b||a===b) return;
+      const mid=a.clone().add(b).multiplyScalar(.5); mid.y=8+k*1.2;
+      const curve=new THREE.QuadraticBezierCurve3(a.clone(),mid,b.clone());
+      const tube=new THREE.Mesh(new THREE.TubeGeometry(curve,40,.09,6),liveArcMat);
+      liveArcGroup.add(tube); liveArcMeshes.push(tube);
+      const token=new THREE.Group();
+      token.add(new THREE.Mesh(new THREE.TorusGeometry(.34,.11,8,18),liveTokenMat));
+      const hb=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.2,8),liveTokenMat);
+      hb.rotation.x=Math.PI/2; token.add(hb);
+      liveArcGroup.add(token); liveArcMeshes.push(token);
+      liveArcAnims.push({curve,token,t:Math.random(),speed:.1+Math.random()*.06,spin:1+Math.random()});
+      regSel(tube,'hands','LIVE ARC',nameOf(h.from)+' → '+nameOf(h.to),
+        [['Note',h.note||'—'],['Event',h.event_id],['At',h.at||'—'],['seal','ledger · LIVE']]);
+    });
+  };
+  anims.push((t,dt)=>{ liveDashT.offset.x-=dt*.9;
+    for(const a of liveArcAnims){ a.t=(a.t+dt*a.speed)%1;
+      a.curve.getPoint(a.t,a.token.position); a.token.rotation.z+=dt*3*a.spin; } });
+  window.__glSetArcMode=function(live){
+    sampleArcGroup.visible=!live; liveArcGroup.visible=!!live;
+  };
   const ribMats=[];
   SAMPLE.timeline.slice(0,14).forEach((v,i)=>{
     const t=canvasTex(128,128,(g,w,h)=>{
@@ -1662,6 +1732,10 @@ function logFeed(html){
   feedEl.prepend(d);
   while(feedEl.children.length>5) feedEl.lastChild.remove();
 }
+/* LIVE-mode gate: when the client is synced to the real ledger, sim-task
+   chatter (invented task numbers/verbs/gear) is suppressed from the feed —
+   the feed then carries only real ledger events + interaction ambience. */
+function isLiveMode(){ return !!(window.GearLedgerLive && window.GearLedgerLive.mode==='LIVE'); }
 
 function spawnAgent(def,atStation){
   const grp=new THREE.Group();
@@ -1735,7 +1809,7 @@ function assignTask(a){
   const task=newTask(); a.task=task; a.state='toPickup'; a.t=0;
   const tgt=stationFor[task.from].clone(); tgt.x+=(Math.random()-.5)*4; tgt.z+=(Math.random()-.5)*4;
   startTravel(a,tgt,6+Math.random()*4);
-  logFeed('<b>'+a.def.name+'</b> took task #'+task.id+' · '+task.verb.toLowerCase());
+  if(!isLiveMode()) logFeed('<b>'+a.def.name+'</b> took task #'+task.id+' · '+task.verb.toLowerCase());
 }
 function startTravel(a,tgt,dur){
   a.p0.copy(a.grp.position); a.p2.copy(tgt);
@@ -1847,7 +1921,7 @@ function updateAgent(a,dt){
       g.lookAt(_pa.copy(g.position).add(_v1.subVectors(a.p2,a.p0).setY(0)));
       bankAgent(a,dt);
       if(a.t>=1){ a.state='working'; a.workT=0; a.workDur=a.task.dur;
-        logFeed('<b>'+a.def.name+'</b> working · '+a.task.verb.toLowerCase()+' #'+a.task.id); }
+        if(!isLiveMode()) logFeed('<b>'+a.def.name+'</b> working · '+a.task.verb.toLowerCase()+' #'+a.task.id); }
       break;
     case 'working':
       a.workT+=dt;
@@ -1864,7 +1938,7 @@ function updateAgent(a,dt){
       bankAgent(a,dt);
       if(a.t>=1){
         a.done++;
-        logFeed('✓ <b>'+a.def.name+'</b> delivered #'+a.task.id+' · '+a.task.gear+' → '+a.task.to.toUpperCase());
+        if(!isLiveMode()) logFeed('✓ <b>'+a.def.name+'</b> delivered #'+a.task.id+' · '+a.task.gear+' → '+a.task.to.toUpperCase());
         a.task=null;
         if(a.done>=a.quota && !a.def.king && simAgents.length>4){ killAgent(a); }
         else { a.state='idle'; a.wanderT=1+Math.random()*3;
@@ -1937,7 +2011,7 @@ function fireHandoff(){
   const A=c[(Math.random()*c.length)|0]; let B=A;
   while(B===A) B=c[(Math.random()*c.length)|0];
   const id=++taskSeq;
-  logFeed('⇄ handoff · <b>'+A.def.name+'</b> → <b>'+B.def.name+'</b> · brief #'+id);
+  if(!isLiveMode()) logFeed('⇄ handoff · <b>'+A.def.name+'</b> → <b>'+B.def.name+'</b> · brief #'+id);
   greetPair(A,B,true);
   if(reduced) return;
   const p0=A.grp.position.clone(); p0.y+=2.4;
@@ -2049,7 +2123,89 @@ function simTick(dt){
 spawnAgent(AGENT_DEFS[0],'hub');
 ['CWI_Sync','CWI_Radio','CWI_Data','CWI_Studio'].forEach(n=>
   spawnAgent(AGENT_DEFS.find(d=>d.name===n),'hands'));
-logFeed('Ledger sim live · all figures <b>SAMPLE</b>');
+/* ============================================================
+   8c. LIVE LEDGER WIRING — server-authoritative data layer.
+   When window.GearLedgerLive reports LIVE, agent tasks, presence,
+   handoffs and the event feed render real records from the Pages
+   mirror (authority: the Contents API). In OFFLINE mode everything
+   falls back to the honest SAMPLE layer and the pill says so.
+   Movement, greetings, wear and music taste stay illustrative
+   ambience in both modes. Crown stays KingCode-only.
+   ============================================================ */
+function chipFor(st){
+  const c={created:'st-created',assigned:'st-assigned',in_progress:'st-in_progress',
+    delivered:'st-delivered',verified:'st-verified',cancelled:'st-cancelled',failed:'st-failed'}[st]||'st-created';
+  return '<span class="chip '+c+'">'+String(st||'?').replace(/_/g,' ').toUpperCase()+'</span>';
+}
+function escHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const GLW=window.GearLedgerLive||null;
+let glConnectedOnce=false;
+const LIVE_TAG='<span class="sv live">LIVE</span>';
+function refreshAgentTag(a){
+  if(a.liveTag){ a.grp.remove(a.liveTag);
+    if(a.liveTag.material.map) a.liveTag.material.map.dispose();
+    a.liveTag.material.dispose(); a.liveTag=null; }
+  if(!GLW||GLW.mode!=='LIVE'){
+    if(a.glow) a.glow.material.opacity=.5;
+    if(a.nameSprite) a.nameSprite.material.color.set('#ffffff');
+    return;
+  }
+  const pres=GLW.presenceByAgent[a.def.name];
+  const tasks=GLW.tasksByAgent[a.def.name]||[];
+  const active=tasks.filter(t=>!['verified','cancelled','failed'].includes(t.state)).length;
+  const away=!pres||pres.stale;
+  const label=away?('AWAY'+(pres&&pres.at?' · '+GLW.ago(pres.at):''))
+    :(tasks.length+' TASK'+(tasks.length===1?'':'S')+(active?' · '+active+' ACTIVE':''));
+  const tag=labelSprite((away?'▲ ':'● ')+label,{size:22,fg:away?'#1a1206':'#7ef0c1',
+    bg:away?'rgba(255,176,32,.92)':'rgba(10,40,30,.85)'});
+  tag.position.y=3.5+a.yOff-1.35;
+  a.grp.add(tag); a.liveTag=tag;
+  if(a.glow) a.glow.material.opacity=away?.18:.5;   /* stale presence → dimmed */
+  if(a.nameSprite) a.nameSprite.material.color.set(away?'#ffb020':'#ffffff');
+}
+function renderLive(){
+  if(!GLW) return;
+  const live=GLW.mode==='LIVE';
+  const pill=document.getElementById('samplepill');
+  if(live){ pill.className='sample-pill live';
+    pill.innerHTML='<span class="cdot"></span>LIVE · ledger v'+GLW.version; }
+  else { pill.className='sample-pill offline';
+    pill.innerHTML='<span class="cdot"></span>OFFLINE · sample demo'; }
+  const sm=document.querySelector('#title small');
+  if(sm) sm.innerHTML=live
+    ? '<a href="'+GLW.repoUrl+'" target="_blank" rel="noopener">LIVE — server-authoritative ledger</a>'
+    : 'CWI · AGENT DECK — 3D CONCEPT';
+  const ih=document.getElementById('info-h'), im=document.getElementById('info-mode'), hm=document.getElementById('hint-mode');
+  if(live){
+    if(ih) ih.textContent='LIVE — server-authoritative ledger data.';
+    if(im) im.textContent='Connected to the live Gear Ledger (v'+GLW.version+', updated '+
+      GLW.ago(GLW.updated_at)+'). Agent tasks, presence, handoffs and the event feed are real '+
+      'server-authoritative records — verify any figure against the ledger. Movement, greetings, '+
+      'wear and music taste remain illustrative ambience.';
+    if(hm) hm.textContent='Agent tasks, presence, handoffs and the event feed are LIVE from the ledger. Motion and music taste are illustrative ambience.';
+  }else{
+    if(ih) ih.textContent='Concept mockup — not the live ledger.';
+    if(im) im.textContent='This 3D archipelago is a design concept for the CWI Gear Ledger. All figures are illustrative sample data, not live ledger values.';
+    if(hm) hm.textContent='Every number you see is SAMPLE data — a concept mockup, not the live ledger.';
+  }
+  if(window.__glBuildLiveArcs) window.__glBuildLiveArcs(GLW.handoffs,id=>GLW.agentName(id));
+  if(window.__glSetArcMode) window.__glSetArcMode(live);
+  for(const a of simAgents) refreshAgentTag(a);
+  if(live){
+    if(!glConnectedOnce){
+      glConnectedOnce=true;
+      logFeed('⛓ <b>Ledger LIVE</b> · server-authoritative · v'+GLW.version+' '+LIVE_TAG);
+      const all=GLW.events; all.forEach(ev=>GLW.markSeen(ev));
+      all.slice(-5).reverse().forEach(ev=>{ const h=GLW.humanize(ev); logFeed(h.html+' '+LIVE_TAG); });
+    }else{
+      const fresh=GLW.newEvents().filter(ev=>ev.event!=='agent.presence');
+      fresh.slice(-5).forEach(ev=>{ const h=GLW.humanize(ev); logFeed(h.html+' '+LIVE_TAG); });
+    }
+  }
+  if(inspOpen&&currentSel&&currentSel.kind==='AGENT') renderRows(currentSel);
+}
+if(GLW) GLW.onUpdate(renderLive);
+logFeed(GLW?'Ledger link warming up · polling the live ledger…':'Ledger sim live · all figures <b>SAMPLE</b>');
 
 /* ============================================================
    9. INTERACTION — tap, fly-to, inspector, HUD, tour
@@ -2103,26 +2259,50 @@ function focusAgent(a){
 
 /* ---------- inspector ---------- */
 const insp=document.getElementById('inspector');
-function agentRows(a){
-  const rows=[
-    ['Status',()=>a.state.replace('toPickup','EN ROUTE').replace('toDrop','DELIVERING').replace('toHome','RETURNING').toUpperCase()],
-    ['Current task',()=>a.task?('#'+a.task.id+' · '+a.task.verb):'— idle'],
-    ['Route',()=>a.task?(a.task.from.toUpperCase()+' → '+a.task.to.toUpperCase()):'—'],
-    ['Carrying',()=>a.task?a.task.gear:'—'],
-    ['♪ Now playing',()=>a.def.quiet?'— · quiet review':(a.track?('“'+a.track+'”'):'—')],
-    ['Silhouette',()=>a.look?lookLabel(a.look):'—'],
-    ['Tasks completed',()=>String(a.done)],
+/* LIVE-mode agent rows: real ledger tasks + presence. Every rendered
+   datum traces to state.json; ambience rows keep their SAMPLE tag. */
+function liveAgentRows(a){
+  const pres=window.GearLedgerLive?window.GearLedgerLive.presenceByAgent[a.def.name]:null;
+  const tasks=(window.GearLedgerLive&&window.GearLedgerLive.tasksByAgent[a.def.name])||[];
+  const presTxt=pres?((pres.stale?'AWAY':'ONLINE')+' · heartbeat '+(pres.at?window.GearLedgerLive.ago(pres.at):'—')
+    +(pres.current_task_id?' · on '+pres.current_task_id:'')):'no heartbeat yet';
+  const taskHtml=tasks.length?tasks.slice(0,6).map(t=>
+    '<span class="ltask">'+chipFor(t.state)+' '+escHtml(t.title||t.task_id)+
+    '<br><span class="tid">'+escHtml(t.task_id)+'</span></span>').join('')
+    :'— no ledger tasks assigned';
+  return [
+    ['Ledger presence',()=>presTxt],
+    ['Ledger tasks ('+tasks.length+')',()=>taskHtml],
   ];
-  if(a.def.confOrb) rows.splice(5,0,['Forecast confidence',()=>Math.round((a.conf||0)*100)+'% · orb-linked']);
+}
+function agentRows(a){
+  if(isLiveMode()&&window.GearLedgerLive){
+    const rows=liveAgentRows(a).map(([k,v])=>[k,v,'LIVE']);
+    rows.push(['♪ Now playing',()=>a.def.quiet?'— · quiet review':(a.track?('“'+a.track+'”'):'—'),'SAMPLE']);
+    rows.push(['Silhouette',()=>a.look?lookLabel(a.look):'—','SAMPLE']);
+    if(a.def.confOrb) rows.push(['Forecast confidence',()=>Math.round((a.conf||0)*100)+'% · orb-linked','SAMPLE']);
+    return rows;
+  }
+  const rows=[
+    ['Status',()=>a.state.replace('toPickup','EN ROUTE').replace('toDrop','DELIVERING').replace('toHome','RETURNING').toUpperCase(),'SAMPLE'],
+    ['Current task',()=>a.task?('#'+a.task.id+' · '+a.task.verb):'— idle','SAMPLE'],
+    ['Route',()=>a.task?(a.task.from.toUpperCase()+' → '+a.task.to.toUpperCase()):'—','SAMPLE'],
+    ['Carrying',()=>a.task?a.task.gear:'—','SAMPLE'],
+    ['♪ Now playing',()=>a.def.quiet?'— · quiet review':(a.track?('“'+a.track+'”'):'—'),'SAMPLE'],
+    ['Silhouette',()=>a.look?lookLabel(a.look):'—','SAMPLE'],
+    ['Tasks completed',()=>String(a.done),'SAMPLE'],
+  ];
+  if(a.def.confOrb) rows.splice(5,0,['Forecast confidence',()=>Math.round((a.conf||0)*100)+'% · orb-linked','SAMPLE']);
   return rows;
 }
 function renderRows(sel){
   const el=document.getElementById('i-rows'); el.innerHTML='';
   const rows=sel.kind==='AGENT'?agentRows(sel.agent):sel.rows;
-  for(const [k,v] of rows){
+  for(const [k,v,tag] of rows){
     const val=typeof v==='function'?v():v;
+    const t=tag||'SAMPLE';
     const d=document.createElement('div'); d.className='row';
-    d.innerHTML='<span>'+k+'</span><b>'+val+'<span class="sv">SAMPLE</span></b>';
+    d.innerHTML='<span>'+k+'</span><b>'+val+'<span class="sv'+(t==='LIVE'?' live':'')+'">'+t+'</span></b>';
     el.appendChild(d);
   }
   if(!rows.length){
