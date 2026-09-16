@@ -320,6 +320,8 @@ setTimeout(function(){
 <script src="live-client.js"></script>
 <script src="instruments.js"></script>
 <script type="module" src="genome-panel.js"></script>
+<script src="ledger-live.js"></script>
+<script src="ambient.js"></script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -356,7 +358,7 @@ const ISLANDS = [
   {id:'hands',   name:'HANDOFFS',     tag:'GEAR IN MOTION',                x:-8,  z:24,  r:10, accent:'#35C4FF'},
   {id:'chain',   name:'FULL CHAIN',   tag:'EVERY HANDOFF',                 x:16,  z:22,  r:7,  accent:'#7EF0C1', sx:1.9},
   {id:'legends', name:'LEGENDS',      tag:'MOST-TRAVELED GEAR',            x:34,  z:8,   r:8,  accent:'#FFC93C'},
-  {id:'stage',   name:'AGENT STAGE',  tag:'FORM FROM IDENTITY · LIVE STATE', x:2,  z:46,  r:10, accent:'#FFB224'},
+  {id:'stage',   name:'AGENT STAGE',  tag:'FORM FROM IDENTITY', x:2,  z:46,  r:10, accent:'#FFB224'},
 ];
 const BRIDGES = [['hub','dist'],['hub','leads'],['hub','hands'],['hub','chain'],['chain','legends'],['leads','legends'],['hub','stage']];
 
