@@ -47,6 +47,22 @@ setTimeout(function(){
   #vig{position:fixed;inset:0;z-index:10;pointer-events:none;
     background:radial-gradient(ellipse at 50% 42%, transparent 52%, rgba(6,14,24,.42) 100%)}
 
+  /* ---------- broadcast mode (?broadcast=1): clean feed for streaming/embed ---------- */
+  #bcast-mark{display:none}
+  body.broadcast #bcast-mark{display:block;position:absolute;right:14px;bottom:calc(12px + var(--safe-b,0px));
+    font-size:11px;letter-spacing:.22em;font-weight:700;color:rgba(255,255,255,.78);
+    text-shadow:0 1px 3px rgba(0,0,0,.65);pointer-events:none;z-index:30}
+  body.broadcast #topright .hbtn,
+  body.broadcast #thumbbar,
+  body.broadcast #inspector,
+  body.broadcast .sheet,
+  body.broadcast #tourcap,
+  body.broadcast #toast,
+  body.broadcast #focusring{display:none!important}
+  body.broadcast #title{opacity:1!important;transform:none!important}
+  body.broadcast #title h1{font-size:15px;letter-spacing:.24em}
+  body.broadcast #title small{font-size:9px}
+
   /* ---------- loader ---------- */
   #loader{position:fixed;inset:0;background:#0b1622;z-index:60;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:18px;transition:opacity .6s}
@@ -175,6 +191,7 @@ setTimeout(function(){
     <button class="hbtn" id="b-legend" title="Legend (L)">? <span class="lbl">Legend</span></button>
     <button class="hbtn" id="b-info" title="About this mockup (I)">ⓘ <span class="lbl">Info</span></button>
   </div>
+  <div id="bcast-mark">CWI · CUMULATIVE WEB INC</div>
   <div id="thumbbar">
     <button class="hbtn" data-act="overview">⌂<br><span style="font-size:10px">Overview</span></button>
     <button class="hbtn" data-act="tour">▶<br><span style="font-size:10px">Tour</span></button>
@@ -267,6 +284,8 @@ const P = {
 };
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const nohint = /[?&]nohint=1/.test(location.search);
+const broadcast = /[?&]broadcast=1/.test(location.search);
+if(broadcast) document.body.classList.add('broadcast');
 
 const ISLANDS = [
   {id:'hub',     name:'GEAR LEDGER',  tag:'TRACK • HANDOFF • VERIFY',      x:0,   z:0,   r:11, accent:'#35C4FF'},
@@ -410,6 +429,8 @@ controls.minDistance=20; controls.maxDistance=160;
 controls.minPolarAngle=.314; controls.maxPolarAngle=1.361;
 controls.rotateSpeed=.55; controls.zoomSpeed=.9;
 controls.autoRotateSpeed=.5;
+/* Broadcast mode: camera is director-driven — no user input. */
+if(broadcast) controls.enabled=false;
 
 const sun=new THREE.DirectionalLight(0xFFF2D8,2.6);
 sun.position.set(-60,90,-40); sun.castShadow=true;
@@ -1354,7 +1375,7 @@ function startBootReveal(){
   document.body.classList.add('booted');
   if(reduced){ camera.position.copy(OVERVIEW.pos); controls.target.copy(OVERVIEW.tgt); return; }
   bootT0=performance.now()/1000; bootRamp=true;
-  flyTo(OVERVIEW.pos,OVERVIEW.tgt,2.8,()=>{ pulseSign('hub'); });
+  flyTo(OVERVIEW.pos,OVERVIEW.tgt,2.8,()=>{ pulseSign('hub'); if(broadcast) startTour(); });
 }
 
 function flyTo(pos,tgt,dur=1.6,done){
@@ -1445,15 +1466,18 @@ function pulsePill(){
 const dom=renderer.domElement;
 let dPos=null,dTime=0,dragged=false;
 dom.addEventListener('pointerdown',e=>{
+  if(broadcast) return;   /* broadcast feed is director-driven */
   lastInteract=performance.now()/1000; controls.autoRotate=false;
   dPos=[e.clientX,e.clientY]; dTime=performance.now(); dragged=false;
   if(tween) tween=null;
   hideHint();
 });
 dom.addEventListener('pointermove',e=>{
+  if(broadcast) return;
   if(dPos&&Math.hypot(e.clientX-dPos[0],e.clientY-dPos[1])>8){ dragged=true; if(tour.active) stopTour(); }
 });
 dom.addEventListener('pointerup',e=>{
+  if(broadcast) return;
   lastInteract=performance.now()/1000;
   const moved=Math.hypot(e.clientX-dPos[0],e.clientY-dPos[1]);
   if(moved>8||performance.now()-dTime>300||dragged) return; // not a tap
@@ -1470,7 +1494,7 @@ dom.addEventListener('pointerup',e=>{
   if(sel.island&&sel.island!==focused){ focusIsland(sel.island,()=>openInspector(sel)); }
   else openInspector(sel);
 });
-dom.addEventListener('wheel',()=>{ lastInteract=performance.now()/1000; controls.autoRotate=false; },{passive:true});
+dom.addEventListener('wheel',()=>{ if(broadcast) return; lastInteract=performance.now()/1000; controls.autoRotate=false; },{passive:true});
 
 /* ---------- HUD ---------- */
 document.getElementById('b-overview').onclick=goOverview;
@@ -1522,11 +1546,15 @@ function tourGoto(i){
   tour.phase='fly'; showCaption(i);
 }
 function tourNext(){
-  if(tour.idx>=TOUR.length-1){ stopTour(); goOverview(); return; }
+  if(tour.idx>=TOUR.length-1){
+    if(broadcast){ tourGoto(0); return; }   /* broadcast loops the cinematic forever */
+    stopTour(); goOverview(); return;
+  }
   tourGoto(tour.idx+1);
 }
 function startTour(){
-  if(reduced) tour.dwellDur=8; else tour.dwellDur=5;
+  if(broadcast) tour.dwellDur=8;             /* slower, calmer beats for a streamed feed */
+  else if(reduced) tour.dwellDur=8; else tour.dwellDur=5;
   tour.active=true; tour.idx=0;
   document.getElementById('b-tour').classList.add('active');
   document.getElementById('b-tour').innerHTML='⏹ <span class="lbl">Stop tour</span>';
@@ -1558,6 +1586,7 @@ function kbHighlight(){
   }
 }
 addEventListener('keydown',e=>{
+  if(broadcast) return;   /* broadcast feed is director-driven */
   if(e.key==='Escape'){
     if(inspOpen) closeInspector(); else if(tour.active) stopTour(); else goOverview();
   }
@@ -1640,7 +1669,7 @@ function runLoader(){
     setTimeout(()=>{
       loader.classList.add('done');
       startBootReveal();
-      if(!nohint&&!window.__glStore.get('gear-ledger-3d.hintSeen')){
+      if(!broadcast&&!nohint&&!window.__glStore.get('gear-ledger-3d.hintSeen')){
         document.getElementById('hint').classList.add('open');
         window.__glStore.set('gear-ledger-3d.hintSeen','1');
       }
