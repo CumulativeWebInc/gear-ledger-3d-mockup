@@ -481,15 +481,17 @@ TEX.ocean.wrapS=TEX.ocean.wrapT=THREE.RepeatWrapping; TEX.ocean.repeat.set(10,10
 /* ============================================================
    3. SKY / HILLS / CLOUDS / SUN
    ============================================================ */
+let skyMatRef=null,sunSprRef=null,waterMatRef=null;
 const clouds=[];
 {
-  const skyMat=new THREE.MeshBasicMaterial({map:TEX.sky,side:THREE.BackSide,fog:false});
+  skyMatRef=new THREE.MeshBasicMaterial({map:TEX.sky,side:THREE.BackSide,fog:false});
+  const skyMat=skyMatRef;
   skyMat.color.set(0xdff2ff);
   scene.add(new THREE.Mesh(new THREE.SphereGeometry(380,24,16),skyMat));
 
-  const sunSpr=new THREE.Sprite(new THREE.SpriteMaterial({
+  sunSprRef=new THREE.Sprite(new THREE.SpriteMaterial({
     map:glowTex('#FFF3C4'),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.95,fog:false}));
-  sunSpr.position.set(-190,190,-140); sunSpr.scale.set(90,90,1); scene.add(sunSpr);
+  sunSprRef.position.set(-190,190,-140); sunSprRef.scale.set(90,90,1); scene.add(sunSprRef);
 
   const hillTex=(color)=>canvasTex(1024,128,(g,w,h)=>{
     g.clearRect(0,0,w,h); g.fillStyle=color;
@@ -535,8 +537,9 @@ let waterGeo, waterBase;
   waterGeo=new THREE.PlaneGeometry(400,400,96,96);
   waterGeo.rotateX(-Math.PI/2);
   waterBase=waterGeo.attributes.position.array.slice();
-  const water=new THREE.Mesh(waterGeo,new THREE.MeshStandardMaterial({color:P.water,
-    transparent:true,opacity:.82,roughness:.15,metalness:0,map:TEX.ocean}));
+  waterMatRef=new THREE.MeshStandardMaterial({color:P.water,
+    transparent:true,opacity:.82,roughness:.15,metalness:0,map:TEX.ocean});
+  const water=new THREE.Mesh(waterGeo,waterMatRef);
   water.position.y=0; scene.add(water);
 
   const depth=new THREE.Mesh(new THREE.PlaneGeometry(400,400),
@@ -556,6 +559,100 @@ let waterGeo, waterBase;
     const t2=new THREE.CanvasTexture(c); t2.colorSpace=THREE.SRGBColorSpace;
     seaMat.map=t2; seaMat.needsUpdate=true;
   });
+}
+
+/* ============================================================
+   4b. LIVING WORLD — day cycle, atmosphere moods, creatures.
+   The world breathes on a slow ~4-minute day: dawn → midday →
+   dusk → night. One directional light does the whole journey
+   (it becomes moonlight at night). Fireflies own the dark.
+   ============================================================ */
+let nightF=0, dayT=0.06, moodName='';
+const DAY_KEYS=[
+ {t:0.00,name:'dawn',  sun:0xFFB36B,sunI:2.1, hs:0xFFD9B0,hg:0x4A6B5E,hi:.6, fog:0xF2C9A0,sky:0xFFD9B3,water:0x2FB8C4,expo:1.0},
+ {t:0.25,name:'midday',sun:0xFFF2D8,sunI:2.6, hs:0xBFE3FF,hg:0x3E7C6B,hi:.75,fog:0xF0F6FA,sky:0xdff2ff,water:0x2FB8C4,expo:1.15},
+ {t:0.50,name:'dusk',  sun:0xFF8E53,sunI:1.9, hs:0xE8A06A,hg:0x3E4A5E,hi:.55,fog:0xE8A37C,sky:0xFFC9A3,water:0x1F9AA8,expo:1.05},
+ {t:0.62,name:'night', sun:0x9FB8FF,sunI:.65, hs:0x2A3A5E,hg:0x16222E,hi:.42,fog:0x1E2A44,sky:0x27354F,water:0x0E5A70,expo:.9},
+ {t:0.88,name:'night', sun:0x9FB8FF,sunI:.7,  hs:0x2A3A5E,hg:0x16222E,hi:.42,fog:0x1E2A44,sky:0x27354F,water:0x0E5A70,expo:.9},
+ {t:1.00,name:'dawn',  sun:0xFFB36B,sunI:2.1, hs:0xFFD9B0,hg:0x4A6B5E,hi:.6, fog:0xF2C9A0,sky:0xFFD9B3,water:0x2FB8C4,expo:1.0},
+];
+const _dc=new THREE.Color();
+function mixc(target,pa,pb,e){ target.set(pa).lerp(_dc.set(pb),e); }
+function keyAt(t){
+  let i=0; while(i<DAY_KEYS.length-2&&t>=DAY_KEYS[i+1].t) i++;
+  const A=DAY_KEYS[i],B=DAY_KEYS[i+1],k=(t-A.t)/Math.max(1e-5,B.t-A.t);
+  return {A,B,k:Math.min(1,Math.max(0,k))};
+}
+function updateDayCycle(dt){
+  if(reduced||bootRamp) return;   /* sunrise ramp owns the light until boot completes */
+  dayT=(dayT+dt/240)%1;
+  const {A,B,k}=keyAt(dayT), e=k*k*(3-2*k);
+  mixc(sun.color,A.sun,B.sun,e); sun.intensity=A.sunI+(B.sunI-A.sunI)*e;
+  mixc(hemi.color,A.hs,B.hs,e); mixc(hemi.groundColor,A.hg,B.hg,e); hemi.intensity=A.hi+(B.hi-A.hi)*e;
+  mixc(scene.fog.color,A.fog,B.fog,e);
+  if(skyMatRef) mixc(skyMatRef.color,A.sky,B.sky,e);
+  if(waterMatRef) mixc(waterMatRef.color,A.water,B.water,e);
+  renderer.toneMappingExposure=A.expo+(B.expo-A.expo)*e;
+  const sa=dayT*Math.PI*2-Math.PI/2;
+  sun.position.set(Math.cos(sa)*130,42+Math.sin(sa)*85,-55+Math.cos(sa*.6)*35);
+  if(sunSprRef){ sunSprRef.position.set(Math.cos(sa)*300,90+Math.sin(sa)*160,-220);
+    sunSprRef.material.opacity=.95*(1-nightF*.55); }
+  const nf=(dayT>.6&&dayT<.9)?Math.max(0,Math.sin((dayT-.6)/.3*Math.PI)):0;
+  nightF+=(nf-nightF)*Math.min(1,dt*2);
+  const mood=k<.5?A.name:B.name;
+  if(moodName&&mood!==moodName){
+    logFeed(mood==='dawn'?'🌅 dawn breaks over the ledger':mood==='midday'?'☀️ midday — the world at full shine':mood==='dusk'?'🌇 dusk settles over the islands':'🌙 night watch — the ledger glows');
+  }
+  moodName=mood;
+  if(fireflies) fireflies.material.opacity=nightF*.9;
+}
+/* fireflies — one Points draw call, owned by the night */
+let fireflies=null;
+{
+  const n=46, pos=new Float32Array(n*3);
+  for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2, r=14+Math.random()*58;
+    pos[i*3]=Math.cos(a)*r; pos[i*3+1]=2+Math.random()*9; pos[i*3+2]=Math.sin(a)*r; }
+  const fg=new THREE.BufferGeometry(); fg.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  fireflies=new THREE.Points(fg,new THREE.PointsMaterial({color:0xFFE08A,size:.75,transparent:true,
+    opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));
+  fireflies.userData.base=pos.slice(); scene.add(fireflies);
+}
+function updateFireflies(t){
+  if(!fireflies||nightF<=0.01) return;
+  const p=fireflies.geometry.attributes.position, b=fireflies.userData.base;
+  for(let i=0;i<p.count;i++){
+    p.array[i*3]=b[i*3]+Math.sin(t*.7+i*2.1)*1.3;
+    p.array[i*3+1]=b[i*3+1]+Math.sin(t*1.1+i*1.3)*.9;
+    p.array[i*3+2]=b[i*3+2]+Math.cos(t*.5+i*1.7)*1.3;
+  }
+  p.needsUpdate=true;
+}
+/* gulls — six distant birds, one shared geometry, banking flight */
+const birds=[];
+{
+  const bg=new THREE.BufferGeometry();
+  bg.setAttribute('position',new THREE.BufferAttribute(new Float32Array([
+    0,0,.35,  0,.06,-.3,  -.9,.15,-.1,
+    0,0,.35,  .9,.15,-.1,  0,.06,-.3 ]),3));
+  bg.computeVertexNormals();
+  const bm=new THREE.MeshBasicMaterial({color:0x2A3A44,side:THREE.DoubleSide});
+  for(let i=0;i<6;i++){
+    const m=new THREE.Mesh(bg,bm), flock=i<3?0:1;
+    m.userData={cx:flock?-45:55,cz:flock?35:-50,r:26+Math.random()*24,
+      h:46+Math.random()*22,sp:.13+Math.random()*.12,ph:Math.random()*7};
+    scene.add(m); birds.push(m);
+  }
+}
+const _bv=new THREE.Vector3();
+function updateBirds(dt,t){
+  for(const b of birds){
+    const u=b.userData, a=t*u.sp+u.ph;
+    b.position.set(u.cx+Math.cos(a)*u.r,u.h+Math.sin(t*.9+u.ph)*2.5,u.cz+Math.sin(a)*u.r);
+    _bv.set(u.cx+Math.cos(a+.08)*u.r,b.position.y,u.cz+Math.sin(a+.08)*u.r);
+    b.lookAt(_bv);
+    b.rotation.z+=Math.sin(t*6+u.ph)*.3;
+    b.scale.y=1+Math.sin(t*9+u.ph)*.22;
+  }
 }
 
 /* ============================================================
@@ -779,28 +876,56 @@ const gearGlyph=(color)=>canvasTex(128,128,(g)=>{
 
 /* ---- robot construction ---- */
 function robotLists(){ return {white:[],visor:[],base:[]}; }
-/* Entry silhouettes: body-form variants each agent can choose at arrival. */
+/* Signature silhouette families — one frozen identity per agent, so any frozen
+   frame identifies each agent by silhouette alone. The agent still chooses its
+   wear/gear/music within its family; entry flicker tries other families on. */
+const FRAME_LABELS={sovereign:'Sovereign',scout:'Scout',herald:'Herald',hauler:'Hauler',
+  beacon:'Beacon',scribe:'Scribe',artisan:'Artisan',oracle:'Oracle',warden:'Warden'};
 const FORMS={
-  classic:{bsx:1,bsy:1,bsz:1,hy:1.75,hr:.42,vy:1.78},
-  tall:{bsx:.88,bsy:1.32,bsz:.88,hy:2.02,hr:.4,vy:2.05},
-  wide:{bsx:1.32,bsy:.88,bsz:1.32,hy:1.68,hr:.44,vy:1.71},
-  sleek:{bsx:.84,bsy:1.14,bsz:.84,hy:1.84,hr:.36,vy:1.87},
+  sovereign:{bsx:1.0,bsy:1.25,bsz:1.0,hy:2.0,hr:.46,vy:2.03,armLen:.85,armX:.68,leg:'ring',  sig:'cape',     visorShape:'wide'},
+  scout:    {bsx:.8, bsy:.95, bsz:.8, hy:1.55,hr:.5, vy:1.58,armLen:.6, armX:.55,leg:'stilts',sig:null,       visorShape:'round'},
+  herald:   {bsx:1.3,bsy:.95, bsz:1.3,hy:1.7, hr:.44,vy:1.73,armLen:.95,armX:.85,leg:'ring',  sig:null,       visorShape:'wide'},
+  hauler:   {bsx:1.45,bsy:1.0,bsz:1.45,hy:1.6,hr:.42,vy:1.63,armLen:.7, armX:.9, leg:'ring',  sig:null,       visorShape:'slit'},
+  beacon:   {bsx:.9, bsy:1.3, bsz:.9, hy:2.05,hr:.4, vy:2.08,armLen:.7, armX:.6, leg:'stilts',sig:'array',    visorShape:'round'},
+  scribe:   {bsx:.82,bsy:1.2, bsz:.82,hy:1.95,hr:.38,vy:1.98,armLen:.8, armX:.58,leg:'stilts',sig:'slate',    visorShape:'slit'},
+  artisan:  {bsx:1.05,bsy:1.05,bsz:1.05,hy:1.8,hr:.44,vy:1.83,armLen:.8, armX:.66,leg:'ring',  sig:'toolarm',  visorShape:'wide'},
+  oracle:   {bsx:.95,bsy:1.1, bsz:.95,hy:1.9, hr:.42,vy:1.93,armLen:.75,armX:.62,leg:'hover', sig:'orb',      visorShape:'split'},
+  warden:   {bsx:1.25,bsy:1.1,bsz:1.25,hy:1.75,hr:.44,vy:1.78,armLen:.75,armX:.78,leg:'ring',  sig:'pauldrons',visorShape:'slit'},
 };
 function robotParts(L,x,y,z,ry,visorColor,form){
-  form=form||FORMS.classic;
+  form=form||FORMS.sovereign;
   put(L.white,new THREE.SphereGeometry(.55,16,12),x,y+.95,z,0,ry,0,form.bsx,form.bsy,form.bsz);
   put(L.white,new THREE.SphereGeometry(form.hr,16,12),x,y+form.hy,z,0,ry,0);
-  const armX=.62*form.bsx, armY=.95+.1*form.bsy;
-  put(L.white,new THREE.CylinderGeometry(.09,.09,.7,8),x-armX,y+armY,z,0,0,.5);
-  put(L.white,new THREE.CylinderGeometry(.09,.09,.7,8),x+armX,y+armY,z,0,0,-.5);
+  const armX=form.armX||.62, armY=.95+.1*(form.bsy||1), al=form.armLen||.7;
+  put(L.white,new THREE.CylinderGeometry(.09,.09,al,8),x-armX,y+armY,z,0,0,.5);
+  put(L.white,new THREE.CylinderGeometry(.09,.09,al,8),x+armX,y+armY,z,0,0,-.5);
   put(L.white,new THREE.CylinderGeometry(.05,.05,.5,6),x,y+form.hy+.55,z);
+  /* signature parts — static, merged into the body so silhouettes stay cheap */
+  const sig=form.sig;
+  if(sig==='cape'){ put(L.base,new THREE.ConeGeometry(.52,1.5,8),x,y+1.45,z-.58,.55,0,0,1,1,.42); }
+  else if(sig==='array'){ for(let i=-1;i<=1;i++){ put(L.white,new THREE.CylinderGeometry(.025,.025,.95,6),x+i*.18,y+form.hy+1.0,z,0,0,i*.2); put(L.base,new THREE.SphereGeometry(.065,8,6),x+i*.32,y+form.hy+1.42,z); } }
+  else if(sig==='slate'){ put(L.base,new THREE.BoxGeometry(.42,.58,.06),x,y+1.12,z+.64,.18,0,0); put(L.base,new THREE.BoxGeometry(.3,.06,.08),x,y+.78,z+.5); }
+  else if(sig==='toolarm'){ put(L.white,new THREE.CylinderGeometry(.13,.13,al*1.3,8),x+armX+.14,y+armY-.12,z,0,0,-.95); put(L.base,new THREE.BoxGeometry(.2,.3,.2),x+armX+.46,y+armY-.5,z); }
+  else if(sig==='pauldrons'){ put(L.white,new THREE.SphereGeometry(.25,10,8),x-armX-.06,y+armY+.24,z,0,0,0,1,.62,1); put(L.white,new THREE.SphereGeometry(.25,10,8),x+armX+.06,y+armY+.24,z,0,0,0,1,.62,1); }
+  /* legs: ring (classic hover-ring), stilts, or hover (emissive disc, animated) */
+  const leg=form.leg||'ring';
+  if(leg==='ring'){ put(L.base,new THREE.TorusGeometry(.5,.1,8,20),x,y+.15,z,Math.PI/2,0,0); }
+  else if(leg==='stilts'){ put(L.white,new THREE.CylinderGeometry(.07,.09,.85,8),x-.22,y+.42,z); put(L.white,new THREE.CylinderGeometry(.07,.09,.85,8),x+.22,y+.42,z); put(L.base,new THREE.CylinderGeometry(.17,.21,.1,10),x-.22,y+.03,z); put(L.base,new THREE.CylinderGeometry(.17,.21,.1,10),x+.22,y+.03,z); }
+  /* expressive visor language — each family reads a different face */
   const vm=new THREE.MeshStandardMaterial({color:0x101C26,emissive:visorColor,emissiveIntensity:1.6,roughness:.15,metalness:.6});
-  const visor=new THREE.Mesh(new THREE.SphereGeometry(.3,12,8),vm);
-  visor.scale.set(1,.55,.5);
-  visor.position.set(x+Math.sin(ry)*.28,y+form.vy,z+Math.cos(ry)*.28);
-  visor.rotation.y=ry;
-  L.visor.push(visor);
-  put(L.base,new THREE.TorusGeometry(.5,.1,8,20),x,y+.15,z,Math.PI/2,0,0);
+  const vsh=form.visorShape||'slit';
+  const fx=Math.sin(ry)*.28, fz=Math.cos(ry)*.28, px=Math.cos(ry), pz=-Math.sin(ry);
+  if(vsh==='split'){
+    for(const s of [-1,1]){ const v=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),vm);
+      v.position.set(x+fx+s*.18*px,y+form.vy,z+fz+s*.18*pz); v.rotation.y=ry; L.visor.push(v); }
+  }else{
+    const visor=new THREE.Mesh(new THREE.SphereGeometry(.3,12,8),vm);
+    if(vsh==='round') visor.scale.set(.85,.85,.5);
+    else if(vsh==='wide') visor.scale.set(1.45,.42,.5);
+    else visor.scale.set(1,.55,.5);
+    visor.position.set(x+fx,y+form.vy,z+fz); visor.rotation.y=ry; L.visor.push(visor);
+  }
+  return {hover:leg==='hover', wantOrb:sig==='orb'};
 }
 function finalizeRobots(L,parent){
   const w=buildMesh(L.white,MAT.robotWhite); if(w) parent.add(w);
@@ -1201,15 +1326,15 @@ function makeBoat(){
    gear = worn kit · vibe = personality weight for music changes.
    Crown stays exclusive to MUSE_CWI (KingCode). */
 const AGENT_DEFS=[
-  {name:'MUSE_CWI',    role:'Chief of Staff',    visor:0xFFD24D, king:true, tint:0xFFF3D6, accents:[0xFFD24D,0xFFF6E0,0xE0A92E], acc:'crown',   gear:'walkman',  vibe:'regal'},
-  {name:'CWI_AandR',   role:'A&R',               visor:0xFF6B6B, tint:0xFFE7E3, accents:[0xFF6B6B,0xFF9F43,0xC0392B], acc:'crest',   gear:'walkman',  vibe:'bold'},
-  {name:'CWI_Marketing',role:'Marketing & Social',visor:0xFF9F43, tint:0xFFEDD6, accents:[0xFF9F43,0xF368E0,0xFFD24D], acc:'crest',   gear:'walkman',  vibe:'loud'},
-  {name:'CWI_Sync',    role:'Sync & Licensing',  visor:0xB388FF, tint:0xEDE6FF, accents:[0xB388FF,0x7EF0C1,0x5B4BDB], acc:'fin',     gear:'toolpack', vibe:'smooth'},
-  {name:'CWI_Radio',   role:'Radio & Playlists', visor:0x35C4FF, tint:0xDFF4FF, accents:[0x35C4FF,0x54D8FF,0x7EF0C1], acc:'halo',    gear:'walkman',  vibe:'electric'},
-  {name:'CWI_Press',   role:'Press & PR',        visor:0xF368E0, tint:0xFFE0F6, accents:[0xF368E0,0xFF6B6B,0xB388FF], acc:'cap',     gear:'none',     vibe:'sharp'},
-  {name:'CWI_Studio',  role:'Content Studio',    visor:0x7EF0C1, tint:0xDFF7EC, accents:[0x7EF0C1,0x35C4FF,0x2E9E4F], acc:'crest',   gear:'walkman',  vibe:'craft'},
-  {name:'CWI_Data',    role:'Data & Analytics',  visor:0x54D8FF, tint:0xE3F0FF, accents:[0x54D8FF,0x35C4FF,0xB388FF], acc:'antenna', gear:'toolpack', vibe:'precise'},
-  {name:'CWI_Affairs', role:'Business Affairs',  visor:0xFFC93C, tint:0xFFF0D6, accents:[0xFFC93C,0xFF9F43,0x8A6D1B], acc:'cap',     gear:'none',     vibe:'steady'},
+  {name:'MUSE_CWI',    role:'Chief of Staff',    visor:0xFFD24D, king:true, tint:0xFFF3D6, accents:[0xFFD24D,0xFFF6E0,0xE0A92E], acc:'crown',   gear:'walkman',  vibe:'regal',   frame:'sovereign'},
+  {name:'CWI_AandR',   role:'A&R',               visor:0xFF6B6B, tint:0xFFE7E3, accents:[0xFF6B6B,0xFF9F43,0xC0392B], acc:'crest',   gear:'walkman',  vibe:'bold',    frame:'scout'},
+  {name:'CWI_Marketing',role:'Marketing & Social',visor:0xFF9F43, tint:0xFFEDD6, accents:[0xFF9F43,0xF368E0,0xFFD24D], acc:'crest',   gear:'walkman',  vibe:'loud',    frame:'herald'},
+  {name:'CWI_Sync',    role:'Sync & Licensing',  visor:0xB388FF, tint:0xEDE6FF, accents:[0xB388FF,0x7EF0C1,0x5B4BDB], acc:'fin',     gear:'toolpack', vibe:'smooth',  frame:'hauler'},
+  {name:'CWI_Radio',   role:'Radio & Playlists', visor:0x35C4FF, tint:0xDFF4FF, accents:[0x35C4FF,0x54D8FF,0x7EF0C1], acc:'halo',    gear:'walkman',  vibe:'electric',frame:'beacon'},
+  {name:'CWI_Press',   role:'Press & PR',        visor:0xF368E0, tint:0xFFE0F6, accents:[0xF368E0,0xFF6B6B,0xB388FF], acc:'cap',     gear:'none',     vibe:'sharp',   frame:'scribe'},
+  {name:'CWI_Studio',  role:'Content Studio',    visor:0x7EF0C1, tint:0xDFF7EC, accents:[0x7EF0C1,0x35C4FF,0x2E9E4F], acc:'crest',   gear:'walkman',  vibe:'craft',   frame:'artisan'},
+  {name:'CWI_Data',    role:'Data & Analytics',  visor:0x54D8FF, tint:0xE3F0FF, accents:[0x54D8FF,0x35C4FF,0xB388FF], acc:'antenna', gear:'toolpack', vibe:'precise', frame:'oracle'},
+  {name:'CWI_Affairs', role:'Business Affairs',  visor:0xFFC93C, tint:0xFFF0D6, accents:[0xFFC93C,0xFF9F43,0x8A6D1B], acc:'cap',     gear:'none',     vibe:'steady',  frame:'warden'},
 ];
 const TASK_VERBS=[
   ['Verifying handoff',4,7],['Equipping gear',5,8],['Auditing chain',6,10],
@@ -1239,17 +1364,17 @@ const LOOK_SETS={regal:['halo','cap'],bold:['crest','fin'],loud:['crest','halo']
   electric:['halo','antenna'],sharp:['cap','fin'],craft:['crest','halo'],precise:['antenna','fin'],steady:['cap','crest']};
 const GEAR_SETS={regal:['walkman','none'],bold:['walkman','toolpack'],loud:['walkman'],smooth:['toolpack','walkman'],
   electric:['walkman'],sharp:['none','toolpack'],craft:['walkman','toolpack'],precise:['toolpack','none'],steady:['none','toolpack']};
-const FORM_NAMES=['classic','tall','wide','sleek'];
+const FORM_NAMES=['sovereign','scout','herald','hauler','beacon','scribe','artisan','oracle','warden'];
 function chooseLook(def){
   const accs=LOOK_SETS[def.vibe]||['crest'], gears=GEAR_SETS[def.vibe]||['none'];
   return {
-    form:FORM_NAMES[Math.floor(Math.random()*FORM_NAMES.length)],
+    form:def.frame,   /* silhouette family is the agent's frozen identity */
     acc:def.king?'crown':accs[Math.floor(Math.random()*accs.length)],
     accent:def.accents[Math.floor(Math.random()*def.accents.length)],
     gear:gears[Math.floor(Math.random()*gears.length)],
   };
 }
-function lookLabel(l){ return l.form+' frame · '+l.acc+(l.gear==='none'?'':' · '+l.gear); }
+function lookLabel(l){ return (FRAME_LABELS[l.form]||l.form)+' frame · '+l.acc+(l.gear==='none'?'':' · '+l.gear); }
 /* CWI badge texture for the walkman face — CWI logo on all gear. */
 const walkmanTex=canvasTex(128,128,(g)=>{
   g.fillStyle='#14202C'; g.beginPath(); g.roundRect(0,0,128,128,18); g.fill();
@@ -1292,14 +1417,14 @@ function buildGearMeshes(def,gear,yOff){
 }
 function disposeGroup(gr){ gr.traverse(o=>{ if(o.geometry) o.geometry.dispose(); }); }
 function buildAgentBody(def,formName,visorColor){
-  const form=FORMS[formName]||FORMS.classic;
+  const form=FORMS[formName]||FORMS.sovereign;
   const grp=new THREE.Group();
-  const L=robotLists(); robotParts(L,0,0,0,0,visorColor,form);
+  const L=robotLists(); const rp=robotParts(L,0,0,0,0,visorColor,form);
   const bodyMat=MAT.robotWhite.clone(); bodyMat.color.set(def.tint);
   const bw=buildMesh(L.white,bodyMat); if(bw) grp.add(bw);
   for(const v of L.visor) grp.add(v);
   const bb=buildMesh(L.base,MAT.visor,false); if(bb) grp.add(bb);
-  return {grp,bodyMat,yOff:(form.hy+form.hr)-2.17};
+  return {grp,bodyMat,visors:L.visor,yOff:(form.hy+form.hr)-2.17,hover:rp.hover,wantOrb:rp.wantOrb};
 }
 /* Dress the agent in its chosen look: silhouette, wear, gear, glow signature. */
 function dressAgent(a,look){
@@ -1307,9 +1432,11 @@ function dressAgent(a,look){
   if(a.bodyGrp){ grp.remove(a.bodyGrp); disposeGroup(a.bodyGrp); if(a.bodyMat) a.bodyMat.dispose(); }
   const bp=buildAgentBody(d,look.form,d.visor);
   grp.add(bp.grp); a.bodyGrp=bp.grp; a.bodyMat=bp.bodyMat; a.yOff=bp.yOff;
+  a.visors=bp.visors.map(v=>({m:v,sy:v.scale.y})); a.hover=bp.hover;
   if(a.expr){ grp.remove(a.expr); disposeGroup(a.expr);
     if(a.accMat) a.accMat.dispose();
-    if(a.glow){ a.glow.material.map.dispose(); a.glow.material.dispose(); } }
+    if(a.glow){ a.glow.material.map.dispose(); a.glow.material.dispose(); }
+    a.orb=null; a.hoverDisc=null; }
   const expr=new THREE.Group(); grp.add(expr); a.expr=expr;
   a.accent=look.accent; a.accType=look.acc;
   a.accMat=new THREE.MeshStandardMaterial({color:look.accent,emissive:look.accent,emissiveIntensity:.9,roughness:.3,metalness:.4});
@@ -1326,6 +1453,16 @@ function dressAgent(a,look){
     blending:THREE.AdditiveBlending,depthWrite:false}));
   a.glow.scale.set(2.4,2.4,1); a.glow.position.set(0,1.0,0); expr.add(a.glow);
   buildGearMeshes(d,look.gear,a.yOff).forEach(m=>expr.add(m));
+  if(bp.hover){  /* oracle rides a cushion of light */
+    const disc=new THREE.Mesh(new THREE.CircleGeometry(.58,20),
+      new THREE.MeshBasicMaterial({color:look.accent,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false}));
+    disc.rotation.x=-Math.PI/2; disc.position.y=.3; expr.add(disc); a.hoverDisc=disc;
+  }
+  if(bp.wantOrb){  /* oracle's companion mote — its second pair of eyes */
+    const orb=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),
+      new THREE.MeshStandardMaterial({color:0x101C26,emissive:look.accent,emissiveIntensity:2.2,roughness:.3,metalness:.4}));
+    orb.position.set(1.15,2,0); expr.add(orb); a.orb=orb;
+  }
   a.nameSprite.position.y=3.5+a.yOff;
   a.look=look;
 }
@@ -1350,10 +1487,12 @@ function updateEntry(a,dt){
   g.scale.setScalar(Math.max(.01,e<.75?e/.75:1+Math.sin((e-.75)/.25*Math.PI)*.05));
   if(a.glow) a.glow.material.opacity=.5+.35*Math.sin(a.enterT*11);
   if(a.enterRing){ a.enterRing.scale.setScalar(1+k*4.5); a.enterRing.material.opacity=.9*(1-k); }
+  if(a.beam){ a.beam.material.opacity=.3*(1-k); a.beam.rotation.y+=dt*2.4; }
   g.position.y=a.enterY0+Math.sin(k*Math.PI)*1.5;
   if(k>=1){
     a.entering=false; g.scale.setScalar(1); g.position.y=a.enterY0;
     if(a.enterRing){ g.remove(a.enterRing); a.enterRing.geometry.dispose(); a.enterRing.material.dispose(); a.enterRing=null; }
+    if(a.beam){ g.remove(a.beam); a.beam.geometry.dispose(); a.beam.material.dispose(); a.beam=null; }
     dressAgent(a,a.look);   /* the choice locks in */
     if(a.glow) a.glow.material.opacity=.5;
     a.hopBase=a.enterY0; a.hopT=0;
@@ -1434,6 +1573,9 @@ function spawnAgent(def,atStation){
     wanderT:2+Math.random()*4,done:0,quota:4+Math.floor(Math.random()*5),
     hopT:-1,workT:0,workDur:0,
     bodyGrp:null,bodyMat:null,expr:null,accMat:null,glow:null,yOff:0,look:null,
+    visors:[],hover:false,orb:null,hoverDisc:null,beam:null,
+    blinkT:2+Math.random()*4,blinkK:0,idleYaw:0,
+    departing:false,departT:0,
     track:pickTrack(null),choiceT:20+Math.random()*40,
     entering:true,enterT:0,enterY0:home.y,_f1:false,_f2:false,enterRing:null};
   /* the agent chooses its full look at arrival — silhouette, wear, gear, glow */
@@ -1444,6 +1586,10 @@ function spawnAgent(def,atStation){
   const ring=new THREE.Mesh(new THREE.TorusGeometry(1,.06,8,32),
     new THREE.MeshBasicMaterial({color:a.accent,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));
   ring.rotation.x=Math.PI/2; ring.position.y=.25; grp.add(ring); a.enterRing=ring;
+  /* arrival beam — a pillar of light the agent descends through */
+  const beam=new THREE.Mesh(new THREE.CylinderGeometry(1.25,1.9,17,12,1,true),
+    new THREE.MeshBasicMaterial({color:a.accent,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+  beam.position.y=8.5; grp.add(beam); a.beam=beam;
   const sel=regSel(proxy,'agents','AGENT',def.name+' — '+def.role,[]);
   sel.agent=a;
   simAgents.push(a);
@@ -1451,7 +1597,19 @@ function spawnAgent(def,atStation){
   return a;
 }
 function killAgent(a){
-  logFeed('<b>'+a.def.name+'</b> went offline · '+a.done+' tasks done');
+  if(a.departing||a.entering) return;
+  a.departing=true; a.departT=0;   /* the departure ceremony begins */
+  logFeed('🌠 <b>'+a.def.name+'</b> departing the world · '+a.done+' tasks done');
+}
+function updateDeparture(a,dt){
+  a.departT+=dt; const k=Math.min(1,a.departT/2.2), g=a.grp;
+  g.position.y+=dt*(2+k*7); g.rotation.y+=dt*2.2;
+  const e=Math.max(.01,1-k*k); g.scale.setScalar(e);
+  if(a.glow) a.glow.material.opacity=(.5+.3*Math.sin(a.departT*14))*e;
+  if(a.beam){ a.beam.material.opacity=.3*e; }
+  if(k>=1) removeAgent(a);
+}
+function removeAgent(a){
   scene.remove(a.grp);
   const i=simAgents.indexOf(a); if(i>=0) simAgents.splice(i,1);
   const hi=hitMeshes.indexOf(a.proxy); if(hi>=0) hitMeshes.splice(hi,1);
@@ -1500,15 +1658,40 @@ function bankAgent(a,dt){
 const _pa=new THREE.Vector3();
 function updateAgent(a,dt){
   const g=a.grp;
+  if(a.departing){ updateDeparture(a,dt); return; }
   if(a.entering){ updateEntry(a,dt); return; }   /* entry materialize runs first */
+  /* ---- expression layer: visor blink + eye language, companion orb, hover ---- */
+  if(a.visors&&a.visors.length){
+    a.blinkT-=dt;
+    if(a.blinkT<=0){ a.blinkT=2.2+Math.random()*5; a.blinkK=.16; }
+    const shut=a.blinkK>0?(a.blinkK-=dt,.08):1;
+    const tgtE=(a.state==='working'?2.5:1.5)+Math.sin(simClock*3+a.done)*.15+nightF*.7;
+    for(const v of a.visors){ v.m.scale.y=v.sy*shut;
+      const mm=v.m.material; mm.emissiveIntensity+=(tgtE-mm.emissiveIntensity)*Math.min(1,dt*5); }
+  }
+  if(a.orb){ const oa=simClock*1.5+a.done*1.7;
+    a.orb.position.set(Math.cos(oa)*1.15,2.0+Math.sin(simClock*2.2)*.18,Math.sin(oa)*1.15); }
+  if(a.hoverDisc){ a.hoverDisc.position.y=.3+Math.sin(simClock*3+a.done)*.09;
+    a.hoverDisc.material.opacity=.42+nightF*.3; }
   /* Design-masters review (D1): eased hop timing — landings feel weighted. */
   if(a.hopT>=0){ a.hopT+=dt; const hk=Math.min(1,a.hopT/.6), he=1-Math.pow(1-hk,3);
     g.position.y=a.hopBase+Math.sin(he*Math.PI)*1.2;
     if(a.hopT>.6){ a.hopT=-1; g.position.y=a.hopBase; } }
   switch(a.state){
-    case 'idle':
-      g.position.y=a.home.y+Math.sin(simClock*2+a.done)*.1;
-      g.rotation.z=Math.sin(simClock*1.3+a.done)*.05;   // idle body lean (D3)
+    case 'idle':{
+      const vibe=a.def.vibe, ph=a.done*1.7;
+      let bobY=a.home.y+Math.sin(simClock*2+ph)*.1, leanZ=Math.sin(simClock*1.3+ph)*.05, yawO=0;
+      if(vibe==='regal'){ bobY=a.home.y+Math.sin(simClock*1.1+ph)*.17; leanZ=Math.sin(simClock*.8+ph)*.03; }
+      else if(vibe==='bold'){ bobY=a.home.y+Math.abs(Math.sin(simClock*3.2+ph))*.38; }
+      else if(vibe==='loud'){ yawO=Math.sin(simClock*.9+ph)*.55; bobY=a.home.y+Math.sin(simClock*2.6+ph)*.15; }
+      else if(vibe==='smooth'){ bobY=a.home.y+Math.sin(simClock*1.6+ph)*.13; yawO=Math.sin(simClock*.5+ph)*.35; }
+      else if(vibe==='electric'){ if(Math.sin(simClock*4+ph)>.93) yawO=.7; leanZ=Math.sin(simClock*5+ph)*.09; }
+      else if(vibe==='craft'){ bobY=a.home.y+Math.abs(Math.sin(simClock*2.2+ph))*.24; leanZ=Math.sin(simClock*2.2+ph)*.08; }
+      else if(vibe==='precise'){ yawO=Math.sin(simClock*.7+ph)*.95; }
+      else if(vibe==='steady'){ bobY=a.home.y+Math.sin(simClock*1.2+ph)*.05; leanZ*=.4; }
+      if(a.hover){ bobY=a.home.y+.55+Math.sin(simClock*2.4+ph)*.3; g.rotation.y+=dt*.45; }
+      g.position.y=bobY; g.rotation.z=leanZ;
+      if(!a.hover) g.rotation.y+=((a.idleYaw+yawO)-g.rotation.y)*Math.min(1,dt*3);
       a.wanderT-=dt;
       if(a.wanderT<=0){
         if(Math.random()<.75 && simAgents.length>1) assignTask(a);
@@ -1518,12 +1701,12 @@ function updateAgent(a,dt){
         }
         a.wanderT=3+Math.random()*5;
       }
-      break;
+      break; }
     case 'wander':
       a.t+=dt/a.dur; qbezE(g.position,a.p0,a.p1,a.p2,Math.min(1,a.t));
       g.lookAt(_pa.copy(g.position).add(_v1.subVectors(a.p2,a.p0).setY(0)));
       bankAgent(a,dt);
-      if(a.t>=1){ a.state='idle'; g.position.y=a.home.y; }
+      if(a.t>=1){ a.state='idle'; a.idleYaw=g.rotation.y; g.position.y=a.home.y; }
       break;
     case 'toPickup':
       a.t+=dt/a.dur; qbezE(g.position,a.p0,a.p1,a.p2,Math.min(1,a.t));
@@ -1557,7 +1740,7 @@ function updateAgent(a,dt){
     case 'toHome':
       a.t+=dt/a.dur; qbezE(g.position,a.p0,a.p1,a.p2,Math.min(1,a.t));
       bankAgent(a,dt);
-      if(a.t>=1){ a.state='idle'; g.position.copy(a.home); }
+      if(a.t>=1){ a.state='idle'; a.idleYaw=g.rotation.y; g.position.copy(a.home); }
       break;
   }
 }
@@ -1643,7 +1826,7 @@ function agentRows(a){
     ['Route',()=>a.task?(a.task.from.toUpperCase()+' → '+a.task.to.toUpperCase()):'—'],
     ['Carrying',()=>a.task?a.task.gear:'—'],
     ['♪ Now playing',()=>a.track?('“'+a.track+'”'):'—'],
-    ['Frame',()=>a.look?lookLabel(a.look):'—'],
+    ['Silhouette',()=>a.look?lookLabel(a.look):'—'],
     ['Tasks completed',()=>String(a.done)],
   ];
 }
@@ -1888,6 +2071,9 @@ function animate(){
   foamMats.forEach(f=>{ f.map.offset.x+=dt*.03; });
   for(const c of clouds){ c.position.x+=c.userData.v*dt; if(c.position.x>320) c.position.x=-320; }
   for(const f of anims) f(t,dt);
+  updateDayCycle(dt);
+  updateBirds(dt,t);
+  updateFireflies(t);
   simTick(dt);
   if(tour.active&&tour.phase==='dwell'){
     tour.dwellT+=dt;
