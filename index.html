@@ -1682,6 +1682,7 @@ function spawnAgent(def,atStation){
     blinkT:2+Math.random()*4,blinkK:0,idleYaw:0,
     departing:false,departT:0,
     track:def.taste==='quiet'?null:(def.track0||pickTrack(null,def.taste)),choiceT:20+Math.random()*40,
+    greet:null,greetCd:8+Math.random()*10,
     conf:.6+Math.random()*.3,throughput:.4+Math.random()*.5,confT:3+Math.random()*4,
     entering:true,enterT:0,enterY0:home.y,_f1:false,_f2:false,enterRing:null};
   /* the agent chooses its full look at arrival — silhouette, wear, gear, glow */
@@ -1768,12 +1769,22 @@ function updateAgent(a,dt){
   const g=a.grp;
   if(a.departing){ updateDeparture(a,dt); return; }
   if(a.entering){ updateEntry(a,dt); return; }   /* entry materialize runs first */
+  /* interaction: greeting beat — turn to face each other while glyphs cross */
+  if(a.greet&&a.greet.t>0){
+    a.greet.t-=dt;
+    const _o=a.greet.other;
+    if(_o&&_o.grp&&!_o.departing){ _v1.subVectors(_o.grp.position,g.position);
+      const _ty=Math.atan2(_v1.x,_v1.z); let _dy=_ty-g.rotation.y;
+      if(_dy>Math.PI)_dy-=Math.PI*2; if(_dy<-Math.PI)_dy+=Math.PI*2;
+      g.rotation.y+=_dy*Math.min(1,dt*6); }
+    if(a.greet.t<=0) a.greet=null;
+  }
   /* ---- expression layer: visor blink + eye language, companion orb, hover ---- */
   if(a.visors&&a.visors.length){
     a.blinkT-=dt;
     if(a.blinkT<=0){ a.blinkT=2.2+Math.random()*5; a.blinkK=.16; }
     const shut=a.blinkK>0?(a.blinkK-=dt,.08):1;
-    const tgtE=(a.state==='working'?2.5:1.5)+Math.sin(simClock*3+a.done)*.15+nightF*.7;
+    const tgtE=(a.state==='working'?2.5:1.5)+Math.sin(simClock*3+a.done)*.15+nightF*.7+(a.greet?2.4:0)+(syncPulseT>0?2.0:0);
     for(const v of a.visors){ v.m.scale.y=v.sy*shut;
       const mm=v.m.material; mm.emissiveIntensity+=(tgtE-mm.emissiveIntensity)*Math.min(1,dt*5); }
   }
@@ -1865,7 +1876,156 @@ function updateAgent(a,dt){
       bankAgent(a,dt);
       if(a.t>=1){ a.state='idle'; a.idleYaw=g.rotation.y; g.position.copy(a.home); }
       break;
+    case 'toGather':
+      a.t+=dt/a.dur; qbezE(g.position,a.p0,a.p1,a.p2,Math.min(1,a.t));
+      g.lookAt(_pa.copy(g.position).add(_v1.subVectors(a.p2,a.p0).setY(0)));
+      bankAgent(a,dt);
+      if(a.t>=1){ a.state='gather'; a.idleYaw=g.rotation.y; }
+      break;
+    case 'gather':
+      /* face the pavilion center while the cast holds the moment */
+      _v1.subVectors(stationFor['hub'],g.position);
+      { const _gy=Math.atan2(_v1.x,_v1.z); let _gd=_gy-g.rotation.y;
+        if(_gd>Math.PI)_gd-=Math.PI*2; if(_gd<-Math.PI)_gd+=Math.PI*2;
+        g.rotation.y+=_gd*Math.min(1,dt*3); }
+      break;
   }
+}
+/* ============================================================
+   10. AGENT-TO-AGENT INTERACTION — greetings, handoffs, convergence
+   ============================================================ */
+/* SAMPLE-simulation choreography: the cast acknowledges, hands off, gathers. */
+let syncPulseT=0;
+const glyphGeo=new THREE.OctahedronGeometry(.22);
+const glyphs=[];
+function spawnGlyph(fromA,toB){
+  const m=new THREE.Mesh(glyphGeo,new THREE.MeshBasicMaterial({color:fromA.accent,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false}));
+  m.position.copy(fromA.grp.position); m.position.y+=2.2; scene.add(m);
+  glyphs.push({m,from:fromA,to:toB,t:0,dur:1.1});
+}
+function greetPair(a,b,quiet){
+  a.greet={t:1.6,other:b}; b.greet={t:1.6,other:a};
+  a.greetCd=22+Math.random()*18; b.greetCd=22+Math.random()*18;
+  if(reduced) return;
+  spawnGlyph(a,b); spawnGlyph(b,a);
+  if(!quiet) logFeed('👋 <b>'+a.def.name+'</b> × <b>'+b.def.name+'</b> — paths crossed, glyphs exchanged');
+}
+function checkGreetings(dt){
+  for(const a of simAgents){ if(a.greetCd>0) a.greetCd-=dt; }
+  for(let i=0;i<simAgents.length;i++) for(let j=i+1;j<simAgents.length;j++){
+    const a=simAgents[i], b=simAgents[j];
+    if(a.entering||b.entering||a.departing||b.departing) continue;
+    if(a.greet||b.greet||a.greetCd>0||b.greetCd>0) continue;
+    if(a.grp.position.distanceToSquared(b.grp.position)>20) continue; /* ~4.5u */
+    greetPair(a,b);
+  }
+}
+function updateGlyphs(dt){
+  for(let i=glyphs.length-1;i>=0;i--){
+    const gl=glyphs[i]; gl.t+=dt/gl.dur; const k=Math.min(1,gl.t);
+    _v1.lerpVectors(gl.from.grp.position,gl.to.grp.position,k); _v1.y+=2.2+Math.sin(k*Math.PI)*1.4;
+    gl.m.position.copy(_v1); gl.m.rotation.y+=dt*6; gl.m.material.opacity=.95*(1-k*k);
+    if(k>=1){ scene.remove(gl.m); gl.m.material.dispose(); glyphs.splice(i,1); }
+  }
+}
+/* task handoffs: a light-arc carries a data packet between departments */
+let handoffT=16;
+const handoffs=[];
+function fireHandoff(){
+  const c=simAgents.filter(a=>!a.entering&&!a.departing&&!a.greet);
+  if(c.length<2) return;
+  const A=c[(Math.random()*c.length)|0]; let B=A;
+  while(B===A) B=c[(Math.random()*c.length)|0];
+  const id=++taskSeq;
+  logFeed('⇄ handoff · <b>'+A.def.name+'</b> → <b>'+B.def.name+'</b> · brief #'+id);
+  greetPair(A,B,true);
+  if(reduced) return;
+  const p0=A.grp.position.clone(); p0.y+=2.4;
+  const p2=B.grp.position.clone(); p2.y+=2.4;
+  const mid=p0.clone().lerp(p2,.5); mid.y=Math.max(p0.y,p2.y)+5;
+  const pts=[]; for(let i=0;i<=24;i++){ const k=i/24, u=1-k;
+    pts.push(new THREE.Vector3(u*u*p0.x+2*u*k*mid.x+k*k*p2.x, u*u*p0.y+2*u*k*mid.y+k*k*p2.y, u*u*p0.z+2*u*k*mid.z+k*k*p2.z)); }
+  const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({color:A.accent,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false}));
+  scene.add(line);
+  const pkt=new THREE.Mesh(new THREE.SphereGeometry(.3,10,10),
+    new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:1,blending:THREE.AdditiveBlending,depthWrite:false}));
+  scene.add(pkt);
+  handoffs.push({line,pkt,pts,t:0,dur:2.6});
+}
+function updateHandoffs(dt){
+  for(let i=handoffs.length-1;i>=0;i--){
+    const h=handoffs[i]; h.t+=dt/h.dur; const k=Math.min(1,h.t);
+    const pi=Math.min(24,Math.floor(k*24));
+    h.pkt.position.copy(h.pts[pi]);
+    h.pkt.scale.setScalar(1+Math.sin(k*Math.PI*4)*.25);
+    if(k>.75) h.line.material.opacity=.85*(1-(k-.75)/.25);
+    if(k>=1){ scene.remove(h.line); scene.remove(h.pkt);
+      h.line.geometry.dispose(); h.line.material.dispose(); h.pkt.geometry.dispose(); h.pkt.material.dispose();
+      handoffs.splice(i,1); }
+  }
+}
+/* group moments: the cast converges at the hub pavilion, visors sync, then disperses */
+let gatherT=140+Math.random()*80;
+let gathering=null;
+const syncRings=[];
+function fireConvergence(){
+  const c=simAgents.filter(a=>!a.entering&&!a.departing&&a.state==='idle').slice(0,5);
+  if(c.length<2){ gatherT=60+Math.random()*60; return; }
+  const hubC=stationFor['hub'];
+  gathering={members:c,phase:'toGather',t:0};
+  logFeed('◉ the cast gathers at the pavilion…');
+  if(reduced){ gathering.phase='gather'; return; }
+  c.forEach((a,i)=>{
+    const ang=i/c.length*Math.PI*2+.4;
+    a.gatherPt=hubC.clone(); a.gatherPt.x+=Math.cos(ang)*5; a.gatherPt.z+=Math.sin(ang)*5;
+    a.state='toGather'; a.t=0; startTravel(a,a.gatherPt,7+Math.random()*2);
+  });
+}
+function disperseGather(){
+  const g=gathering; gathering=null;
+  syncPulseT=1.4;
+  if(!reduced){
+    const hubC=stationFor['hub'];
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(1,.09,8,48),
+      new THREE.MeshBasicMaterial({color:0x7EF0C1,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));
+    ring.rotation.x=Math.PI/2; ring.position.set(hubC.x,1.2,hubC.z);
+    scene.add(ring); syncRings.push({ring,t:0});
+  }
+  logFeed('◉ visors sync — the cast disperses');
+  for(const a of g.members){
+    if(a.departing||a.entering) continue;
+    const hb=a.home.clone(); startTravel(a,hb,6); a.state='toHome';
+  }
+}
+function updateGathering(dt){
+  if(syncPulseT>0) syncPulseT-=dt;
+  if(!gathering){
+    gatherT-=dt;
+    if(gatherT<=0){ gatherT=170+Math.random()*90; fireConvergence(); }
+    return;
+  }
+  const g=gathering; g.t+=dt;
+  if(g.phase==='toGather'){
+    if(g.members.every(a=>a.state==='gather'||a.departing||a.entering)||g.t>22){ g.phase='gather'; g.t=0; }
+  } else if(g.phase==='gather'){
+    if(g.t>5.5) disperseGather();
+  }
+}
+function updateSyncRings(dt){
+  for(let i=syncRings.length-1;i>=0;i--){
+    const r=syncRings[i]; r.t+=dt; const k=r.t/1.6;
+    r.ring.scale.setScalar(1+k*7); r.ring.material.opacity=.9*(1-k);
+    if(k>=1){ scene.remove(r.ring); r.ring.geometry.dispose(); r.ring.material.dispose(); syncRings.splice(i,1); }
+  }
+}
+function interactionTick(dt){
+  checkGreetings(dt);
+  updateGlyphs(dt);
+  handoffT-=dt; if(handoffT<=0){ handoffT=22+Math.random()*20; fireHandoff(); }
+  updateHandoffs(dt);
+  updateGathering(dt);
+  updateSyncRings(dt);
 }
 /* population control */
 let spawnT=4;
@@ -1880,6 +2040,7 @@ function simTick(dt){
     }
   }
   for(let i=simAgents.length-1;i>=0;i--) updateAgent(simAgents[i],dt);
+  interactionTick(dt);
   /* expression: personal choice timers + music ticker */
   for(const a of simAgents){ if(a.entering) continue; a.choiceT-=dt; if(a.choiceT<=0) expressChoice(a); }
   tickT-=dt; if(tickT<=0){ tickT=6; cycleTicker(); }
