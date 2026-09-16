@@ -879,21 +879,22 @@ function robotLists(){ return {white:[],visor:[],base:[]}; }
 /* Signature silhouette families — one frozen identity per agent, so any frozen
    frame identifies each agent by silhouette alone. The agent still chooses its
    wear/gear/music within its family; entry flicker tries other families on. */
-const FRAME_LABELS={sovereign:'Sovereign',scout:'Scout',herald:'Herald',hauler:'Hauler',
+const FRAME_LABELS={sovereign:'Sovereign',scout:'Scout',herald:'Herald',hauler:'Hauler',haulerSlim:'Hauler',
   beacon:'Beacon',scribe:'Scribe',artisan:'Artisan',oracle:'Oracle',warden:'Warden'};
 const FORMS={
   sovereign:{bsx:1.0,bsy:1.25,bsz:1.0,hy:2.0,hr:.46,vy:2.03,armLen:.85,armX:.68,leg:'ring',  sig:'cape',     visorShape:'wide'},
   scout:    {bsx:.8, bsy:.95, bsz:.8, hy:1.55,hr:.5, vy:1.58,armLen:.6, armX:.55,leg:'stilts',sig:null,       visorShape:'round'},
   herald:   {bsx:1.3,bsy:.95, bsz:1.3,hy:1.7, hr:.44,vy:1.73,armLen:.95,armX:.85,leg:'ring',  sig:null,       visorShape:'wide'},
   hauler:   {bsx:1.45,bsy:1.0,bsz:1.45,hy:1.6,hr:.42,vy:1.63,armLen:.7, armX:.9, leg:'ring',  sig:null,       visorShape:'slit'},
+  haulerSlim:{bsx:1.0,bsy:1.0, bsz:1.0, hy:1.75,hr:.42,vy:1.78,armLen:.75,armX:.62,leg:'ring', sig:'contractslate',visorShape:'slit'},
   beacon:   {bsx:.9, bsy:1.3, bsz:.9, hy:2.05,hr:.4, vy:2.08,armLen:.7, armX:.6, leg:'stilts',sig:'array',    visorShape:'round'},
   scribe:   {bsx:.82,bsy:1.2, bsz:.82,hy:1.95,hr:.38,vy:1.98,armLen:.8, armX:.58,leg:'stilts',sig:'slate',    visorShape:'slit'},
-  artisan:  {bsx:1.05,bsy:1.05,bsz:1.05,hy:1.8,hr:.44,vy:1.83,armLen:.8, armX:.66,leg:'ring',  sig:'toolarm',  visorShape:'wide'},
+  artisan:  {bsx:1.05,bsy:1.05,bsz:1.05,hy:1.8,hr:.44,vy:1.83,armLen:.8, armX:.66,leg:'ring',  sig:'faderbank',visorShape:'wide'},
   oracle:   {bsx:.95,bsy:1.1, bsz:.95,hy:1.9, hr:.42,vy:1.93,armLen:.75,armX:.62,leg:'hover', sig:'orb',      visorShape:'split'},
-  warden:   {bsx:1.25,bsy:1.1,bsz:1.25,hy:1.75,hr:.44,vy:1.78,armLen:.75,armX:.78,leg:'ring',  sig:'pauldrons',visorShape:'slit'},
+  warden:   {bsx:1.25,bsy:1.1,bsz:1.25,hy:1.75,hr:.44,vy:1.78,armLen:.75,armX:.78,leg:'ring',  sig:'pauldrons',visorShape:'slit',tablet:true},
 };
-function robotParts(L,x,y,z,ry,visorColor,form){
-  form=form||FORMS.sovereign;
+function robotParts(L,x,y,z,ry,visorColor,form,opts){
+  form=form||FORMS.sovereign; opts=opts||{};
   put(L.white,new THREE.SphereGeometry(.55,16,12),x,y+.95,z,0,ry,0,form.bsx,form.bsy,form.bsz);
   put(L.white,new THREE.SphereGeometry(form.hr,16,12),x,y+form.hy,z,0,ry,0);
   const armX=form.armX||.62, armY=.95+.1*(form.bsy||1), al=form.armLen||.7;
@@ -905,8 +906,17 @@ function robotParts(L,x,y,z,ry,visorColor,form){
   if(sig==='cape'){ put(L.base,new THREE.ConeGeometry(.52,1.5,8),x,y+1.45,z-.58,.55,0,0,1,1,.42); }
   else if(sig==='array'){ for(let i=-1;i<=1;i++){ put(L.white,new THREE.CylinderGeometry(.025,.025,.95,6),x+i*.18,y+form.hy+1.0,z,0,0,i*.2); put(L.base,new THREE.SphereGeometry(.065,8,6),x+i*.32,y+form.hy+1.42,z); } }
   else if(sig==='slate'){ put(L.base,new THREE.BoxGeometry(.42,.58,.06),x,y+1.12,z+.64,.18,0,0); put(L.base,new THREE.BoxGeometry(.3,.06,.08),x,y+.78,z+.5); }
-  else if(sig==='toolarm'){ put(L.white,new THREE.CylinderGeometry(.13,.13,al*1.3,8),x+armX+.14,y+armY-.12,z,0,0,-.95); put(L.base,new THREE.BoxGeometry(.2,.3,.2),x+armX+.46,y+armY-.5,z); }
   else if(sig==='pauldrons'){ put(L.white,new THREE.SphereGeometry(.25,10,8),x-armX-.06,y+armY+.24,z,0,0,0,1,.62,1); put(L.white,new THREE.SphereGeometry(.25,10,8),x+armX+.06,y+armY+.24,z,0,0,0,1,.62,1); }
+  else if(sig==='contractslate'){ put(L.base,new THREE.BoxGeometry(.46,.62,.07),x,y+1.15,z+.6,.12,0,0); }
+  /* faderbank: no merged parts — Fader's 8-channel bank is built live in dressAgent */
+  if(form.tablet){ put(L.base,new THREE.BoxGeometry(.42,.56,.07),x-.66,y+1.02,z+.18,0,.25,.1); }
+  if(opts.deckKit){ /* Dial's deck: chest plate + fader slots + forearm strip, merged cheap */
+    put(L.base,new THREE.BoxGeometry(.5,.36,.09),x,y+1.45,z+.5,.1,0,0);
+    for(let i=0;i<3;i++){ put(L.white,new THREE.BoxGeometry(.05,.2,.03),x-.14+i*.14,y+1.45,z+.56,.1,0,0);
+      put(L.base,new THREE.BoxGeometry(.075,.05,.045),x-.14+i*.14,y+1.45+(i-1)*.06,z+.575,.1,0,0); }
+    put(L.base,new THREE.BoxGeometry(.13,.42,.1),x+armX+.17,y+armY-.3,z+.06,0,0,-.5);
+    for(let i=0;i<3;i++) put(L.white,new THREE.BoxGeometry(.05,.05,.12),x+armX+.17,y+armY-.42+i*.12,z+.06,0,0,-.5);
+  }
   /* legs: ring (classic hover-ring), stilts, or hover (emissive disc, animated) */
   const leg=form.leg||'ring';
   if(leg==='ring'){ put(L.base,new THREE.TorusGeometry(.5,.1,8,20),x,y+.15,z,Math.PI/2,0,0); }
@@ -1324,17 +1334,22 @@ function makeBoat(){
 /* Expression personas: each simulated agent's chosen look & kit.
    tint = body tint · accents = palette it picks from · acc = head accessory
    gear = worn kit · vibe = personality weight for music changes.
+   Verdict fields (2026-09-16, agent self-expression round):
+   taste deep|anthem|any|quiet · matte (no shine) · still (no idle flourish)
+   cycleEdge (frame edge color-cycles) · confOrb (orb = forecast confidence)
+   deckKit (chest deck plate + forearm faders) · vuReactive (fader-bank VU)
+   tablet (charter tablet) · beamH (entry beam scale) · track0 (opening track).
    Crown stays exclusive to MUSE_CWI (KingCode). */
 const AGENT_DEFS=[
-  {name:'MUSE_CWI',    role:'Chief of Staff',    visor:0xFFD24D, king:true, tint:0xFFF3D6, accents:[0xFFD24D,0xFFF6E0,0xE0A92E], acc:'crown',   gear:'walkman',  vibe:'regal',   frame:'sovereign'},
-  {name:'CWI_AandR',   role:'A&R',               visor:0xFF6B6B, tint:0xFFE7E3, accents:[0xFF6B6B,0xFF9F43,0xC0392B], acc:'crest',   gear:'walkman',  vibe:'bold',    frame:'scout'},
-  {name:'CWI_Marketing',role:'Marketing & Social',visor:0xFF9F43, tint:0xFFEDD6, accents:[0xFF9F43,0xF368E0,0xFFD24D], acc:'crest',   gear:'walkman',  vibe:'loud',    frame:'herald'},
-  {name:'CWI_Sync',    role:'Sync & Licensing',  visor:0xB388FF, tint:0xEDE6FF, accents:[0xB388FF,0x7EF0C1,0x5B4BDB], acc:'fin',     gear:'toolpack', vibe:'smooth',  frame:'hauler'},
-  {name:'CWI_Radio',   role:'Radio & Playlists', visor:0x35C4FF, tint:0xDFF4FF, accents:[0x35C4FF,0x54D8FF,0x7EF0C1], acc:'halo',    gear:'walkman',  vibe:'electric',frame:'beacon'},
-  {name:'CWI_Press',   role:'Press & PR',        visor:0xF368E0, tint:0xFFE0F6, accents:[0xF368E0,0xFF6B6B,0xB388FF], acc:'cap',     gear:'none',     vibe:'sharp',   frame:'scribe'},
-  {name:'CWI_Studio',  role:'Content Studio',    visor:0x7EF0C1, tint:0xDFF7EC, accents:[0x7EF0C1,0x35C4FF,0x2E9E4F], acc:'crest',   gear:'walkman',  vibe:'craft',   frame:'artisan'},
-  {name:'CWI_Data',    role:'Data & Analytics',  visor:0x54D8FF, tint:0xE3F0FF, accents:[0x54D8FF,0x35C4FF,0xB388FF], acc:'antenna', gear:'toolpack', vibe:'precise', frame:'oracle'},
-  {name:'CWI_Affairs', role:'Business Affairs',  visor:0xFFC93C, tint:0xFFF0D6, accents:[0xFFC93C,0xFF9F43,0x8A6D1B], acc:'cap',     gear:'none',     vibe:'steady',  frame:'warden'},
+  {name:'MUSE_CWI',    role:'Chief of Staff',    visor:0xFFD24D, king:true, beamH:1.35, tint:0xFFF3D6, accents:[0xFFD24D,0xFFF6E0,0xE0A92E], acc:'crown', gear:'walkman', vibe:'regal', frame:'sovereign', taste:'any'},
+  {name:'CWI_AandR',   role:'A&R',               visor:0xFFB35C, tint:0x15171B, matte:true, accents:[0xB87333,0x8C5A2B,0xD99A5B], acc:'ears', gear:'walkman', vibe:'bold', frame:'scout', taste:'deep'},
+  {name:'CWI_Marketing',role:'Marketing & Social',visor:0xFF9F43, tint:0xFFEDD6, accents:[0xFF9F43,0xF368E0,0xFFD24D], acc:'crest', gear:'walkman', vibe:'loud', frame:'herald', taste:'anthem', cycleEdge:true},
+  {name:'CWI_Sync',    role:'Sync & Licensing',  visor:0xFFC93C, tint:0x1B2A4A, accents:[0xFFC93C,0xD4AF37,0x2E5AAC], acc:'fin', gear:'toolpack', vibe:'smooth', frame:'haulerSlim', taste:'any', track0:'Diabolique'},
+  {name:'CWI_Radio',   role:'Radio & Playlists', visor:0xFFB347, tint:0x2A2018, accents:[0xFFB347,0xFF9F43,0xFFD24D], acc:'halo', gear:'walkman', vibe:'electric', frame:'beacon', taste:'any', deckKit:true},
+  {name:'CWI_Press',   role:'Press & PR',        visor:0xEDEDED, tint:0xF2F2F2, accents:[0x141414,0xFFFFFF,0x8A8A8A], acc:'cap', gear:'none', vibe:'sharp', frame:'scribe', taste:'any', still:true},
+  {name:'CWI_Studio',  role:'Content Studio',    visor:0xFFD24D, tint:0x241C12, accents:[0xC9973F,0x8A6D2B,0xFFD24D], acc:'crest', gear:'walkman', vibe:'craft', frame:'artisan', taste:'any', vuReactive:true},
+  {name:'CWI_Data',    role:'Data & Analytics',  visor:0x54D8FF, tint:0xE3F0FF, accents:[0x54D8FF,0x35C4FF,0xB388FF], acc:'antenna', gear:'toolpack', vibe:'precise', frame:'oracle', taste:'any', confOrb:true},
+  {name:'CWI_Affairs', role:'Business Affairs',  visor:0xC9D4E2, tint:0x2A3A4C, accents:[0x9AA8BC,0x5A6E85,0xD7E0EA], acc:'cap', gear:'none', vibe:'steady', frame:'warden', taste:'quiet'},
 ];
 const TASK_VERBS=[
   ['Verifying handoff',4,7],['Equipping gear',5,8],['Auditing chain',6,10],
@@ -1354,17 +1369,34 @@ const CATALOG_TRACKS=['Zooted Zone','Shaka Zulu','Doves & Diamonds','Diabolique'
 'Spirits n Shadows','Flex My Flame','Rainbows And Roses','Tears and Scars','Toxic Elements',
 '7th Angel','Scorpions & Sapphires','Place I Go to Dream','Place I Go to Dream - Remastered',
 'Place I Go to Dream - Instrumental',"Smokin' Pain",'Phantasm','Misfits and Hooligans','Roses over Monaco'];
-function pickTrack(except){
+/* Music taste: agents choose within their lane. quiet = Charter's opt-out. */
+const ANTHEMS=['Zooted Zone','Shaka Zulu','Doves & Diamonds','Diabolique','Flamerz','Ultimate'];
+const DEEP_CUTS=CATALOG_TRACKS.filter(t=>!ANTHEMS.includes(t));
+/* Track metadata drives Fader's VU glow (BPM/energy tags — no FFT in this VM). */
+const TRACK_META={'Zooted Zone':{bpm:140,energy:.95},'Shaka Zulu':{bpm:132,energy:.85},
+'Doves & Diamonds':{bpm:120,energy:.7},'Diabolique':{bpm:128,energy:.88},'Flamerz':{bpm:145,energy:.9},
+'Neon Nights Pt. 777':{bpm:122,energy:.65},'Ultimate':{bpm:130,energy:.92},'Painted Lady':{bpm:118,energy:.6},
+'Warped and Wicked':{bpm:138,energy:.87},'Golden Diamond':{bpm:124,energy:.72},
+'Spirits n Shadows':{bpm:110,energy:.55},'Flex My Flame':{bpm:142,energy:.89},
+'Rainbows And Roses':{bpm:115,energy:.5},'Tears and Scars':{bpm:108,energy:.45},
+'Toxic Elements':{bpm:135,energy:.82},'7th Angel':{bpm:125,energy:.68},
+'Scorpions & Sapphires':{bpm:130,energy:.75},'Place I Go to Dream':{bpm:100,energy:.4},
+'Place I Go to Dream - Remastered':{bpm:100,energy:.42},'Place I Go to Dream - Instrumental':{bpm:100,energy:.35},
+"Smokin' Pain":{bpm:133,energy:.8},'Phantasm':{bpm:118,energy:.58},
+'Misfits and Hooligans':{bpm:140,energy:.86},'Roses over Monaco':{bpm:122,energy:.62},
+__def:{bpm:110,energy:.5}};
+function pickTrack(except,taste){
+  const pool=taste==='deep'?DEEP_CUTS:taste==='anthem'?ANTHEMS:CATALOG_TRACKS;
   let t=except;
-  for(let i=0;i<4&&t===except;i++) t=CATALOG_TRACKS[Math.floor(Math.random()*CATALOG_TRACKS.length)];
+  for(let i=0;i<4&&(t===except||!pool.includes(t));i++) t=pool[Math.floor(Math.random()*pool.length)];
   return t;
 }
 /* Entry looks: personality-seeded sets each agent chooses from at arrival. */
-const LOOK_SETS={regal:['halo','cap'],bold:['crest','fin'],loud:['crest','halo'],smooth:['fin','cap'],
+const LOOK_SETS={regal:['halo','cap'],bold:['ears','crest'],loud:['crest','halo'],smooth:['fin','cap'],
   electric:['halo','antenna'],sharp:['cap','fin'],craft:['crest','halo'],precise:['antenna','fin'],steady:['cap','crest']};
 const GEAR_SETS={regal:['walkman','none'],bold:['walkman','toolpack'],loud:['walkman'],smooth:['toolpack','walkman'],
   electric:['walkman'],sharp:['none','toolpack'],craft:['walkman','toolpack'],precise:['toolpack','none'],steady:['none','toolpack']};
-const FORM_NAMES=['sovereign','scout','herald','hauler','beacon','scribe','artisan','oracle','warden'];
+const FORM_NAMES=['sovereign','scout','herald','hauler','haulerSlim','beacon','scribe','artisan','oracle','warden'];
 function chooseLook(def){
   const accs=LOOK_SETS[def.vibe]||['crest'], gears=GEAR_SETS[def.vibe]||['none'];
   return {
@@ -1384,6 +1416,31 @@ const walkmanTex=canvasTex(128,128,(g)=>{
 });
 const walkmanMat=new THREE.MeshStandardMaterial({map:walkmanTex,roughness:.5,metalness:.2});
 const gearDarkMat=new THREE.MeshStandardMaterial({color:0x1B2A38,roughness:.4,metalness:.6});
+/* Verdict-kit textures — CWI logo on all gear, crown stays KingCode-only. */
+const capeBadgeTex=canvasTex(128,128,(g)=>{
+  g.fillStyle='#101C26'; g.beginPath(); g.arc(64,64,62,0,7); g.fill();
+  g.strokeStyle='#FFC93C'; g.lineWidth=6; g.beginPath(); g.arc(64,64,52,0,7); g.stroke();
+  g.fillStyle='#FFFFFF'; g.font='800 34px Arial'; g.textAlign='center'; g.fillText('CWI',64,76);
+  g.fillStyle='#FFC93C'; g.font='700 12px Arial'; g.fillText('KINGCODE',64,100);
+});
+const contractTex=canvasTex(256,320,(g)=>{
+  g.fillStyle='#101C34'; g.fillRect(0,0,256,320);
+  g.strokeStyle='#D4AF37'; g.lineWidth=5; g.strokeRect(10,10,236,300);
+  g.textAlign='center'; g.fillStyle='#D4AF37'; g.font='800 30px Arial'; g.fillText('CWI',128,58);
+  g.fillStyle='#FFFFFF'; g.font='700 22px Arial'; g.fillText('DEAL TERMS',128,108);
+  g.fillStyle='#7EF0C1'; g.font='700 20px Arial'; g.fillText('100% PRE-CLEARED',128,148);
+  g.fillStyle='#FFFFFF'; g.font='700 22px Arial'; g.fillText('TERRITORY',128,198);
+  g.fillStyle='#7EF0C1'; g.font='700 20px Arial'; g.fillText('WORLDWIDE',128,238);
+  g.fillStyle='#D4AF37'; g.font='800 24px Arial'; g.fillText('SEALED',128,288);
+});
+const charterTex=canvasTex(256,320,(g)=>{
+  g.fillStyle='#16222E'; g.fillRect(0,0,256,320);
+  g.strokeStyle='#9AA8BC'; g.lineWidth=4; g.strokeRect(12,12,232,296);
+  g.textAlign='center'; g.fillStyle='#9AA8BC'; g.font='800 28px Arial'; g.fillText('CHARTER',128,70);
+  g.fillStyle='#FFFFFF'; g.font='700 22px Arial'; g.fillText('CWI',128,120);
+  g.fillStyle='#5A6E85'; g.font='400 18px Arial'; g.fillText('BUSINESS',128,170); g.fillText('AFFAIRS',128,198);
+  g.fillStyle='#5A6E85'; g.font='400 15px Arial'; g.fillText('— fine print —',128,258);
+});
 function buildAccessoryMesh(type,mat,yOff){
   yOff=yOff||0;
   const parts=[];
@@ -1392,6 +1449,8 @@ function buildAccessoryMesh(type,mat,yOff){
   else if(type==='fin'){ put(parts,new THREE.BoxGeometry(.07,.42,.3),0,2.02+yOff,-.42,-.15,0,0); }
   else if(type==='cap'){ put(parts,new THREE.CylinderGeometry(.3,.32,.12,12),0,2.2+yOff,0); put(parts,new THREE.BoxGeometry(.44,.05,.3),0,2.15+yOff,.4); }
   else if(type==='antenna'){ put(parts,new THREE.CylinderGeometry(.028,.028,.75,6),0,2.55+yOff,0); put(parts,new THREE.SphereGeometry(.07,8,6),0,2.95+yOff,0); }
+  else if(type==='ears'){ for(const sd of [-1,1]){ /* Needle's parabolic ear sensors */
+      put(parts,new THREE.SphereGeometry(.17,10,6,0,Math.PI*2,0,Math.PI/2.4),sd*.46,2.06+yOff,0, 0,0,sd*-1.35); } }
   else return null;
   return buildMesh(parts,mat,false);
 }
@@ -1419,8 +1478,9 @@ function disposeGroup(gr){ gr.traverse(o=>{ if(o.geometry) o.geometry.dispose();
 function buildAgentBody(def,formName,visorColor){
   const form=FORMS[formName]||FORMS.sovereign;
   const grp=new THREE.Group();
-  const L=robotLists(); const rp=robotParts(L,0,0,0,0,visorColor,form);
+  const L=robotLists(); const rp=robotParts(L,0,0,0,0,visorColor,form,{deckKit:def.deckKit});
   const bodyMat=MAT.robotWhite.clone(); bodyMat.color.set(def.tint);
+  if(def.matte){ bodyMat.roughness=.95; bodyMat.metalness=.05; }  /* Needle: no shine, ears do the work */
   const bw=buildMesh(L.white,bodyMat); if(bw) grp.add(bw);
   for(const v of L.visor) grp.add(v);
   const bb=buildMesh(L.base,MAT.visor,false); if(bb) grp.add(bb);
@@ -1436,7 +1496,9 @@ function dressAgent(a,look){
   if(a.expr){ grp.remove(a.expr); disposeGroup(a.expr);
     if(a.accMat) a.accMat.dispose();
     if(a.glow){ a.glow.material.map.dispose(); a.glow.material.dispose(); }
-    a.orb=null; a.hoverDisc=null; }
+    for(const m of (a.kitMats||[])) m.dispose(); a.kitMats=[];
+    if(a.knobGeo) a.knobGeo.dispose();
+    a.orb=null; a.hoverDisc=null; a.faderKnobs=null; a.vuMat=null; a.capeBadge=null; }
   const expr=new THREE.Group(); grp.add(expr); a.expr=expr;
   a.accent=look.accent; a.accType=look.acc;
   a.accMat=new THREE.MeshStandardMaterial({color:look.accent,emissive:look.accent,emissiveIntensity:.9,roughness:.3,metalness:.4});
@@ -1453,6 +1515,48 @@ function dressAgent(a,look){
     blending:THREE.AdditiveBlending,depthWrite:false}));
   a.glow.scale.set(2.4,2.4,1); a.glow.position.set(0,1.0,0); expr.add(a.glow);
   buildGearMeshes(d,look.gear,a.yOff).forEach(m=>expr.add(m));
+  /* ---- verdict kit: the agents' chosen self-expression upgrades ---- */
+  a.kitMats=[];
+  const fm=FORMS[look.form]||FORMS.sovereign, fArmX=fm.armX||.66, fArmY=.95+.1*(fm.bsy||1);
+  if(d.king){ /* CWI badge woven into the cape lining — seen when he turns */
+    const bmat=new THREE.MeshBasicMaterial({map:capeBadgeTex,transparent:true}); a.kitMats.push(bmat);
+    const badge=new THREE.Mesh(new THREE.CircleGeometry(.2,20),bmat);
+    badge.position.set(0,1.32+a.yOff,-1.02); badge.rotation.y=Math.PI; expr.add(badge); a.capeBadge=badge;
+  }
+  if(d.cycleEdge){ /* Marquee's shoulder light-bar rig — rides the cycling accent */
+    const lb=[]; put(lb,new THREE.BoxGeometry(.1,.52,.1),-.8,1.95+a.yOff,-.12);
+    put(lb,new THREE.BoxGeometry(.1,.52,.1),.8,1.95+a.yOff,-.12);
+    put(lb,new THREE.BoxGeometry(1.7,.08,.08),0,2.24+a.yOff,-.12);
+    const lm=buildMesh(lb,a.accMat,false); if(lm) expr.add(lm);
+  }
+  if(look.form==='haulerSlim'){ /* Seal's contracts slate — terms visible, territories stamped */
+    const cmat=new THREE.MeshBasicMaterial({map:contractTex,transparent:true}); a.kitMats.push(cmat);
+    const cs=new THREE.Mesh(new THREE.PlaneGeometry(.4,.54),cmat);
+    cs.position.set(0,1.15+a.yOff,.66); cs.rotation.x=.12; expr.add(cs);
+  }
+  if(d.tablet){ /* Charter's charter tablet screen */
+    const tmat=new THREE.MeshBasicMaterial({map:charterTex,transparent:true}); a.kitMats.push(tmat);
+    const ts=new THREE.Mesh(new THREE.PlaneGeometry(.34,.46),tmat);
+    ts.position.set(-.66,1.02+a.yOff,.235); ts.rotation.y=.25; expr.add(ts);
+  }
+  if(d.vuReactive){ /* Fader's 8-channel fader bank + VU strip, VU rides the track */
+    const bx=fArmX+.42, by=fArmY-.42;
+    const bank=[]; put(bank,new THREE.BoxGeometry(.58,.8,.1),bx,by,.1,0,0,-.06);
+    for(let i=0;i<8;i++) put(bank,new THREE.BoxGeometry(.03,.5,.02),bx-.245+i*.07,by,.16,0,0,-.06);
+    const bm=buildMesh(bank,gearDarkMat,false); if(bm) expr.add(bm);
+    const knobMat=new THREE.MeshStandardMaterial({color:0xC9973F,emissive:0xC9973F,emissiveIntensity:.5,roughness:.35,metalness:.7});
+    a.kitMats.push(knobMat);
+    a.knobGeo=new THREE.BoxGeometry(.055,.085,.06);
+    a.faderKnobs=[]; a.faderBaseY=[];
+    for(let i=0;i<8;i++){ const k=new THREE.Mesh(a.knobGeo,knobMat);
+      const kx=bx-.245+i*.07, ky=by-.12+((i*37)%3)*.12;
+      k.position.set(kx,ky,.17); k.rotation.z=-.06; expr.add(k);
+      a.faderKnobs.push(k); a.faderBaseY.push(ky); }
+    const vmat=new THREE.MeshStandardMaterial({color:0x1B2A38,emissive:0x7EF0C1,emissiveIntensity:1,roughness:.4});
+    a.kitMats.push(vmat); a.vuMat=vmat;
+    const vu=new THREE.Mesh(new THREE.BoxGeometry(.5,.07,.03),vmat);
+    vu.position.set(bx,by+.46,.15); vu.rotation.z=-.06; expr.add(vu);
+  }
   if(bp.hover){  /* oracle rides a cushion of light */
     const disc=new THREE.Mesh(new THREE.CircleGeometry(.58,20),
       new THREE.MeshBasicMaterial({color:look.accent,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false}));
@@ -1496,7 +1600,7 @@ function updateEntry(a,dt){
     dressAgent(a,a.look);   /* the choice locks in */
     if(a.glow) a.glow.material.opacity=.5;
     a.hopBase=a.enterY0; a.hopT=0;
-    logFeed('✨ <b>'+a.def.name+'</b> arrived — '+lookLabel(a.look)+' · ♪ “'+a.track+'”');
+    logFeed('✨ <b>'+a.def.name+'</b> arrived — '+lookLabel(a.look)+(a.track?(' · ♪ “'+a.track+'”'):' · quiet review'));
   }
 }
 /* Personal choice: the agent picks a new accent, sometimes a new look, often a new track. */
@@ -1520,7 +1624,7 @@ function expressChoice(a){
     logFeed('🔄 <b>'+d.name+'</b> reinvented itself — '+lookLabel(nl));
   }
   const p=(d.vibe==='electric'||d.vibe==='craft')?.7:.35;
-  if(Math.random()<p){ const t=pickTrack(a.track);
+  if(!d.quiet&&Math.random()<p){ const t=pickTrack(a.track,d.taste);
     if(t!==a.track){ a.track=t; logFeed('🎵 <b>'+d.name+'</b> now playing “'+t+'”'); } }
   a.choiceT=45+Math.random()*45;
 }
@@ -1529,9 +1633,10 @@ let tickT=3, tickIdx=0;
 function cycleTicker(){
   const el=document.getElementById('mt-text'); if(!el) return;
   if(!simAgents.length){ el.textContent='warming up the decks…'; return; }
-  tickIdx%=simAgents.length;
-  const a=simAgents[tickIdx++];
-  el.textContent=a.def.name+' · “'+a.track+'”';
+  for(let n=0;n<simAgents.length;n++){ tickIdx%=simAgents.length;
+    const a=simAgents[tickIdx++];
+    if(!a.def.quiet&&a.track){ el.textContent=a.def.name+' · “'+a.track+'”'; return; } }
+  el.textContent='the floor is quiet…';
 }
 const simAgents=[];
 let taskSeq=482;
@@ -1576,7 +1681,8 @@ function spawnAgent(def,atStation){
     visors:[],hover:false,orb:null,hoverDisc:null,beam:null,
     blinkT:2+Math.random()*4,blinkK:0,idleYaw:0,
     departing:false,departT:0,
-    track:pickTrack(null),choiceT:20+Math.random()*40,
+    track:def.taste==='quiet'?null:(def.track0||pickTrack(null,def.taste)),choiceT:20+Math.random()*40,
+    conf:.6+Math.random()*.3,throughput:.4+Math.random()*.5,confT:3+Math.random()*4,
     entering:true,enterT:0,enterY0:home.y,_f1:false,_f2:false,enterRing:null};
   /* the agent chooses its full look at arrival — silhouette, wear, gear, glow */
   a.look=chooseLook(def);
@@ -1586,10 +1692,11 @@ function spawnAgent(def,atStation){
   const ring=new THREE.Mesh(new THREE.TorusGeometry(1,.06,8,32),
     new THREE.MeshBasicMaterial({color:a.accent,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));
   ring.rotation.x=Math.PI/2; ring.position.y=.25; grp.add(ring); a.enterRing=ring;
-  /* arrival beam — a pillar of light the agent descends through */
-  const beam=new THREE.Mesh(new THREE.CylinderGeometry(1.25,1.9,17,12,1,true),
+  /* arrival beam — a pillar of light the agent descends through (KingCode's runs taller) */
+  const beamH=def.beamH||1;
+  const beam=new THREE.Mesh(new THREE.CylinderGeometry(1.25,1.9,17*beamH,12,1,true),
     new THREE.MeshBasicMaterial({color:a.accent,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
-  beam.position.y=8.5; grp.add(beam); a.beam=beam;
+  beam.position.y=8.5*beamH; grp.add(beam); a.beam=beam;
   const sel=regSel(proxy,'agents','AGENT',def.name+' — '+def.role,[]);
   sel.agent=a;
   simAgents.push(a);
@@ -1656,6 +1763,7 @@ function bankAgent(a,dt){
   g.rotation.z+=(lean-g.rotation.z)*Math.min(1,dt*7);
 }
 const _pa=new THREE.Vector3();
+const _c1=new THREE.Color(), _c2=new THREE.Color();
 function updateAgent(a,dt){
   const g=a.grp;
   if(a.departing){ updateDeparture(a,dt); return; }
@@ -1670,7 +1778,20 @@ function updateAgent(a,dt){
       const mm=v.m.material; mm.emissiveIntensity+=(tgtE-mm.emissiveIntensity)*Math.min(1,dt*5); }
   }
   if(a.orb){ const oa=simClock*1.5+a.done*1.7;
-    a.orb.position.set(Math.cos(oa)*1.15,2.0+Math.sin(simClock*2.2)*.18,Math.sin(oa)*1.15); }
+    a.orb.position.set(Math.cos(oa)*1.15,2.0+Math.sin(simClock*2.2)*.18,Math.sin(oa)*1.15);
+    if(a.def.confOrb){ _c1.set(0xFFB347).lerp(_c2.set(0x7EF0C1),a.conf); a.orb.material.emissive.copy(_c1); } }
+  /* verdict living expression: edge cycling, confidence drift, VU glow */
+  if(a.def.cycleEdge&&a.accMat){ _c1.setHSL((simClock*.09+a.done*.07)%1,.9,.62);
+    a.accMat.color.copy(_c1); a.accMat.emissive.copy(_c1); }
+  if(a.def.confOrb){ a.confT-=dt;
+    if(a.confT<=0){ a.confT=6+Math.random()*8;
+      a.conf=Math.min(.98,Math.max(.05,a.conf+(Math.random()-.5)*.3));
+      a.throughput=Math.min(1,Math.max(.1,a.throughput+(Math.random()-.5)*.3)); } }
+  if(a.def.vuReactive&&a.vuMat){ const m=TRACK_META[a.track]||TRACK_META.__def;
+    const beat=Math.sin(simClock*m.bpm/60*Math.PI*2)*.5+.5;
+    a.vuMat.emissiveIntensity=.35+m.energy*(.6+1.8*beat);
+    if(a.faderKnobs) for(let i=0;i<a.faderKnobs.length;i++)
+      a.faderKnobs[i].position.y=a.faderBaseY[i]+Math.sin(simClock*(1.1+i*.23)+i*1.7)*.055*(.3+m.energy); }
   if(a.hoverDisc){ a.hoverDisc.position.y=.3+Math.sin(simClock*3+a.done)*.09;
     a.hoverDisc.material.opacity=.42+nightF*.3; }
   /* Design-masters review (D1): eased hop timing — landings feel weighted. */
@@ -1681,7 +1802,8 @@ function updateAgent(a,dt){
     case 'idle':{
       const vibe=a.def.vibe, ph=a.done*1.7;
       let bobY=a.home.y+Math.sin(simClock*2+ph)*.1, leanZ=Math.sin(simClock*1.3+ph)*.05, yawO=0;
-      if(vibe==='regal'){ bobY=a.home.y+Math.sin(simClock*1.1+ph)*.17; leanZ=Math.sin(simClock*.8+ph)*.03; }
+      if(a.def.still){ bobY=a.home.y+Math.sin(simClock*1.2+ph)*.03; leanZ=0; yawO=0; } /* Dateline: monochrome composure, no flourish */
+      else if(vibe==='regal'){ bobY=a.home.y+Math.sin(simClock*1.1+ph)*.17; leanZ=Math.sin(simClock*.8+ph)*.03; }
       else if(vibe==='bold'){ bobY=a.home.y+Math.abs(Math.sin(simClock*3.2+ph))*.38; }
       else if(vibe==='loud'){ yawO=Math.sin(simClock*.9+ph)*.55; bobY=a.home.y+Math.sin(simClock*2.6+ph)*.15; }
       else if(vibe==='smooth'){ bobY=a.home.y+Math.sin(simClock*1.6+ph)*.13; yawO=Math.sin(simClock*.5+ph)*.35; }
@@ -1689,7 +1811,8 @@ function updateAgent(a,dt){
       else if(vibe==='craft'){ bobY=a.home.y+Math.abs(Math.sin(simClock*2.2+ph))*.24; leanZ=Math.sin(simClock*2.2+ph)*.08; }
       else if(vibe==='precise'){ yawO=Math.sin(simClock*.7+ph)*.95; }
       else if(vibe==='steady'){ bobY=a.home.y+Math.sin(simClock*1.2+ph)*.05; leanZ*=.4; }
-      if(a.hover){ bobY=a.home.y+.55+Math.sin(simClock*2.4+ph)*.3; g.rotation.y+=dt*.45; }
+      if(a.hover){ const hb=a.def.confOrb?(.3+a.throughput*.65):.55; /* Ledger: hover height tracks throughput */
+        bobY=a.home.y+hb+Math.sin(simClock*2.4+ph)*.3; g.rotation.y+=dt*.45; }
       g.position.y=bobY; g.rotation.z=leanZ;
       if(!a.hover) g.rotation.y+=((a.idleYaw+yawO)-g.rotation.y)*Math.min(1,dt*3);
       a.wanderT-=dt;
@@ -1820,15 +1943,17 @@ function focusAgent(a){
 /* ---------- inspector ---------- */
 const insp=document.getElementById('inspector');
 function agentRows(a){
-  return [
+  const rows=[
     ['Status',()=>a.state.replace('toPickup','EN ROUTE').replace('toDrop','DELIVERING').replace('toHome','RETURNING').toUpperCase()],
     ['Current task',()=>a.task?('#'+a.task.id+' · '+a.task.verb):'— idle'],
     ['Route',()=>a.task?(a.task.from.toUpperCase()+' → '+a.task.to.toUpperCase()):'—'],
     ['Carrying',()=>a.task?a.task.gear:'—'],
-    ['♪ Now playing',()=>a.track?('“'+a.track+'”'):'—'],
+    ['♪ Now playing',()=>a.def.quiet?'— · quiet review':(a.track?('“'+a.track+'”'):'—')],
     ['Silhouette',()=>a.look?lookLabel(a.look):'—'],
     ['Tasks completed',()=>String(a.done)],
   ];
+  if(a.def.confOrb) rows.splice(5,0,['Forecast confidence',()=>Math.round((a.conf||0)*100)+'% · orb-linked']);
+  return rows;
 }
 function renderRows(sel){
   const el=document.getElementById('i-rows'); el.innerHTML='';
