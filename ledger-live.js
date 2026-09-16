@@ -40,7 +40,8 @@
     'agent:CWI_Press': 'Dateline',
     'agent:CWI_Studio': 'Fader',
     'agent:CWI_Data': 'Ledger',
-    'agent:CWI_Affairs': 'Charter'
+    'agent:CWI_Affairs': 'Charter',
+    'agent:CWI_Results': 'Receipt'
   };
 
   var EVENT_GLYPH = {
