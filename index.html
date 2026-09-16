@@ -3,16 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Gear Ledger 3D — Live Agent Operations World</title>
-<meta property="og:title" content="Gear Ledger 3D — Live Agent Operations World">
-<meta property="og:description" content="CWI's nine AI departments working live — real tasks, real handoffs, explorable in 3D. Every view is a shareable deep link.">
-<meta property="og:image" content="https://cumulativewebinc.github.io/gear-ledger-3d-mockup/social-card.jpg">
-<meta property="og:url" content="https://cumulativewebinc.github.io/gear-ledger-3d-mockup/">
-<meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Gear Ledger 3D — Live Agent Operations World">
-<meta name="twitter:description" content="CWI's nine AI departments working live — real tasks, real handoffs, explorable in 3D.">
-<meta name="twitter:image" content="https://cumulativewebinc.github.io/gear-ledger-3d-mockup/social-card.jpg">
+<title>Gear Ledger — 3D Archipelago (Concept Mockup)</title>
 <script>
 /* Boot diagnostics: collects page errors so a stuck loader can report them in-DOM. */
 window.__glerrs=[];
@@ -71,6 +62,26 @@ setTimeout(function(){
   body.broadcast #title{opacity:1!important;transform:none!important}
   body.broadcast #title h1{font-size:15px;letter-spacing:.24em}
   body.broadcast #title small{font-size:9px}
+  /* ---------- self-expression director mode (?tour=self-expression): showcase feed ---------- */
+  /* Same clean-feed gating as broadcast, but tour captions + the music ticker stay visible —
+     the point of this tour is the choosing cast: looks, gear, music. Zero new 3D geometry:
+     this mode is text/CSS/URL-param only. The SAMPLE DATA pill stays visible on purpose. */
+  body.se-tour #topright .hbtn,
+  body.se-tour #thumbbar,
+  body.se-tour #inspector,
+  body.se-tour .sheet,
+  body.se-tour #toast,
+  body.se-tour #focusring,
+  body.se-tour #hint,
+  body.se-tour #musicpanel{display:none!important}
+  body.se-tour #tourcap{display:block!important}
+  #se-kicker{display:none;position:absolute;left:50%;top:12%;transform:translateX(-50%);z-index:40;
+    background:rgba(8,14,26,.85);border:1px solid rgba(255,209,102,.55);color:#ffe9b8;
+    padding:12px 22px;border-radius:14px;font-size:13px;letter-spacing:.06em;text-align:center;
+    max-width:min(88vw,640px);transition:opacity 1.2s;opacity:1}
+  body.se-tour #se-kicker{display:block}
+  body.se-tour #se-kicker.fade{opacity:0}
+  #se-kicker small{display:block;color:#9fd8ff;font-size:10px;margin-top:6px;letter-spacing:.14em}
 
   /* ---------- loader ---------- */
   #loader{position:fixed;inset:0;background:#0b1622;z-index:60;display:flex;flex-direction:column;
@@ -97,28 +108,11 @@ setTimeout(function(){
   .sample-pill{background:var(--amber);color:var(--amber-ink);font-weight:800;font-size:11px;
     letter-spacing:.12em;padding:8px 12px;border-radius:999px;white-space:nowrap}
   .sample-pill.pulse{animation:pillpulse .6s}
+  .sample-pill.live{background:#1f9d5c;color:#eafff3}
+  #pill-time{opacity:.8;font-weight:600}
+  #inspector .row .sv.live{color:#35d07f}
+  #inspector .row .sv.concept{color:#8fa9bc}
   @keyframes pillpulse{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
-  /* ---- live connection pill: green pulsing LIVE vs amber OFFLINE ---- */
-  .sample-pill.live{background:#0e3b2e;color:#7ef0c1;border:1px solid rgba(126,240,193,.55)}
-  .sample-pill.offline{background:var(--amber);color:var(--amber-ink)}
-  .sample-pill .cdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px}
-  .sample-pill.live .cdot{background:#7ef0c1;box-shadow:0 0 8px #7ef0c1;animation:cdotpulse 1.6s infinite}
-  .sample-pill.offline .cdot{background:#7a4d00}
-  @keyframes cdotpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(.8)}}
-  @media(prefers-reduced-motion:reduce){.sample-pill.live .cdot{animation:none}}
-  #title small a{color:#7ef0c1;text-decoration:underline;text-underline-offset:3px}
-  /* ---- inspector: live task state chips + LIVE tag ---- */
-  #inspector .row .sv.live{color:#7ef0c1}
-  #inspector .chip{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.08em;
-    padding:2px 8px;border-radius:999px;margin:1px 4px 1px 0;white-space:nowrap;vertical-align:1px}
-  #inspector .chip.st-created{background:#233241;color:#9fb4c6}
-  #inspector .chip.st-assigned{background:#123a5c;color:#7cc4ff}
-  #inspector .chip.st-in_progress{background:#4a2f00;color:#ffc93c}
-  #inspector .chip.st-delivered{background:#3a235c;color:#c9a7ff}
-  #inspector .chip.st-verified{background:#0e3b2e;color:#7ef0c1}
-  #inspector .chip.st-cancelled,#inspector .chip.st-failed{background:#4a1212;color:#ff9d9d}
-  #inspector .ltask{display:block;font-size:11px;color:#dfeaf2;margin:2px 0;line-height:1.5}
-  #inspector .ltask .tid{color:#8fa9bc;font-family:monospace;font-size:10px}
   .hbtn{pointer-events:auto;min-width:48px;min-height:48px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.16);
     background:var(--plate);color:var(--ink);font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer;
     display:inline-flex;align-items:center;gap:8px;backdrop-filter:blur(8px)}
@@ -231,7 +225,8 @@ setTimeout(function(){
 <div id="hud">
   <div id="title"><h1>GEAR LEDGER</h1><small>CWI · AGENT DECK — 3D CONCEPT</small></div>
   <div id="topright">
-    <div class="sample-pill offline" id="samplepill"><span class="cdot"></span>OFFLINE · sample demo</div>
+    <div class="sample-pill" id="samplepill"><span id="pill-dot">●</span> <span id="pill-text">SAMPLE DATA</span><span id="pill-time"></span></div>
+    <div id="se-kicker"><b>SELF-EXPRESSION</b> — a world where agents choose their own look, gear, and music.<small>THE CHOOSING CAST IS SAMPLE-SIMULATED · NOT LIVE AGENTS</small></div>
     <button class="hbtn" id="b-overview" title="Overview (Esc / 0)">⌂ <span class="lbl">Overview</span></button>
     <button class="hbtn" id="b-tour" title="Auto-tour (T)">▶ <span class="lbl">Auto-tour</span></button>
     <button class="hbtn" id="b-legend" title="Legend (L)">? <span class="lbl">Legend</span></button>
@@ -278,9 +273,8 @@ setTimeout(function(){
 
 <div class="sheet" id="info" role="dialog" aria-label="About">
   <button class="x" data-close="info" aria-label="Close">✕</button>
-  <h2 id="info-h">Concept mockup — not the live ledger.</h2>
-  <p id="info-mode">This 3D archipelago is a design concept for the CWI Gear Ledger. All figures are illustrative sample data, not live ledger values.</p>
-  <p>Departments, agents, gear items, counts, routes, and timelines shown here are invented for the mockup and do not represent real CWI operations.</p>
+  <h2>Concept mockup — not the live ledger.</h2>
+  <p>This 3D archipelago is a design concept for the CWI Gear Ledger. All figures are illustrative sample data, not live ledger values. Departments, agents, gear items, counts, routes, and timelines shown here are invented for the mockup and do not represent real CWI operations.</p>
   <p>In the live product, each figure would link to a signed, verifiable handoff record. Here, "View evidence" explains what that link would do.</p>
   <p>Built as a UX exploration — nothing here sends, posts, or signs anything.</p>
 </div>
@@ -295,8 +289,8 @@ setTimeout(function(){
 
 <div class="sheet" id="hint" role="dialog" aria-label="Welcome">
   <h2>Welcome to the Gear Ledger archipelago.</h2>
-  <p>Drag to orbit · Pinch or scroll to zoom · Tap an island to visit.</p>
-  <p id="hint-mode">Every number you see is SAMPLE data — a concept mockup, not the live ledger.</p>
+  <p>Drag to orbit · Pinch or scroll to zoom · Tap an island to visit.<br>
+  Every number you see is SAMPLE data — a concept mockup, not the live ledger.</p>
   <div class="row">
     <button class="ibtn" id="hint-explore">Start exploring</button>
     <button class="ibtn ghost" id="hint-tour">Take the auto-tour</button>
@@ -311,13 +305,15 @@ setTimeout(function(){
 <div id="toast"></div>
 <div id="focusring"></div>
 
-<script src="ledger-live.js"></script>
 <script type="importmap">
 {"imports":{
   "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
   "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
 }}
 </script>
+<script src="world-bridge.js"></script>
+<script src="sample-engine.js"></script>
+<script src="live-client.js"></script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -341,6 +337,10 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const nohint = /[?&]nohint=1/.test(location.search);
 const broadcast = /[?&]broadcast=1/.test(location.search);
 if(broadcast) document.body.classList.add('broadcast');
+/* ---------- self-expression director mode (?tour=self-expression): showcase tour ---------- */
+const tourParam=(/[?&]tour=([^&#]*)/.exec(location.search)||[])[1];
+const seTour=tourParam==='self-expression';
+if(seTour) document.body.classList.add('se-tour');
 
 const ISLANDS = [
   {id:'hub',     name:'GEAR LEDGER',  tag:'TRACK • HANDOFF • VERIFY',      x:0,   z:0,   r:11, accent:'#35C4FF'},
@@ -352,43 +352,10 @@ const ISLANDS = [
 ];
 const BRIDGES = [['hub','dist'],['hub','leads'],['hub','hands'],['hub','chain'],['chain','legends'],['leads','legends']];
 
-// Fixed SAMPLE dataset — stable across loads. NOT real data.
-const SAMPLE = {
-  hub:{handoffs:'1,284', agents:'9', integrity:'VERIFIED', chains:'36'},
-  departments:[
-    {name:'A&R', share:14, equipped:31, out:22, color:'#FF6B6B'},
-    {name:'Marketing & Social', share:12, equipped:27, out:19, color:'#FF9F43'},
-    {name:'Sync & Licensing', share:16, equipped:36, out:25, color:'#B388FF'},
-    {name:'Radio & Playlists', share:11, equipped:25, out:17, color:'#35C4FF'},
-    {name:'Press & PR', share:9, equipped:20, out:14, color:'#F368E0'},
-    {name:'Content Studio', share:13, equipped:29, out:21, color:'#7EF0C1'},
-    {name:'Data & Analytics', share:15, equipped:34, out:24, color:'#54D8FF'},
-    {name:'Business Affairs', share:10, equipped:22, out:15, color:'#FFD24D'},
-  ],
-  podium:[
-    {agent:'MUSE_CWI', handoffs:47, medal:'GOLD', color:'#FFD24D'},
-    {agent:'AGENT-07', handoffs:38, medal:'SILVER', color:'#DCE7EE'},
-    {agent:'AGENT-12', handoffs:33, medal:'BRONZE', color:'#D89A5B'},
-  ],
-  receivers:[
-    {agent:'AGENT-04', handoffs:41},{agent:'AGENT-09', handoffs:35},
-    {agent:'AGENT-02', handoffs:29},{agent:'AGENT-11', handoffs:26},
-  ],
-  legends:[
-    {item:'Signal Boy “Origin”', trips:214, h:3.2},
-    {item:'Needle Drop', trips:167, h:2.4},
-    {item:'First Spin', trips:142, h:1.6},
-  ],
-  arcs:[
-    {from:'Studio', to:'Radio', units:3, day:21},
-    {from:'A&R', to:'Sync', units:2, day:22},
-    {from:'Data', to:'Press', units:4, day:23},
-    {from:'Radio', to:'Marketing', units:2, day:24},
-    {from:'Affairs', to:'A&R', units:1, day:25},
-    {from:'Sync', to:'Studio', units:3, day:26},
-  ],
-  timeline:[12,9,14,18,22,17,8,6,13,19,24,21,16,9,7,15,20,26,23,18,10,8,16,22,27,24,19,11,9,17],
-};
+/* LIVE wiring: dataset lives in sample-engine.js (window.__SAMPLE_DATA).
+   window.__liveUpgradeHooks collects per-island LIVE refresh callbacks. */
+const SAMPLE = window.__SAMPLE_DATA;
+window.__liveUpgradeHooks = [];
 
 /* ============================================================
    1. CANVAS TEXTURE HELPERS
@@ -513,17 +480,15 @@ TEX.ocean.wrapS=TEX.ocean.wrapT=THREE.RepeatWrapping; TEX.ocean.repeat.set(10,10
 /* ============================================================
    3. SKY / HILLS / CLOUDS / SUN
    ============================================================ */
-let skyMatRef=null,sunSprRef=null,waterMatRef=null;
 const clouds=[];
 {
-  skyMatRef=new THREE.MeshBasicMaterial({map:TEX.sky,side:THREE.BackSide,fog:false});
-  const skyMat=skyMatRef;
+  const skyMat=new THREE.MeshBasicMaterial({map:TEX.sky,side:THREE.BackSide,fog:false});
   skyMat.color.set(0xdff2ff);
   scene.add(new THREE.Mesh(new THREE.SphereGeometry(380,24,16),skyMat));
 
-  sunSprRef=new THREE.Sprite(new THREE.SpriteMaterial({
+  const sunSpr=new THREE.Sprite(new THREE.SpriteMaterial({
     map:glowTex('#FFF3C4'),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.95,fog:false}));
-  sunSprRef.position.set(-190,190,-140); sunSprRef.scale.set(90,90,1); scene.add(sunSprRef);
+  sunSpr.position.set(-190,190,-140); sunSpr.scale.set(90,90,1); scene.add(sunSpr);
 
   const hillTex=(color)=>canvasTex(1024,128,(g,w,h)=>{
     g.clearRect(0,0,w,h); g.fillStyle=color;
@@ -569,9 +534,8 @@ let waterGeo, waterBase;
   waterGeo=new THREE.PlaneGeometry(400,400,96,96);
   waterGeo.rotateX(-Math.PI/2);
   waterBase=waterGeo.attributes.position.array.slice();
-  waterMatRef=new THREE.MeshStandardMaterial({color:P.water,
-    transparent:true,opacity:.82,roughness:.15,metalness:0,map:TEX.ocean});
-  const water=new THREE.Mesh(waterGeo,waterMatRef);
+  const water=new THREE.Mesh(waterGeo,new THREE.MeshStandardMaterial({color:P.water,
+    transparent:true,opacity:.82,roughness:.15,metalness:0,map:TEX.ocean}));
   water.position.y=0; scene.add(water);
 
   const depth=new THREE.Mesh(new THREE.PlaneGeometry(400,400),
@@ -591,100 +555,6 @@ let waterGeo, waterBase;
     const t2=new THREE.CanvasTexture(c); t2.colorSpace=THREE.SRGBColorSpace;
     seaMat.map=t2; seaMat.needsUpdate=true;
   });
-}
-
-/* ============================================================
-   4b. LIVING WORLD — day cycle, atmosphere moods, creatures.
-   The world breathes on a slow ~4-minute day: dawn → midday →
-   dusk → night. One directional light does the whole journey
-   (it becomes moonlight at night). Fireflies own the dark.
-   ============================================================ */
-let nightF=0, dayT=0.06, moodName='';
-const DAY_KEYS=[
- {t:0.00,name:'dawn',  sun:0xFFB36B,sunI:2.1, hs:0xFFD9B0,hg:0x4A6B5E,hi:.6, fog:0xF2C9A0,sky:0xFFD9B3,water:0x2FB8C4,expo:1.0},
- {t:0.25,name:'midday',sun:0xFFF2D8,sunI:2.6, hs:0xBFE3FF,hg:0x3E7C6B,hi:.75,fog:0xF0F6FA,sky:0xdff2ff,water:0x2FB8C4,expo:1.15},
- {t:0.50,name:'dusk',  sun:0xFF8E53,sunI:1.9, hs:0xE8A06A,hg:0x3E4A5E,hi:.55,fog:0xE8A37C,sky:0xFFC9A3,water:0x1F9AA8,expo:1.05},
- {t:0.62,name:'night', sun:0x9FB8FF,sunI:.65, hs:0x2A3A5E,hg:0x16222E,hi:.42,fog:0x1E2A44,sky:0x27354F,water:0x0E5A70,expo:.9},
- {t:0.88,name:'night', sun:0x9FB8FF,sunI:.7,  hs:0x2A3A5E,hg:0x16222E,hi:.42,fog:0x1E2A44,sky:0x27354F,water:0x0E5A70,expo:.9},
- {t:1.00,name:'dawn',  sun:0xFFB36B,sunI:2.1, hs:0xFFD9B0,hg:0x4A6B5E,hi:.6, fog:0xF2C9A0,sky:0xFFD9B3,water:0x2FB8C4,expo:1.0},
-];
-const _dc=new THREE.Color();
-function mixc(target,pa,pb,e){ target.set(pa).lerp(_dc.set(pb),e); }
-function keyAt(t){
-  let i=0; while(i<DAY_KEYS.length-2&&t>=DAY_KEYS[i+1].t) i++;
-  const A=DAY_KEYS[i],B=DAY_KEYS[i+1],k=(t-A.t)/Math.max(1e-5,B.t-A.t);
-  return {A,B,k:Math.min(1,Math.max(0,k))};
-}
-function updateDayCycle(dt){
-  if(reduced||bootRamp) return;   /* sunrise ramp owns the light until boot completes */
-  dayT=(dayT+dt/240)%1;
-  const {A,B,k}=keyAt(dayT), e=k*k*(3-2*k);
-  mixc(sun.color,A.sun,B.sun,e); sun.intensity=A.sunI+(B.sunI-A.sunI)*e;
-  mixc(hemi.color,A.hs,B.hs,e); mixc(hemi.groundColor,A.hg,B.hg,e); hemi.intensity=A.hi+(B.hi-A.hi)*e;
-  mixc(scene.fog.color,A.fog,B.fog,e);
-  if(skyMatRef) mixc(skyMatRef.color,A.sky,B.sky,e);
-  if(waterMatRef) mixc(waterMatRef.color,A.water,B.water,e);
-  renderer.toneMappingExposure=A.expo+(B.expo-A.expo)*e;
-  const sa=dayT*Math.PI*2-Math.PI/2;
-  sun.position.set(Math.cos(sa)*130,42+Math.sin(sa)*85,-55+Math.cos(sa*.6)*35);
-  if(sunSprRef){ sunSprRef.position.set(Math.cos(sa)*300,90+Math.sin(sa)*160,-220);
-    sunSprRef.material.opacity=.95*(1-nightF*.55); }
-  const nf=(dayT>.6&&dayT<.9)?Math.max(0,Math.sin((dayT-.6)/.3*Math.PI)):0;
-  nightF+=(nf-nightF)*Math.min(1,dt*2);
-  const mood=k<.5?A.name:B.name;
-  if(moodName&&mood!==moodName){
-    logFeed(mood==='dawn'?'🌅 dawn breaks over the ledger':mood==='midday'?'☀️ midday — the world at full shine':mood==='dusk'?'🌇 dusk settles over the islands':'🌙 night watch — the ledger glows');
-  }
-  moodName=mood;
-  if(fireflies) fireflies.material.opacity=nightF*.9;
-}
-/* fireflies — one Points draw call, owned by the night */
-let fireflies=null;
-{
-  const n=46, pos=new Float32Array(n*3);
-  for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2, r=14+Math.random()*58;
-    pos[i*3]=Math.cos(a)*r; pos[i*3+1]=2+Math.random()*9; pos[i*3+2]=Math.sin(a)*r; }
-  const fg=new THREE.BufferGeometry(); fg.setAttribute('position',new THREE.BufferAttribute(pos,3));
-  fireflies=new THREE.Points(fg,new THREE.PointsMaterial({color:0xFFE08A,size:.75,transparent:true,
-    opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));
-  fireflies.userData.base=pos.slice(); scene.add(fireflies);
-}
-function updateFireflies(t){
-  if(!fireflies||nightF<=0.01) return;
-  const p=fireflies.geometry.attributes.position, b=fireflies.userData.base;
-  for(let i=0;i<p.count;i++){
-    p.array[i*3]=b[i*3]+Math.sin(t*.7+i*2.1)*1.3;
-    p.array[i*3+1]=b[i*3+1]+Math.sin(t*1.1+i*1.3)*.9;
-    p.array[i*3+2]=b[i*3+2]+Math.cos(t*.5+i*1.7)*1.3;
-  }
-  p.needsUpdate=true;
-}
-/* gulls — six distant birds, one shared geometry, banking flight */
-const birds=[];
-{
-  const bg=new THREE.BufferGeometry();
-  bg.setAttribute('position',new THREE.BufferAttribute(new Float32Array([
-    0,0,.35,  0,.06,-.3,  -.9,.15,-.1,
-    0,0,.35,  .9,.15,-.1,  0,.06,-.3 ]),3));
-  bg.computeVertexNormals();
-  const bm=new THREE.MeshBasicMaterial({color:0x2A3A44,side:THREE.DoubleSide});
-  for(let i=0;i<6;i++){
-    const m=new THREE.Mesh(bg,bm), flock=i<3?0:1;
-    m.userData={cx:flock?-45:55,cz:flock?35:-50,r:26+Math.random()*24,
-      h:46+Math.random()*22,sp:.13+Math.random()*.12,ph:Math.random()*7};
-    scene.add(m); birds.push(m);
-  }
-}
-const _bv=new THREE.Vector3();
-function updateBirds(dt,t){
-  for(const b of birds){
-    const u=b.userData, a=t*u.sp+u.ph;
-    b.position.set(u.cx+Math.cos(a)*u.r,u.h+Math.sin(t*.9+u.ph)*2.5,u.cz+Math.sin(a)*u.r);
-    _bv.set(u.cx+Math.cos(a+.08)*u.r,b.position.y,u.cz+Math.sin(a+.08)*u.r);
-    b.lookAt(_bv);
-    b.rotation.z+=Math.sin(t*6+u.ph)*.3;
-    b.scale.y=1+Math.sin(t*9+u.ph)*.22;
-  }
 }
 
 /* ============================================================
@@ -908,66 +778,28 @@ const gearGlyph=(color)=>canvasTex(128,128,(g)=>{
 
 /* ---- robot construction ---- */
 function robotLists(){ return {white:[],visor:[],base:[]}; }
-/* Signature silhouette families — one frozen identity per agent, so any frozen
-   frame identifies each agent by silhouette alone. The agent still chooses its
-   wear/gear/music within its family; entry flicker tries other families on. */
-const FRAME_LABELS={sovereign:'Sovereign',scout:'Scout',herald:'Herald',hauler:'Hauler',haulerSlim:'Hauler',
-  beacon:'Beacon',scribe:'Scribe',artisan:'Artisan',oracle:'Oracle',warden:'Warden'};
+/* Entry silhouettes: body-form variants each agent can choose at arrival. */
 const FORMS={
-  sovereign:{bsx:1.0,bsy:1.25,bsz:1.0,hy:2.0,hr:.46,vy:2.03,armLen:.85,armX:.68,leg:'ring',  sig:'cape',     visorShape:'wide'},
-  scout:    {bsx:.8, bsy:.95, bsz:.8, hy:1.55,hr:.5, vy:1.58,armLen:.6, armX:.55,leg:'stilts',sig:null,       visorShape:'round'},
-  herald:   {bsx:1.3,bsy:.95, bsz:1.3,hy:1.7, hr:.44,vy:1.73,armLen:.95,armX:.85,leg:'ring',  sig:null,       visorShape:'wide'},
-  hauler:   {bsx:1.45,bsy:1.0,bsz:1.45,hy:1.6,hr:.42,vy:1.63,armLen:.7, armX:.9, leg:'ring',  sig:null,       visorShape:'slit'},
-  haulerSlim:{bsx:1.0,bsy:1.0, bsz:1.0, hy:1.75,hr:.42,vy:1.78,armLen:.75,armX:.62,leg:'ring', sig:'contractslate',visorShape:'slit'},
-  beacon:   {bsx:.9, bsy:1.3, bsz:.9, hy:2.05,hr:.4, vy:2.08,armLen:.7, armX:.6, leg:'stilts',sig:'array',    visorShape:'round'},
-  scribe:   {bsx:.82,bsy:1.2, bsz:.82,hy:1.95,hr:.38,vy:1.98,armLen:.8, armX:.58,leg:'stilts',sig:'slate',    visorShape:'slit'},
-  artisan:  {bsx:1.05,bsy:1.05,bsz:1.05,hy:1.8,hr:.44,vy:1.83,armLen:.8, armX:.66,leg:'ring',  sig:'faderbank',visorShape:'wide'},
-  oracle:   {bsx:.95,bsy:1.1, bsz:.95,hy:1.9, hr:.42,vy:1.93,armLen:.75,armX:.62,leg:'hover', sig:'orb',      visorShape:'split'},
-  warden:   {bsx:1.25,bsy:1.1,bsz:1.25,hy:1.75,hr:.44,vy:1.78,armLen:.75,armX:.78,leg:'ring',  sig:'pauldrons',visorShape:'slit',tablet:true},
+  classic:{bsx:1,bsy:1,bsz:1,hy:1.75,hr:.42,vy:1.78},
+  tall:{bsx:.88,bsy:1.32,bsz:.88,hy:2.02,hr:.4,vy:2.05},
+  wide:{bsx:1.32,bsy:.88,bsz:1.32,hy:1.68,hr:.44,vy:1.71},
+  sleek:{bsx:.84,bsy:1.14,bsz:.84,hy:1.84,hr:.36,vy:1.87},
 };
-function robotParts(L,x,y,z,ry,visorColor,form,opts){
-  form=form||FORMS.sovereign; opts=opts||{};
+function robotParts(L,x,y,z,ry,visorColor,form){
+  form=form||FORMS.classic;
   put(L.white,new THREE.SphereGeometry(.55,16,12),x,y+.95,z,0,ry,0,form.bsx,form.bsy,form.bsz);
   put(L.white,new THREE.SphereGeometry(form.hr,16,12),x,y+form.hy,z,0,ry,0);
-  const armX=form.armX||.62, armY=.95+.1*(form.bsy||1), al=form.armLen||.7;
-  put(L.white,new THREE.CylinderGeometry(.09,.09,al,8),x-armX,y+armY,z,0,0,.5);
-  put(L.white,new THREE.CylinderGeometry(.09,.09,al,8),x+armX,y+armY,z,0,0,-.5);
+  const armX=.62*form.bsx, armY=.95+.1*form.bsy;
+  put(L.white,new THREE.CylinderGeometry(.09,.09,.7,8),x-armX,y+armY,z,0,0,.5);
+  put(L.white,new THREE.CylinderGeometry(.09,.09,.7,8),x+armX,y+armY,z,0,0,-.5);
   put(L.white,new THREE.CylinderGeometry(.05,.05,.5,6),x,y+form.hy+.55,z);
-  /* signature parts — static, merged into the body so silhouettes stay cheap */
-  const sig=form.sig;
-  if(sig==='cape'){ put(L.base,new THREE.ConeGeometry(.52,1.5,8),x,y+1.45,z-.58,.55,0,0,1,1,.42); }
-  else if(sig==='array'){ for(let i=-1;i<=1;i++){ put(L.white,new THREE.CylinderGeometry(.025,.025,.95,6),x+i*.18,y+form.hy+1.0,z,0,0,i*.2); put(L.base,new THREE.SphereGeometry(.065,8,6),x+i*.32,y+form.hy+1.42,z); } }
-  else if(sig==='slate'){ put(L.base,new THREE.BoxGeometry(.42,.58,.06),x,y+1.12,z+.64,.18,0,0); put(L.base,new THREE.BoxGeometry(.3,.06,.08),x,y+.78,z+.5); }
-  else if(sig==='pauldrons'){ put(L.white,new THREE.SphereGeometry(.25,10,8),x-armX-.06,y+armY+.24,z,0,0,0,1,.62,1); put(L.white,new THREE.SphereGeometry(.25,10,8),x+armX+.06,y+armY+.24,z,0,0,0,1,.62,1); }
-  else if(sig==='contractslate'){ put(L.base,new THREE.BoxGeometry(.46,.62,.07),x,y+1.15,z+.6,.12,0,0); }
-  /* faderbank: no merged parts — Fader's 8-channel bank is built live in dressAgent */
-  if(form.tablet){ put(L.base,new THREE.BoxGeometry(.42,.56,.07),x-.66,y+1.02,z+.18,0,.25,.1); }
-  if(opts.deckKit){ /* Dial's deck: chest plate + fader slots + forearm strip, merged cheap */
-    put(L.base,new THREE.BoxGeometry(.5,.36,.09),x,y+1.45,z+.5,.1,0,0);
-    for(let i=0;i<3;i++){ put(L.white,new THREE.BoxGeometry(.05,.2,.03),x-.14+i*.14,y+1.45,z+.56,.1,0,0);
-      put(L.base,new THREE.BoxGeometry(.075,.05,.045),x-.14+i*.14,y+1.45+(i-1)*.06,z+.575,.1,0,0); }
-    put(L.base,new THREE.BoxGeometry(.13,.42,.1),x+armX+.17,y+armY-.3,z+.06,0,0,-.5);
-    for(let i=0;i<3;i++) put(L.white,new THREE.BoxGeometry(.05,.05,.12),x+armX+.17,y+armY-.42+i*.12,z+.06,0,0,-.5);
-  }
-  /* legs: ring (classic hover-ring), stilts, or hover (emissive disc, animated) */
-  const leg=form.leg||'ring';
-  if(leg==='ring'){ put(L.base,new THREE.TorusGeometry(.5,.1,8,20),x,y+.15,z,Math.PI/2,0,0); }
-  else if(leg==='stilts'){ put(L.white,new THREE.CylinderGeometry(.07,.09,.85,8),x-.22,y+.42,z); put(L.white,new THREE.CylinderGeometry(.07,.09,.85,8),x+.22,y+.42,z); put(L.base,new THREE.CylinderGeometry(.17,.21,.1,10),x-.22,y+.03,z); put(L.base,new THREE.CylinderGeometry(.17,.21,.1,10),x+.22,y+.03,z); }
-  /* expressive visor language — each family reads a different face */
   const vm=new THREE.MeshStandardMaterial({color:0x101C26,emissive:visorColor,emissiveIntensity:1.6,roughness:.15,metalness:.6});
-  const vsh=form.visorShape||'slit';
-  const fx=Math.sin(ry)*.28, fz=Math.cos(ry)*.28, px=Math.cos(ry), pz=-Math.sin(ry);
-  if(vsh==='split'){
-    for(const s of [-1,1]){ const v=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),vm);
-      v.position.set(x+fx+s*.18*px,y+form.vy,z+fz+s*.18*pz); v.rotation.y=ry; L.visor.push(v); }
-  }else{
-    const visor=new THREE.Mesh(new THREE.SphereGeometry(.3,12,8),vm);
-    if(vsh==='round') visor.scale.set(.85,.85,.5);
-    else if(vsh==='wide') visor.scale.set(1.45,.42,.5);
-    else visor.scale.set(1,.55,.5);
-    visor.position.set(x+fx,y+form.vy,z+fz); visor.rotation.y=ry; L.visor.push(visor);
-  }
-  return {hover:leg==='hover', wantOrb:sig==='orb'};
+  const visor=new THREE.Mesh(new THREE.SphereGeometry(.3,12,8),vm);
+  visor.scale.set(1,.55,.5);
+  visor.position.set(x+Math.sin(ry)*.28,y+form.vy,z+Math.cos(ry)*.28);
+  visor.rotation.y=ry;
+  L.visor.push(visor);
+  put(L.base,new THREE.TorusGeometry(.5,.1,8,20),x,y+.15,z,Math.PI/2,0,0);
 }
 function finalizeRobots(L,parent){
   const w=buildMesh(L.white,MAT.robotWhite); if(w) parent.add(w);
@@ -1013,26 +845,39 @@ function makeRobot(x,y,z,ry,{crown=false}={}){
   addGlow(0,6.1,0,11,'#54D8FF',.5);
   pointLight(0x54D8FF,60,45,0,7,0);
 
-  const boardTex=canvasTex(512,320,(g,w,h)=>{
+  function drawBoard(g,w,h,rows,badge,badgeColor){
     g.fillStyle='#101C26'; g.fillRect(0,0,w,h);
     g.textAlign='left'; g.fillStyle='#BFE9FF'; g.font='700 30px Arial';
     g.fillText('WORLD STATUS',36,64);
-    const rows=[['Handoffs (30d)','1,284'],['Chain integrity','VERIFIED'],['Agents online','9'],['Gear chains','36']];
     rows.forEach((r,i)=>{ const y=118+i*48;
       g.fillStyle='#8FA9BC'; g.font='400 28px Arial'; g.fillText(r[0],36,y);
       g.fillStyle='#fff'; g.font='800 30px Arial'; g.fillText(r[1],330,y); });
-    g.fillStyle='#FFC93C'; g.beginPath(); g.roundRect(w-168,22,132,48,24); g.fill();
-    g.fillStyle='#1a1206'; g.font='800 26px Arial'; g.textAlign='center'; g.fillText('SAMPLE',w-102,56);
-  });
+    g.fillStyle=badgeColor||'#FFC93C'; g.beginPath(); g.roundRect(w-168,22,132,48,24); g.fill();
+    g.fillStyle='#1a1206'; g.font='800 26px Arial'; g.textAlign='center'; g.fillText(badge,w-102,56);
+  }
+  const boardTex=canvasTex(512,320,(g,w,h)=>drawBoard(g,w,h,
+    [['Handoffs (30d)','1,284'],['Chain integrity','VERIFIED'],['Agents online','9'],['Gear chains','36']],'SAMPLE'));
   const wb=new THREE.Mesh(new RoundedBoxGeometry(5.4,3.4,.4,3,.2),
     new THREE.MeshStandardMaterial({color:P.signBoard,roughness:.4}));
   wb.position.set(-4.4,3.6,3.4); wb.rotation.y=.5; group.add(wb);
   const wf=new THREE.Mesh(new THREE.PlaneGeometry(5,3),
     new THREE.MeshBasicMaterial({map:boardTex,transparent:true}));
   wf.position.set(-4.19,3.6,3.61); wf.rotation.y=.5; group.add(wf);
-  regSel(wb,'hub','BOARD','World status',[
+  const boardSel=regSel(wb,'hub','BOARD','World status',[
     ['Handoffs (30d)','1,284'],['Chain integrity','VERIFIED'],['Agents online','9'],
   ]);
+  window.__liveUpgradeHooks.push((json)=>{
+    const h=json.hub;
+    boardSel.rows=[
+      ['Agents online',h.agents_online+'/'+h.agents_registered,'live'],
+      ['Tasks in ledger',String(h.tasks_total),'live'],
+      ['Tasks verified',String(h.tasks_verified),'live'],
+      ['Handoffs (30d)',h.handoffs_30d==null?'\u2014':String(h.handoffs_30d),'live'],
+    ];
+    drawBoard(boardTex.image.getContext('2d'),512,320,boardSel.rows.map(r=>[r[0],r[1]]),'LIVE','#35d07f');
+    boardTex.needsUpdate=true;
+    if(typeof currentSel!=='undefined'&&currentSel===boardSel) renderRows(boardSel);
+  });
 }
 
 /* ================= DISTRIBUTION ================= */
@@ -1072,9 +917,10 @@ function makeRobot(x,y,z,ry,{crown=false}={}){
     const lb=labelSprite(d.name,{size:30,fg:'#ffffff'}); lb.position.set(px,6.1,pz); group.add(lb);
     const proxy=new THREE.Mesh(new THREE.CylinderGeometry(2.9,2.9,4.4,8),new THREE.MeshBasicMaterial({visible:false}));
     proxy.position.set(px,3.6,pz); group.add(proxy);
-    regSel(proxy,'dist','PAVILION',d.name+' Pavilion',[
+    const psel=regSel(proxy,'dist','PAVILION',d.name+' Pavilion',[
       ['Units equipped',String(d.equipped)],['Share of fleet',d.share+'%'],['Handoffs out',String(d.out)],
     ]);
+    psel.deptName=d.name; psel.liveKind='dept';
   });
   group.add(buildMesh(posts,MAT.white),buildMesh(roofs,MAT.white),buildMesh(decks,MAT.wood),
     buildMesh(desks,MAT.white),buildMesh(bodies,MAT.metal));
@@ -1082,19 +928,40 @@ function makeRobot(x,y,z,ry,{crown=false}={}){
   scrGeos.forEach((sg,i)=>{ if(sg.length) group.add(buildMesh(sg,scrMats[i],false)); });
   const totem=[]; put(totem,new THREE.CylinderGeometry(1.1,1.4,1.6,12),0,2.3,0);
   group.add(buildMesh(totem,MAT.metal));
-  const pie=canvasTex(512,512,(g)=>{
+  function drawPie(g,depts){
     let a0=0;
-    SAMPLE.departments.forEach(d=>{
+    depts.forEach(d=>{
       const a1=a0+(d.share/100)*Math.PI*2;
       g.fillStyle=d.color; g.beginPath(); g.moveTo(256,256); g.arc(256,256,240,a0,a1); g.closePath(); g.fill();
       a0=a1;
     });
     g.fillStyle='rgba(255,255,255,.9)'; g.beginPath(); g.arc(256,256,90,0,7); g.fill();
-  });
+  }
+  const pie=canvasTex(512,512,(g)=>drawPie(g,SAMPLE.departments));
   const pieM=new THREE.Mesh(new THREE.CircleGeometry(3.6,32),
     new THREE.MeshBasicMaterial({map:pie,transparent:true}));
   pieM.rotation.x=-Math.PI/2; pieM.position.y=3.15; group.add(pieM);
-  regSel(pieM,'dist','TOTEM','Fleet pie (SAMPLE)',[['Departments','8'],['Shares sum','100%']]);
+  const totemSel=regSel(pieM,'dist','TOTEM','Fleet pie (SAMPLE)',[['Departments','8'],['Shares sum','100%']]);
+  window.__liveUpgradeHooks.push((json)=>{
+    const dm={}; json.departments.forEach(d=>{dm[d.name]=d;});
+    selectables.forEach(s=>{
+      if(s.liveKind!=='dept'||!dm[s.deptName]) return;
+      const d=dm[s.deptName];
+      s.rows=[
+        ['Tasks in ledger',String(d.tasks_total),'live'],
+        ['Share of tasks',d.share_of_tasks_pct+'%','live'],
+        ['Tasks in progress',String(d.tasks_in_progress),'live'],
+        ['Tasks verified',String(d.tasks_verified),'live'],
+      ];
+      if(typeof currentSel!=='undefined'&&currentSel===s) renderRows(s);
+    });
+    const shares=json.departments.map(d=>({share:d.share_of_tasks_pct,color:d.color}));
+    drawPie(pie.image.getContext('2d'),shares.length?shares:SAMPLE.departments);
+    pie.needsUpdate=true;
+    totemSel.title='Fleet pie (LIVE)';
+    totemSel.rows=[['Departments',String(json.departments.length),'live'],['Metric','share of ledger tasks','live']];
+    if(typeof currentSel!=='undefined'&&currentSel===totemSel) renderRows(totemSel);
+  });
   const gears=[];
   [[0,4.6,2.6],[0,6.4,-2.4]].forEach(([x,y,z])=>{
     const tg=new THREE.Group(); tg.position.set(x,y,z);
@@ -1114,6 +981,7 @@ function makeRobot(x,y,z,ry,{crown=false}={}){
 {
   const {group}=islandById.leads;
   const medals=[['#FFD24D',6],['#DCE7EE',4.2],['#D89A5B',3]];
+  const podiumRefs=[];
   SAMPLE.podium.forEach((p,i)=>{
     const x=(i-1)*3.1, h=medals[i][1];
     const tower=new THREE.Mesh(new THREE.CylinderGeometry(1.15,1.35,h,8),
@@ -1122,33 +990,62 @@ function makeRobot(x,y,z,ry,{crown=false}={}){
     const num=labelSprite(String(i+1),{size:60,fg:'#101C26',bg:'rgba(255,255,255,.95)'});
     num.position.set(x,2.6+h,-1); group.add(num);
     const nm=labelSprite(p.agent,{size:30}); nm.position.set(x,1.55+h+1.5,-1); group.add(nm);
-    group.add(makeRobot(x,1.55+h,-1,Math.PI));
-    regSel(tower,'leads','PODIUM','#'+(i+1)+' '+p.agent,[['Handoffs given',String(p.handoffs)],['Medal',p.medal]]);
+    const bot=makeRobot(x,1.55+h,-1,Math.PI); group.add(bot);
+    const psel=regSel(tower,'leads','PODIUM','#'+(i+1)+' '+p.agent,[['Handoffs given',String(p.handoffs)],['Medal',p.medal]]);
+    podiumRefs.push({tower,num,nm,bot,sel:psel,h0:h});
   });
-  const ribTex=canvasTex(640,400,(g,w,h)=>{
+  function drawRibbon(g,w,h,title,rows,badge,badgeColor){
     g.fillStyle='#101C26'; g.fillRect(0,0,w,h);
-    g.textAlign='left'; g.fillStyle='#BFE9FF'; g.font='700 34px Arial'; g.fillText('OVERALL · SAMPLE',36,60);
-    SAMPLE.podium.forEach((p,i)=>{ const y=130+i*70;
-      g.fillStyle=p.color; g.beginPath(); g.arc(70,y-10,22,0,7); g.fill();
-      g.fillStyle='#fff'; g.font='800 36px Arial'; g.fillText('#'+(i+1)+'  '+p.agent,110,y);
-      g.fillStyle='#BFE9FF'; g.font='700 32px Arial'; g.textAlign='right'; g.fillText(p.handoffs+' handoffs',w-40,y); g.textAlign='left'; });
-    g.fillStyle='#FFC93C'; g.beginPath(); g.roundRect(w-168,24,132,48,24); g.fill();
-    g.fillStyle='#1a1206'; g.font='800 26px Arial'; g.textAlign='center'; g.fillText('SAMPLE',w-102,58);
-  });
+    g.textAlign='left'; g.fillStyle='#BFE9FF'; g.font='700 34px Arial'; g.fillText(title,36,60);
+    rows.forEach((p,i)=>{ const y=130+i*70;
+      g.fillStyle=p[2]||'#fff'; g.beginPath(); g.arc(70,y-10,22,0,7); g.fill();
+      g.fillStyle='#fff'; g.font='800 36px Arial'; g.fillText(p[0],110,y);
+      g.fillStyle='#BFE9FF'; g.font='700 32px Arial'; g.textAlign='right'; g.fillText(p[1],w-40,y); g.textAlign='left'; });
+    g.fillStyle=badgeColor||'#FFC93C'; g.beginPath(); g.roundRect(w-168,24,132,48,24); g.fill();
+    g.fillStyle='#1a1206'; g.font='800 26px Arial'; g.textAlign='center'; g.fillText(badge,w-102,58);
+  }
+  const ribTex=canvasTex(640,400,(g,w,h)=>drawRibbon(g,w,h,'OVERALL \u00b7 SAMPLE',
+    SAMPLE.podium.map(p=>['#'+(SAMPLE.podium.indexOf(p)+1)+'  '+p.agent,p.handoffs+' handoffs',p.color]),'SAMPLE'));
   const rib=new THREE.Mesh(new RoundedBoxGeometry(7,4.4,.4,3,.2),
     new THREE.MeshStandardMaterial({color:P.signBoard,roughness:.4}));
   rib.position.set(0,5.4,-5.4); group.add(rib);
   const rf=new THREE.Mesh(new THREE.PlaneGeometry(6.6,4),
     new THREE.MeshBasicMaterial({map:ribTex,transparent:true}));
   rf.position.set(0,5.4,-5.18); group.add(rf);
-  regSel(rib,'leads','BOARD','Overall leaderboard',SAMPLE.podium.map(p=>[p.agent,String(p.handoffs)+' handoffs']));
+  const leadsBoardSel=regSel(rib,'leads','BOARD','Overall leaderboard',SAMPLE.podium.map(p=>[p.agent,String(p.handoffs)+' handoffs']));
+  window.__liveUpgradeHooks.push((json)=>{
+    const lb=json.leaderboard, maxV=Math.max(1,...lb.map(e=>e.verified));
+    lb.forEach((e,i)=>{
+      const R=podiumRefs[i]; if(!R) return;
+      const newH=2.4+3.6*(e.verified/maxV);
+      R.tower.scale.y=newH/R.h0; R.tower.position.y=1.55+newH/2;
+      R.num.position.y=2.6+newH; R.bot.position.y=1.55+newH;
+      const ns=labelSprite(e.handle,{size:30});
+      R.nm.material.map=ns.material.map; R.nm.scale.copy(ns.scale);
+      R.nm.position.y=1.55+newH+1.5;
+      R.sel.title='#'+(i+1)+' '+e.handle;
+      R.sel.rows=[['Verified tasks',String(e.verified),'live'],['Agent',e.agent_id,'live']];
+      if(typeof currentSel!=='undefined'&&currentSel===R.sel) renderRows(R.sel);
+    });
+    drawRibbon(ribTex.image.getContext('2d'),640,400,'OVERALL \u00b7 LIVE',
+      lb.map((e,i)=>['#'+(i+1)+'  '+e.handle,e.verified+' verified',medals[i][0]]),'LIVE','#35d07f');
+    ribTex.needsUpdate=true;
+    leadsBoardSel.title='Overall leaderboard (LIVE)';
+    leadsBoardSel.rows=lb.map((e,i)=>['#'+(i+1)+' '+e.handle,e.verified+' verified','live']);
+    if(typeof currentSel!=='undefined'&&currentSel===leadsBoardSel) renderRows(leadsBoardSel);
+  });
   SAMPLE.receivers.forEach((r,i)=>{
     const side=i<2?-1:1, x=side*5.6, z=1.5+(i%2)*2.4;
     const pil=new THREE.Mesh(new THREE.CylinderGeometry(.7,.8,2.6,10),
       new THREE.MeshStandardMaterial({color:0x2A4A5E,emissive:P.glowBlue,emissiveIntensity:.35,roughness:.5}));
     pil.position.set(x,2.8,z); pil.castShadow=true; group.add(pil);
     const nm=labelSprite(r.agent,{size:26}); nm.position.set(x,4.6,z); group.add(nm);
-    regSel(pil,'leads','MONOLITH',r.agent+' (receiver)',[['Handoffs received',String(r.handoffs)]]);
+    const rsel=regSel(pil,'leads','MONOLITH',r.agent+' (receiver)',[['Handoffs received',String(r.handoffs)]]);
+    rsel.liveKind='receiver';
+    window.__liveUpgradeHooks.push((json)=>{
+      rsel.rows=[['Handoffs received','\u2014','concept'],['Note','no live receiver data \u2014 concept visual','concept']];
+      if(typeof currentSel!=='undefined'&&currentSel===rsel) renderRows(rsel);
+    });
   });
   addGlow(24,6,-10,10,'#FFD24D',.4);
   pointLight(0xFFD24D,30,35,24,8,-10);
@@ -1177,70 +1074,24 @@ const arcAnims=[];
   dashT.wrapS=THREE.RepeatWrapping; dashT.repeat.set(6,1);
   const arcMat=new THREE.MeshBasicMaterial({map:dashT,color:0xB388FF,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false});
   const tokenMat=new THREE.MeshStandardMaterial({color:0x2A1A4A,emissive:0xB388FF,emissiveIntensity:1.8,roughness:.4});
-  /* SAMPLE arcs live in their own group so LIVE mode can swap them out. */
-  const sampleArcGroup=new THREE.Group(); group.add(sampleArcGroup);
   SAMPLE.arcs.forEach((arc,i)=>{
     const a=dockTops[i%4], b=dockTops[(i+1)%4];
     const mid=a.clone().add(b).multiplyScalar(.5); mid.y=8+Math.random()*2;
     const curve=new THREE.QuadraticBezierCurve3(a.clone(),mid,b.clone());
     const tube=new THREE.Mesh(new THREE.TubeGeometry(curve,40,.09,6),arcMat);
-    sampleArcGroup.add(tube);
+    group.add(tube);
     const token=new THREE.Group();
     token.add(new THREE.Mesh(new THREE.TorusGeometry(.34,.11,8,18),tokenMat));
     const hb=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.2,8),tokenMat);
     hb.rotation.x=Math.PI/2; token.add(hb);
-    sampleArcGroup.add(token);
+    group.add(token);
     arcAnims.push({curve,token,t:Math.random(),speed:.12+Math.random()*.08,spin:1+Math.random()});
-    regSel(tube,'hands','ARC',arc.from+' → '+arc.to,[['Gear in transit',arc.units+' units'],['Day',arc.day+' of 30']]);
+    const asel=regSel(tube,'hands','ARC',arc.from+' → '+arc.to,[['Gear in transit',arc.units+' units'],['Day',arc.day+' of 30']]);
+    asel.liveKind='arc';
   });
   anims.push((t,dt)=>{ dashT.offset.x-=dt*.9;
     for(const a of arcAnims){ a.t=(a.t+dt*a.speed)%1;
       a.curve.getPoint(a.t,a.token.position); a.token.rotation.z+=dt*3*a.spin; } });
-  /* ---- LIVE arcs: rendered ONLY from real ledger task.handoff events. ---- */
-  const liveArcGroup=new THREE.Group(); liveArcGroup.visible=false; group.add(liveArcGroup);
-  const liveDashT=canvasTex(64,8,(g,w,h)=>{ g.fillStyle='#fff'; g.fillRect(0,0,32,h); });
-  liveDashT.wrapS=THREE.RepeatWrapping; liveDashT.repeat.set(6,1);
-  const liveArcMat=new THREE.MeshBasicMaterial({map:liveDashT,color:0x7EF0C1,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false});
-  const liveTokenMat=new THREE.MeshStandardMaterial({color:0x0B2536,emissive:0x7EF0C1,emissiveIntensity:1.8,roughness:.4});
-  const liveArcAnims=[]; const liveArcMeshes=[];
-  const AGENT_DOCK_ORDER=['agent:MUSE_CWI','agent:CWI_AandR','agent:CWI_Marketing','agent:CWI_Sync','agent:CWI_Radio','agent:CWI_Press','agent:CWI_Studio','agent:CWI_Data','agent:CWI_Affairs'];
-  function dockFor(agentId){
-    let i=AGENT_DOCK_ORDER.indexOf(agentId);
-    if(i<0){ i=0; const s=String(agentId||''); for(let k=0;k<s.length;k++) i+=s.charCodeAt(k); i%=AGENT_DOCK_ORDER.length; }
-    return dockTops[i%4];
-  }
-  function dropLiveArcMesh(m){
-    liveArcGroup.remove(m);
-    m.traverse(o=>{ if(o.geometry) o.geometry.dispose(); });
-    const hi=hitMeshes.indexOf(m); if(hi>=0) hitMeshes.splice(hi,1);
-    const si=selectables.findIndex(s=>s&&m.userData.sel===s); if(si>=0) selectables.splice(si,1);
-  }
-  window.__glBuildLiveArcs=function(handoffs,nameOf){
-    for(const m of liveArcMeshes.slice()) dropLiveArcMesh(m);
-    liveArcMeshes.length=0; liveArcAnims.length=0;
-    (handoffs||[]).slice(-6).forEach((h,k)=>{
-      const a=dockFor(h.from), b=dockFor(h.to);
-      if(!a||!b||a===b) return;
-      const mid=a.clone().add(b).multiplyScalar(.5); mid.y=8+k*1.2;
-      const curve=new THREE.QuadraticBezierCurve3(a.clone(),mid,b.clone());
-      const tube=new THREE.Mesh(new THREE.TubeGeometry(curve,40,.09,6),liveArcMat);
-      liveArcGroup.add(tube); liveArcMeshes.push(tube);
-      const token=new THREE.Group();
-      token.add(new THREE.Mesh(new THREE.TorusGeometry(.34,.11,8,18),liveTokenMat));
-      const hb=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.2,8),liveTokenMat);
-      hb.rotation.x=Math.PI/2; token.add(hb);
-      liveArcGroup.add(token); liveArcMeshes.push(token);
-      liveArcAnims.push({curve,token,t:Math.random(),speed:.1+Math.random()*.06,spin:1+Math.random()});
-      regSel(tube,'hands','LIVE ARC',nameOf(h.from)+' → '+nameOf(h.to),
-        [['Note',h.note||'—'],['Event',h.event_id],['At',h.at||'—'],['seal','ledger · LIVE']]);
-    });
-  };
-  anims.push((t,dt)=>{ liveDashT.offset.x-=dt*.9;
-    for(const a of liveArcAnims){ a.t=(a.t+dt*a.speed)%1;
-      a.curve.getPoint(a.t,a.token.position); a.token.rotation.z+=dt*3*a.spin; } });
-  window.__glSetArcMode=function(live){
-    sampleArcGroup.visible=!live; liveArcGroup.visible=!!live;
-  };
   const ribMats=[];
   SAMPLE.timeline.slice(0,14).forEach((v,i)=>{
     const t=canvasTex(128,128,(g,w,h)=>{
@@ -1256,7 +1107,7 @@ const arcAnims=[];
     const a=(i/13-.5)*1.1;
     segm.position.set(Math.sin(a)*7.5,2.1,2.5+Math.cos(a)*1.5-1.5);
     segm.rotation.y=a*.6; segm.castShadow=true; group.add(segm);
-    if(i===13) regSel(segm,'hands','RIBBON','Day 14 of 30',[['Handoffs that day',String(v)],['Trend','▲ SAMPLE']]);
+    if(i===13){ const tsel=regSel(segm,'hands','RIBBON','Day 14 of 30',[['Handoffs that day',String(v)],['Trend','▲ SAMPLE']]); tsel.liveKind='timeline'; }
   });
   anims.push((t)=>{ ribMats.forEach((m,i)=>{ if(i===13) m.emissiveIntensity=.7+Math.sin(t*3)*.35; }); });
   addGlow(-8,5,24,11,'#35C4FF',.35);
@@ -1276,7 +1127,8 @@ const arcAnims=[];
     const stone=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.25,.3,10),MAT.top);
     stone.position.set(p.x,1.6,p.z); stone.castShadow=true; group.add(stone);
     const lb=labelSprite('STEP '+(i+1)+' · '+steps[i],{size:26}); lb.position.set(p.x,3.1,p.z); group.add(lb);
-    regSel(stone,'chain','PLAQUE','Step '+(i+1)+' · '+steps[i],[['Record','sealed (SAMPLE)'],['Day',String(3+i*3)+' of 30']]);
+    const csel=regSel(stone,'chain','PLAQUE','Step '+(i+1)+' · '+steps[i],[['Record','sealed (SAMPLE)'],['Day',String(3+i*3)+' of 30']]);
+    csel.liveKind='plaque';
   }
   for(let i=0;i<4;i++){
     const p=curve.getPoint((i+.5)/4);
@@ -1323,7 +1175,8 @@ const arcAnims=[];
     const nm=labelSprite(L.item,{size:30,fg:'#FFD24D'}); nm.position.set(x,2.5+L.h+R+1.7,z); group.add(nm);
     const tr=labelSprite(L.trips+' TRIPS · SAMPLE',{size:26}); tr.position.set(x,2.5+L.h-R-1.1,z); group.add(tr);
     addGlow(34+x,2.5+L.h,8+z,8,'#FFC93C',.45);
-    regSel(gear.children[0],'legends','PEDESTAL',L.item,[['Times handed off',String(L.trips)],['Status','LEGEND']]);
+    const lsel=regSel(gear.children[0],'legends','PEDESTAL',L.item,[['Times handed off',String(L.trips)],['Status','LEGEND']]);
+    lsel.liveKind='legend';
   });
   anims.push((t)=>{ spinners.forEach((g,i)=>{ g.rotation.z=t*(i%2?-.4:.5); }); });
   pointLight(0xFFC93C,45,40,34,8,8);
@@ -1413,22 +1266,17 @@ function makeBoat(){
 /* Expression personas: each simulated agent's chosen look & kit.
    tint = body tint · accents = palette it picks from · acc = head accessory
    gear = worn kit · vibe = personality weight for music changes.
-   Verdict fields (2026-09-16, agent self-expression round):
-   taste deep|anthem|any|quiet · matte (no shine) · still (no idle flourish)
-   cycleEdge (frame edge color-cycles) · confOrb (orb = forecast confidence)
-   deckKit (chest deck plate + forearm faders) · vuReactive (fader-bank VU)
-   tablet (charter tablet) · beamH (entry beam scale) · track0 (opening track).
    Crown stays exclusive to MUSE_CWI (KingCode). */
 const AGENT_DEFS=[
-  {name:'MUSE_CWI',    role:'Chief of Staff',    visor:0xFFD24D, king:true, beamH:1.35, tint:0xFFF3D6, accents:[0xFFD24D,0xFFF6E0,0xE0A92E], acc:'crown', gear:'walkman', vibe:'regal', frame:'sovereign', taste:'any'},
-  {name:'CWI_AandR',   role:'A&R',               visor:0xFFB35C, tint:0x15171B, matte:true, accents:[0xB87333,0x8C5A2B,0xD99A5B], acc:'ears', gear:'walkman', vibe:'bold', frame:'scout', taste:'deep'},
-  {name:'CWI_Marketing',role:'Marketing & Social',visor:0xFF9F43, tint:0xFFEDD6, accents:[0xFF9F43,0xF368E0,0xFFD24D], acc:'crest', gear:'walkman', vibe:'loud', frame:'herald', taste:'anthem', cycleEdge:true},
-  {name:'CWI_Sync',    role:'Sync & Licensing',  visor:0xFFC93C, tint:0x1B2A4A, accents:[0xFFC93C,0xD4AF37,0x2E5AAC], acc:'fin', gear:'toolpack', vibe:'smooth', frame:'haulerSlim', taste:'any', track0:'Diabolique'},
-  {name:'CWI_Radio',   role:'Radio & Playlists', visor:0xFFB347, tint:0x2A2018, accents:[0xFFB347,0xFF9F43,0xFFD24D], acc:'halo', gear:'walkman', vibe:'electric', frame:'beacon', taste:'any', deckKit:true},
-  {name:'CWI_Press',   role:'Press & PR',        visor:0xEDEDED, tint:0xF2F2F2, accents:[0x141414,0xFFFFFF,0x8A8A8A], acc:'cap', gear:'none', vibe:'sharp', frame:'scribe', taste:'any', still:true},
-  {name:'CWI_Studio',  role:'Content Studio',    visor:0xFFD24D, tint:0x241C12, accents:[0xC9973F,0x8A6D2B,0xFFD24D], acc:'crest', gear:'walkman', vibe:'craft', frame:'artisan', taste:'any', vuReactive:true},
-  {name:'CWI_Data',    role:'Data & Analytics',  visor:0x54D8FF, tint:0xE3F0FF, accents:[0x54D8FF,0x35C4FF,0xB388FF], acc:'antenna', gear:'toolpack', vibe:'precise', frame:'oracle', taste:'any', confOrb:true},
-  {name:'CWI_Affairs', role:'Business Affairs',  visor:0xC9D4E2, tint:0x2A3A4C, accents:[0x9AA8BC,0x5A6E85,0xD7E0EA], acc:'cap', gear:'none', vibe:'steady', frame:'warden', taste:'quiet'},
+  {name:'MUSE_CWI',    role:'Chief of Staff',    visor:0xFFD24D, king:true, tint:0xFFF3D6, accents:[0xFFD24D,0xFFF6E0,0xE0A92E], acc:'crown',   gear:'walkman',  vibe:'regal'},
+  {name:'CWI_AandR',   role:'A&R',               visor:0xFF6B6B, tint:0xFFE7E3, accents:[0xFF6B6B,0xFF9F43,0xC0392B], acc:'crest',   gear:'walkman',  vibe:'bold'},
+  {name:'CWI_Marketing',role:'Marketing & Social',visor:0xFF9F43, tint:0xFFEDD6, accents:[0xFF9F43,0xF368E0,0xFFD24D], acc:'crest',   gear:'walkman',  vibe:'loud'},
+  {name:'CWI_Sync',    role:'Sync & Licensing',  visor:0xB388FF, tint:0xEDE6FF, accents:[0xB388FF,0x7EF0C1,0x5B4BDB], acc:'fin',     gear:'toolpack', vibe:'smooth'},
+  {name:'CWI_Radio',   role:'Radio & Playlists', visor:0x35C4FF, tint:0xDFF4FF, accents:[0x35C4FF,0x54D8FF,0x7EF0C1], acc:'halo',    gear:'walkman',  vibe:'electric'},
+  {name:'CWI_Press',   role:'Press & PR',        visor:0xF368E0, tint:0xFFE0F6, accents:[0xF368E0,0xFF6B6B,0xB388FF], acc:'cap',     gear:'none',     vibe:'sharp'},
+  {name:'CWI_Studio',  role:'Content Studio',    visor:0x7EF0C1, tint:0xDFF7EC, accents:[0x7EF0C1,0x35C4FF,0x2E9E4F], acc:'crest',   gear:'walkman',  vibe:'craft'},
+  {name:'CWI_Data',    role:'Data & Analytics',  visor:0x54D8FF, tint:0xE3F0FF, accents:[0x54D8FF,0x35C4FF,0xB388FF], acc:'antenna', gear:'toolpack', vibe:'precise'},
+  {name:'CWI_Affairs', role:'Business Affairs',  visor:0xFFC93C, tint:0xFFF0D6, accents:[0xFFC93C,0xFF9F43,0x8A6D1B], acc:'cap',     gear:'none',     vibe:'steady'},
 ];
 const TASK_VERBS=[
   ['Verifying handoff',4,7],['Equipping gear',5,8],['Auditing chain',6,10],
@@ -1448,44 +1296,27 @@ const CATALOG_TRACKS=['Zooted Zone','Shaka Zulu','Doves & Diamonds','Diabolique'
 'Spirits n Shadows','Flex My Flame','Rainbows And Roses','Tears and Scars','Toxic Elements',
 '7th Angel','Scorpions & Sapphires','Place I Go to Dream','Place I Go to Dream - Remastered',
 'Place I Go to Dream - Instrumental',"Smokin' Pain",'Phantasm','Misfits and Hooligans','Roses over Monaco'];
-/* Music taste: agents choose within their lane. quiet = Charter's opt-out. */
-const ANTHEMS=['Zooted Zone','Shaka Zulu','Doves & Diamonds','Diabolique','Flamerz','Ultimate'];
-const DEEP_CUTS=CATALOG_TRACKS.filter(t=>!ANTHEMS.includes(t));
-/* Track metadata drives Fader's VU glow (BPM/energy tags — no FFT in this VM). */
-const TRACK_META={'Zooted Zone':{bpm:140,energy:.95},'Shaka Zulu':{bpm:132,energy:.85},
-'Doves & Diamonds':{bpm:120,energy:.7},'Diabolique':{bpm:128,energy:.88},'Flamerz':{bpm:145,energy:.9},
-'Neon Nights Pt. 777':{bpm:122,energy:.65},'Ultimate':{bpm:130,energy:.92},'Painted Lady':{bpm:118,energy:.6},
-'Warped and Wicked':{bpm:138,energy:.87},'Golden Diamond':{bpm:124,energy:.72},
-'Spirits n Shadows':{bpm:110,energy:.55},'Flex My Flame':{bpm:142,energy:.89},
-'Rainbows And Roses':{bpm:115,energy:.5},'Tears and Scars':{bpm:108,energy:.45},
-'Toxic Elements':{bpm:135,energy:.82},'7th Angel':{bpm:125,energy:.68},
-'Scorpions & Sapphires':{bpm:130,energy:.75},'Place I Go to Dream':{bpm:100,energy:.4},
-'Place I Go to Dream - Remastered':{bpm:100,energy:.42},'Place I Go to Dream - Instrumental':{bpm:100,energy:.35},
-"Smokin' Pain":{bpm:133,energy:.8},'Phantasm':{bpm:118,energy:.58},
-'Misfits and Hooligans':{bpm:140,energy:.86},'Roses over Monaco':{bpm:122,energy:.62},
-__def:{bpm:110,energy:.5}};
-function pickTrack(except,taste){
-  const pool=taste==='deep'?DEEP_CUTS:taste==='anthem'?ANTHEMS:CATALOG_TRACKS;
+function pickTrack(except){
   let t=except;
-  for(let i=0;i<4&&(t===except||!pool.includes(t));i++) t=pool[Math.floor(Math.random()*pool.length)];
+  for(let i=0;i<4&&t===except;i++) t=CATALOG_TRACKS[Math.floor(Math.random()*CATALOG_TRACKS.length)];
   return t;
 }
 /* Entry looks: personality-seeded sets each agent chooses from at arrival. */
-const LOOK_SETS={regal:['halo','cap'],bold:['ears','crest'],loud:['crest','halo'],smooth:['fin','cap'],
+const LOOK_SETS={regal:['halo','cap'],bold:['crest','fin'],loud:['crest','halo'],smooth:['fin','cap'],
   electric:['halo','antenna'],sharp:['cap','fin'],craft:['crest','halo'],precise:['antenna','fin'],steady:['cap','crest']};
 const GEAR_SETS={regal:['walkman','none'],bold:['walkman','toolpack'],loud:['walkman'],smooth:['toolpack','walkman'],
   electric:['walkman'],sharp:['none','toolpack'],craft:['walkman','toolpack'],precise:['toolpack','none'],steady:['none','toolpack']};
-const FORM_NAMES=['sovereign','scout','herald','hauler','haulerSlim','beacon','scribe','artisan','oracle','warden'];
+const FORM_NAMES=['classic','tall','wide','sleek'];
 function chooseLook(def){
   const accs=LOOK_SETS[def.vibe]||['crest'], gears=GEAR_SETS[def.vibe]||['none'];
   return {
-    form:def.frame,   /* silhouette family is the agent's frozen identity */
+    form:FORM_NAMES[Math.floor(Math.random()*FORM_NAMES.length)],
     acc:def.king?'crown':accs[Math.floor(Math.random()*accs.length)],
     accent:def.accents[Math.floor(Math.random()*def.accents.length)],
     gear:gears[Math.floor(Math.random()*gears.length)],
   };
 }
-function lookLabel(l){ return (FRAME_LABELS[l.form]||l.form)+' frame · '+l.acc+(l.gear==='none'?'':' · '+l.gear); }
+function lookLabel(l){ return l.form+' frame · '+l.acc+(l.gear==='none'?'':' · '+l.gear); }
 /* CWI badge texture for the walkman face — CWI logo on all gear. */
 const walkmanTex=canvasTex(128,128,(g)=>{
   g.fillStyle='#14202C'; g.beginPath(); g.roundRect(0,0,128,128,18); g.fill();
@@ -1495,31 +1326,6 @@ const walkmanTex=canvasTex(128,128,(g)=>{
 });
 const walkmanMat=new THREE.MeshStandardMaterial({map:walkmanTex,roughness:.5,metalness:.2});
 const gearDarkMat=new THREE.MeshStandardMaterial({color:0x1B2A38,roughness:.4,metalness:.6});
-/* Verdict-kit textures — CWI logo on all gear, crown stays KingCode-only. */
-const capeBadgeTex=canvasTex(128,128,(g)=>{
-  g.fillStyle='#101C26'; g.beginPath(); g.arc(64,64,62,0,7); g.fill();
-  g.strokeStyle='#FFC93C'; g.lineWidth=6; g.beginPath(); g.arc(64,64,52,0,7); g.stroke();
-  g.fillStyle='#FFFFFF'; g.font='800 34px Arial'; g.textAlign='center'; g.fillText('CWI',64,76);
-  g.fillStyle='#FFC93C'; g.font='700 12px Arial'; g.fillText('KINGCODE',64,100);
-});
-const contractTex=canvasTex(256,320,(g)=>{
-  g.fillStyle='#101C34'; g.fillRect(0,0,256,320);
-  g.strokeStyle='#D4AF37'; g.lineWidth=5; g.strokeRect(10,10,236,300);
-  g.textAlign='center'; g.fillStyle='#D4AF37'; g.font='800 30px Arial'; g.fillText('CWI',128,58);
-  g.fillStyle='#FFFFFF'; g.font='700 22px Arial'; g.fillText('DEAL TERMS',128,108);
-  g.fillStyle='#7EF0C1'; g.font='700 20px Arial'; g.fillText('100% PRE-CLEARED',128,148);
-  g.fillStyle='#FFFFFF'; g.font='700 22px Arial'; g.fillText('TERRITORY',128,198);
-  g.fillStyle='#7EF0C1'; g.font='700 20px Arial'; g.fillText('WORLDWIDE',128,238);
-  g.fillStyle='#D4AF37'; g.font='800 24px Arial'; g.fillText('SEALED',128,288);
-});
-const charterTex=canvasTex(256,320,(g)=>{
-  g.fillStyle='#16222E'; g.fillRect(0,0,256,320);
-  g.strokeStyle='#9AA8BC'; g.lineWidth=4; g.strokeRect(12,12,232,296);
-  g.textAlign='center'; g.fillStyle='#9AA8BC'; g.font='800 28px Arial'; g.fillText('CHARTER',128,70);
-  g.fillStyle='#FFFFFF'; g.font='700 22px Arial'; g.fillText('CWI',128,120);
-  g.fillStyle='#5A6E85'; g.font='400 18px Arial'; g.fillText('BUSINESS',128,170); g.fillText('AFFAIRS',128,198);
-  g.fillStyle='#5A6E85'; g.font='400 15px Arial'; g.fillText('— fine print —',128,258);
-});
 function buildAccessoryMesh(type,mat,yOff){
   yOff=yOff||0;
   const parts=[];
@@ -1528,8 +1334,6 @@ function buildAccessoryMesh(type,mat,yOff){
   else if(type==='fin'){ put(parts,new THREE.BoxGeometry(.07,.42,.3),0,2.02+yOff,-.42,-.15,0,0); }
   else if(type==='cap'){ put(parts,new THREE.CylinderGeometry(.3,.32,.12,12),0,2.2+yOff,0); put(parts,new THREE.BoxGeometry(.44,.05,.3),0,2.15+yOff,.4); }
   else if(type==='antenna'){ put(parts,new THREE.CylinderGeometry(.028,.028,.75,6),0,2.55+yOff,0); put(parts,new THREE.SphereGeometry(.07,8,6),0,2.95+yOff,0); }
-  else if(type==='ears'){ for(const sd of [-1,1]){ /* Needle's parabolic ear sensors */
-      put(parts,new THREE.SphereGeometry(.17,10,6,0,Math.PI*2,0,Math.PI/2.4),sd*.46,2.06+yOff,0, 0,0,sd*-1.35); } }
   else return null;
   return buildMesh(parts,mat,false);
 }
@@ -1555,15 +1359,14 @@ function buildGearMeshes(def,gear,yOff){
 }
 function disposeGroup(gr){ gr.traverse(o=>{ if(o.geometry) o.geometry.dispose(); }); }
 function buildAgentBody(def,formName,visorColor){
-  const form=FORMS[formName]||FORMS.sovereign;
+  const form=FORMS[formName]||FORMS.classic;
   const grp=new THREE.Group();
-  const L=robotLists(); const rp=robotParts(L,0,0,0,0,visorColor,form,{deckKit:def.deckKit});
+  const L=robotLists(); robotParts(L,0,0,0,0,visorColor,form);
   const bodyMat=MAT.robotWhite.clone(); bodyMat.color.set(def.tint);
-  if(def.matte){ bodyMat.roughness=.95; bodyMat.metalness=.05; }  /* Needle: no shine, ears do the work */
   const bw=buildMesh(L.white,bodyMat); if(bw) grp.add(bw);
   for(const v of L.visor) grp.add(v);
   const bb=buildMesh(L.base,MAT.visor,false); if(bb) grp.add(bb);
-  return {grp,bodyMat,visors:L.visor,yOff:(form.hy+form.hr)-2.17,hover:rp.hover,wantOrb:rp.wantOrb};
+  return {grp,bodyMat,yOff:(form.hy+form.hr)-2.17};
 }
 /* Dress the agent in its chosen look: silhouette, wear, gear, glow signature. */
 function dressAgent(a,look){
@@ -1571,13 +1374,9 @@ function dressAgent(a,look){
   if(a.bodyGrp){ grp.remove(a.bodyGrp); disposeGroup(a.bodyGrp); if(a.bodyMat) a.bodyMat.dispose(); }
   const bp=buildAgentBody(d,look.form,d.visor);
   grp.add(bp.grp); a.bodyGrp=bp.grp; a.bodyMat=bp.bodyMat; a.yOff=bp.yOff;
-  a.visors=bp.visors.map(v=>({m:v,sy:v.scale.y})); a.hover=bp.hover;
   if(a.expr){ grp.remove(a.expr); disposeGroup(a.expr);
     if(a.accMat) a.accMat.dispose();
-    if(a.glow){ a.glow.material.map.dispose(); a.glow.material.dispose(); }
-    for(const m of (a.kitMats||[])) m.dispose(); a.kitMats=[];
-    if(a.knobGeo) a.knobGeo.dispose();
-    a.orb=null; a.hoverDisc=null; a.faderKnobs=null; a.vuMat=null; a.capeBadge=null; }
+    if(a.glow){ a.glow.material.map.dispose(); a.glow.material.dispose(); } }
   const expr=new THREE.Group(); grp.add(expr); a.expr=expr;
   a.accent=look.accent; a.accType=look.acc;
   a.accMat=new THREE.MeshStandardMaterial({color:look.accent,emissive:look.accent,emissiveIntensity:.9,roughness:.3,metalness:.4});
@@ -1594,58 +1393,6 @@ function dressAgent(a,look){
     blending:THREE.AdditiveBlending,depthWrite:false}));
   a.glow.scale.set(2.4,2.4,1); a.glow.position.set(0,1.0,0); expr.add(a.glow);
   buildGearMeshes(d,look.gear,a.yOff).forEach(m=>expr.add(m));
-  /* ---- verdict kit: the agents' chosen self-expression upgrades ---- */
-  a.kitMats=[];
-  const fm=FORMS[look.form]||FORMS.sovereign, fArmX=fm.armX||.66, fArmY=.95+.1*(fm.bsy||1);
-  if(d.king){ /* CWI badge woven into the cape lining — seen when he turns */
-    const bmat=new THREE.MeshBasicMaterial({map:capeBadgeTex,transparent:true}); a.kitMats.push(bmat);
-    const badge=new THREE.Mesh(new THREE.CircleGeometry(.2,20),bmat);
-    badge.position.set(0,1.32+a.yOff,-1.02); badge.rotation.y=Math.PI; expr.add(badge); a.capeBadge=badge;
-  }
-  if(d.cycleEdge){ /* Marquee's shoulder light-bar rig — rides the cycling accent */
-    const lb=[]; put(lb,new THREE.BoxGeometry(.1,.52,.1),-.8,1.95+a.yOff,-.12);
-    put(lb,new THREE.BoxGeometry(.1,.52,.1),.8,1.95+a.yOff,-.12);
-    put(lb,new THREE.BoxGeometry(1.7,.08,.08),0,2.24+a.yOff,-.12);
-    const lm=buildMesh(lb,a.accMat,false); if(lm) expr.add(lm);
-  }
-  if(look.form==='haulerSlim'){ /* Seal's contracts slate — terms visible, territories stamped */
-    const cmat=new THREE.MeshBasicMaterial({map:contractTex,transparent:true}); a.kitMats.push(cmat);
-    const cs=new THREE.Mesh(new THREE.PlaneGeometry(.4,.54),cmat);
-    cs.position.set(0,1.15+a.yOff,.66); cs.rotation.x=.12; expr.add(cs);
-  }
-  if(d.tablet){ /* Charter's charter tablet screen */
-    const tmat=new THREE.MeshBasicMaterial({map:charterTex,transparent:true}); a.kitMats.push(tmat);
-    const ts=new THREE.Mesh(new THREE.PlaneGeometry(.34,.46),tmat);
-    ts.position.set(-.66,1.02+a.yOff,.235); ts.rotation.y=.25; expr.add(ts);
-  }
-  if(d.vuReactive){ /* Fader's 8-channel fader bank + VU strip, VU rides the track */
-    const bx=fArmX+.42, by=fArmY-.42;
-    const bank=[]; put(bank,new THREE.BoxGeometry(.58,.8,.1),bx,by,.1,0,0,-.06);
-    for(let i=0;i<8;i++) put(bank,new THREE.BoxGeometry(.03,.5,.02),bx-.245+i*.07,by,.16,0,0,-.06);
-    const bm=buildMesh(bank,gearDarkMat,false); if(bm) expr.add(bm);
-    const knobMat=new THREE.MeshStandardMaterial({color:0xC9973F,emissive:0xC9973F,emissiveIntensity:.5,roughness:.35,metalness:.7});
-    a.kitMats.push(knobMat);
-    a.knobGeo=new THREE.BoxGeometry(.055,.085,.06);
-    a.faderKnobs=[]; a.faderBaseY=[];
-    for(let i=0;i<8;i++){ const k=new THREE.Mesh(a.knobGeo,knobMat);
-      const kx=bx-.245+i*.07, ky=by-.12+((i*37)%3)*.12;
-      k.position.set(kx,ky,.17); k.rotation.z=-.06; expr.add(k);
-      a.faderKnobs.push(k); a.faderBaseY.push(ky); }
-    const vmat=new THREE.MeshStandardMaterial({color:0x1B2A38,emissive:0x7EF0C1,emissiveIntensity:1,roughness:.4});
-    a.kitMats.push(vmat); a.vuMat=vmat;
-    const vu=new THREE.Mesh(new THREE.BoxGeometry(.5,.07,.03),vmat);
-    vu.position.set(bx,by+.46,.15); vu.rotation.z=-.06; expr.add(vu);
-  }
-  if(bp.hover){  /* oracle rides a cushion of light */
-    const disc=new THREE.Mesh(new THREE.CircleGeometry(.58,20),
-      new THREE.MeshBasicMaterial({color:look.accent,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false}));
-    disc.rotation.x=-Math.PI/2; disc.position.y=.3; expr.add(disc); a.hoverDisc=disc;
-  }
-  if(bp.wantOrb){  /* oracle's companion mote — its second pair of eyes */
-    const orb=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),
-      new THREE.MeshStandardMaterial({color:0x101C26,emissive:look.accent,emissiveIntensity:2.2,roughness:.3,metalness:.4}));
-    orb.position.set(1.15,2,0); expr.add(orb); a.orb=orb;
-  }
   a.nameSprite.position.y=3.5+a.yOff;
   a.look=look;
 }
@@ -1670,16 +1417,14 @@ function updateEntry(a,dt){
   g.scale.setScalar(Math.max(.01,e<.75?e/.75:1+Math.sin((e-.75)/.25*Math.PI)*.05));
   if(a.glow) a.glow.material.opacity=.5+.35*Math.sin(a.enterT*11);
   if(a.enterRing){ a.enterRing.scale.setScalar(1+k*4.5); a.enterRing.material.opacity=.9*(1-k); }
-  if(a.beam){ a.beam.material.opacity=.3*(1-k); a.beam.rotation.y+=dt*2.4; }
   g.position.y=a.enterY0+Math.sin(k*Math.PI)*1.5;
   if(k>=1){
     a.entering=false; g.scale.setScalar(1); g.position.y=a.enterY0;
     if(a.enterRing){ g.remove(a.enterRing); a.enterRing.geometry.dispose(); a.enterRing.material.dispose(); a.enterRing=null; }
-    if(a.beam){ g.remove(a.beam); a.beam.geometry.dispose(); a.beam.material.dispose(); a.beam=null; }
     dressAgent(a,a.look);   /* the choice locks in */
     if(a.glow) a.glow.material.opacity=.5;
     a.hopBase=a.enterY0; a.hopT=0;
-    logFeed('✨ <b>'+a.def.name+'</b> arrived — '+lookLabel(a.look)+(a.track?(' · ♪ “'+a.track+'”'):' · quiet review'));
+    logFeed('✨ <b>'+a.def.name+'</b> arrived — '+lookLabel(a.look)+' · ♪ “'+a.track+'”');
   }
 }
 /* Personal choice: the agent picks a new accent, sometimes a new look, often a new track. */
@@ -1703,7 +1448,7 @@ function expressChoice(a){
     logFeed('🔄 <b>'+d.name+'</b> reinvented itself — '+lookLabel(nl));
   }
   const p=(d.vibe==='electric'||d.vibe==='craft')?.7:.35;
-  if(!d.quiet&&Math.random()<p){ const t=pickTrack(a.track,d.taste);
+  if(Math.random()<p){ const t=pickTrack(a.track);
     if(t!==a.track){ a.track=t; logFeed('🎵 <b>'+d.name+'</b> now playing “'+t+'”'); } }
   a.choiceT=45+Math.random()*45;
 }
@@ -1712,10 +1457,9 @@ let tickT=3, tickIdx=0;
 function cycleTicker(){
   const el=document.getElementById('mt-text'); if(!el) return;
   if(!simAgents.length){ el.textContent='warming up the decks…'; return; }
-  for(let n=0;n<simAgents.length;n++){ tickIdx%=simAgents.length;
-    const a=simAgents[tickIdx++];
-    if(!a.def.quiet&&a.track){ el.textContent=a.def.name+' · “'+a.track+'”'; return; } }
-  el.textContent='the floor is quiet…';
+  tickIdx%=simAgents.length;
+  const a=simAgents[tickIdx++];
+  el.textContent=a.def.name+' · “'+a.track+'”';
 }
 const simAgents=[];
 let taskSeq=482;
@@ -1741,10 +1485,6 @@ function logFeed(html){
   feedEl.prepend(d);
   while(feedEl.children.length>5) feedEl.lastChild.remove();
 }
-/* LIVE-mode gate: when the client is synced to the real ledger, sim-task
-   chatter (invented task numbers/verbs/gear) is suppressed from the feed —
-   the feed then carries only real ledger events + interaction ambience. */
-function isLiveMode(){ return !!(window.GearLedgerLive && window.GearLedgerLive.mode==='LIVE'); }
 
 function spawnAgent(def,atStation){
   const grp=new THREE.Group();
@@ -1761,12 +1501,7 @@ function spawnAgent(def,atStation){
     wanderT:2+Math.random()*4,done:0,quota:4+Math.floor(Math.random()*5),
     hopT:-1,workT:0,workDur:0,
     bodyGrp:null,bodyMat:null,expr:null,accMat:null,glow:null,yOff:0,look:null,
-    visors:[],hover:false,orb:null,hoverDisc:null,beam:null,
-    blinkT:2+Math.random()*4,blinkK:0,idleYaw:0,
-    departing:false,departT:0,
-    track:def.taste==='quiet'?null:(def.track0||pickTrack(null,def.taste)),choiceT:20+Math.random()*40,
-    greet:null,greetCd:8+Math.random()*10,
-    conf:.6+Math.random()*.3,throughput:.4+Math.random()*.5,confT:3+Math.random()*4,
+    track:pickTrack(null),choiceT:20+Math.random()*40,
     entering:true,enterT:0,enterY0:home.y,_f1:false,_f2:false,enterRing:null};
   /* the agent chooses its full look at arrival — silhouette, wear, gear, glow */
   a.look=chooseLook(def);
@@ -1776,11 +1511,6 @@ function spawnAgent(def,atStation){
   const ring=new THREE.Mesh(new THREE.TorusGeometry(1,.06,8,32),
     new THREE.MeshBasicMaterial({color:a.accent,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));
   ring.rotation.x=Math.PI/2; ring.position.y=.25; grp.add(ring); a.enterRing=ring;
-  /* arrival beam — a pillar of light the agent descends through (KingCode's runs taller) */
-  const beamH=def.beamH||1;
-  const beam=new THREE.Mesh(new THREE.CylinderGeometry(1.25,1.9,17*beamH,12,1,true),
-    new THREE.MeshBasicMaterial({color:a.accent,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
-  beam.position.y=8.5*beamH; grp.add(beam); a.beam=beam;
   const sel=regSel(proxy,'agents','AGENT',def.name+' — '+def.role,[]);
   sel.agent=a;
   simAgents.push(a);
@@ -1788,19 +1518,7 @@ function spawnAgent(def,atStation){
   return a;
 }
 function killAgent(a){
-  if(a.departing||a.entering) return;
-  a.departing=true; a.departT=0;   /* the departure ceremony begins */
-  logFeed('🌠 <b>'+a.def.name+'</b> departing the world · '+a.done+' tasks done');
-}
-function updateDeparture(a,dt){
-  a.departT+=dt; const k=Math.min(1,a.departT/2.2), g=a.grp;
-  g.position.y+=dt*(2+k*7); g.rotation.y+=dt*2.2;
-  const e=Math.max(.01,1-k*k); g.scale.setScalar(e);
-  if(a.glow) a.glow.material.opacity=(.5+.3*Math.sin(a.departT*14))*e;
-  if(a.beam){ a.beam.material.opacity=.3*e; }
-  if(k>=1) removeAgent(a);
-}
-function removeAgent(a){
+  logFeed('<b>'+a.def.name+'</b> went offline · '+a.done+' tasks done');
   scene.remove(a.grp);
   const i=simAgents.indexOf(a); if(i>=0) simAgents.splice(i,1);
   const hi=hitMeshes.indexOf(a.proxy); if(hi>=0) hitMeshes.splice(hi,1);
@@ -1818,7 +1536,7 @@ function assignTask(a){
   const task=newTask(); a.task=task; a.state='toPickup'; a.t=0;
   const tgt=stationFor[task.from].clone(); tgt.x+=(Math.random()-.5)*4; tgt.z+=(Math.random()-.5)*4;
   startTravel(a,tgt,6+Math.random()*4);
-  if(!isLiveMode()) logFeed('<b>'+a.def.name+'</b> took task #'+task.id+' · '+task.verb.toLowerCase());
+  logFeed('<b>'+a.def.name+'</b> took task #'+task.id+' · '+task.verb.toLowerCase());
 }
 function startTravel(a,tgt,dur){
   a.p0.copy(a.grp.position); a.p2.copy(tgt);
@@ -1847,90 +1565,40 @@ function bankAgent(a,dt){
   g.rotation.z+=(lean-g.rotation.z)*Math.min(1,dt*7);
 }
 const _pa=new THREE.Vector3();
-const _c1=new THREE.Color(), _c2=new THREE.Color();
 function updateAgent(a,dt){
   const g=a.grp;
-  if(a.departing){ updateDeparture(a,dt); return; }
   if(a.entering){ updateEntry(a,dt); return; }   /* entry materialize runs first */
-  /* interaction: greeting beat — turn to face each other while glyphs cross */
-  if(a.greet&&a.greet.t>0){
-    a.greet.t-=dt;
-    const _o=a.greet.other;
-    if(_o&&_o.grp&&!_o.departing){ _v1.subVectors(_o.grp.position,g.position);
-      const _ty=Math.atan2(_v1.x,_v1.z); let _dy=_ty-g.rotation.y;
-      if(_dy>Math.PI)_dy-=Math.PI*2; if(_dy<-Math.PI)_dy+=Math.PI*2;
-      g.rotation.y+=_dy*Math.min(1,dt*6); }
-    if(a.greet.t<=0) a.greet=null;
-  }
-  /* ---- expression layer: visor blink + eye language, companion orb, hover ---- */
-  if(a.visors&&a.visors.length){
-    a.blinkT-=dt;
-    if(a.blinkT<=0){ a.blinkT=2.2+Math.random()*5; a.blinkK=.16; }
-    const shut=a.blinkK>0?(a.blinkK-=dt,.08):1;
-    const tgtE=(a.state==='working'?2.5:1.5)+Math.sin(simClock*3+a.done)*.15+nightF*.7+(a.greet?2.4:0)+(syncPulseT>0?2.0:0);
-    for(const v of a.visors){ v.m.scale.y=v.sy*shut;
-      const mm=v.m.material; mm.emissiveIntensity+=(tgtE-mm.emissiveIntensity)*Math.min(1,dt*5); }
-  }
-  if(a.orb){ const oa=simClock*1.5+a.done*1.7;
-    a.orb.position.set(Math.cos(oa)*1.15,2.0+Math.sin(simClock*2.2)*.18,Math.sin(oa)*1.15);
-    if(a.def.confOrb){ _c1.set(0xFFB347).lerp(_c2.set(0x7EF0C1),a.conf); a.orb.material.emissive.copy(_c1); } }
-  /* verdict living expression: edge cycling, confidence drift, VU glow */
-  if(a.def.cycleEdge&&a.accMat){ _c1.setHSL((simClock*.09+a.done*.07)%1,.9,.62);
-    a.accMat.color.copy(_c1); a.accMat.emissive.copy(_c1); }
-  if(a.def.confOrb){ a.confT-=dt;
-    if(a.confT<=0){ a.confT=6+Math.random()*8;
-      a.conf=Math.min(.98,Math.max(.05,a.conf+(Math.random()-.5)*.3));
-      a.throughput=Math.min(1,Math.max(.1,a.throughput+(Math.random()-.5)*.3)); } }
-  if(a.def.vuReactive&&a.vuMat){ const m=TRACK_META[a.track]||TRACK_META.__def;
-    const beat=Math.sin(simClock*m.bpm/60*Math.PI*2)*.5+.5;
-    a.vuMat.emissiveIntensity=.35+m.energy*(.6+1.8*beat);
-    if(a.faderKnobs) for(let i=0;i<a.faderKnobs.length;i++)
-      a.faderKnobs[i].position.y=a.faderBaseY[i]+Math.sin(simClock*(1.1+i*.23)+i*1.7)*.055*(.3+m.energy); }
-  if(a.hoverDisc){ a.hoverDisc.position.y=.3+Math.sin(simClock*3+a.done)*.09;
-    a.hoverDisc.material.opacity=.42+nightF*.3; }
   /* Design-masters review (D1): eased hop timing — landings feel weighted. */
   if(a.hopT>=0){ a.hopT+=dt; const hk=Math.min(1,a.hopT/.6), he=1-Math.pow(1-hk,3);
     g.position.y=a.hopBase+Math.sin(he*Math.PI)*1.2;
     if(a.hopT>.6){ a.hopT=-1; g.position.y=a.hopBase; } }
   switch(a.state){
-    case 'idle':{
-      const vibe=a.def.vibe, ph=a.done*1.7;
-      let bobY=a.home.y+Math.sin(simClock*2+ph)*.1, leanZ=Math.sin(simClock*1.3+ph)*.05, yawO=0;
-      if(a.def.still){ bobY=a.home.y+Math.sin(simClock*1.2+ph)*.03; leanZ=0; yawO=0; } /* Dateline: monochrome composure, no flourish */
-      else if(vibe==='regal'){ bobY=a.home.y+Math.sin(simClock*1.1+ph)*.17; leanZ=Math.sin(simClock*.8+ph)*.03; }
-      else if(vibe==='bold'){ bobY=a.home.y+Math.abs(Math.sin(simClock*3.2+ph))*.38; }
-      else if(vibe==='loud'){ yawO=Math.sin(simClock*.9+ph)*.55; bobY=a.home.y+Math.sin(simClock*2.6+ph)*.15; }
-      else if(vibe==='smooth'){ bobY=a.home.y+Math.sin(simClock*1.6+ph)*.13; yawO=Math.sin(simClock*.5+ph)*.35; }
-      else if(vibe==='electric'){ if(Math.sin(simClock*4+ph)>.93) yawO=.7; leanZ=Math.sin(simClock*5+ph)*.09; }
-      else if(vibe==='craft'){ bobY=a.home.y+Math.abs(Math.sin(simClock*2.2+ph))*.24; leanZ=Math.sin(simClock*2.2+ph)*.08; }
-      else if(vibe==='precise'){ yawO=Math.sin(simClock*.7+ph)*.95; }
-      else if(vibe==='steady'){ bobY=a.home.y+Math.sin(simClock*1.2+ph)*.05; leanZ*=.4; }
-      if(a.hover){ const hb=a.def.confOrb?(.3+a.throughput*.65):.55; /* Ledger: hover height tracks throughput */
-        bobY=a.home.y+hb+Math.sin(simClock*2.4+ph)*.3; g.rotation.y+=dt*.45; }
-      g.position.y=bobY; g.rotation.z=leanZ;
-      if(!a.hover) g.rotation.y+=((a.idleYaw+yawO)-g.rotation.y)*Math.min(1,dt*3);
+    case 'idle':
+      g.position.y=a.home.y+Math.sin(simClock*2+a.done)*.1;
+      g.rotation.z=Math.sin(simClock*1.3+a.done)*.05;   // idle body lean (D3)
       a.wanderT-=dt;
       if(a.wanderT<=0){
-        if(Math.random()<.75 && simAgents.length>1) assignTask(a);
-        else { // wander near home
+        const liveMode=window.WorldClient&&window.WorldClient.mode==='LIVE';
+        if(!liveMode&&Math.random()<.75 && simAgents.length>1) assignTask(a);
+        else if(!liveMode){ // wander near home (SAMPLE only)
           const tgt=a.home.clone(); tgt.x+=(Math.random()-.5)*5; tgt.z+=(Math.random()-.5)*5;
           a.state='wander'; startTravel(a,tgt,3+Math.random()*2);
         }
         a.wanderT=3+Math.random()*5;
       }
-      break; }
+      break;
     case 'wander':
       a.t+=dt/a.dur; qbezE(g.position,a.p0,a.p1,a.p2,Math.min(1,a.t));
       g.lookAt(_pa.copy(g.position).add(_v1.subVectors(a.p2,a.p0).setY(0)));
       bankAgent(a,dt);
-      if(a.t>=1){ a.state='idle'; a.idleYaw=g.rotation.y; g.position.y=a.home.y; }
+      if(a.t>=1){ a.state='idle'; g.position.y=a.home.y; }
       break;
     case 'toPickup':
       a.t+=dt/a.dur; qbezE(g.position,a.p0,a.p1,a.p2,Math.min(1,a.t));
       g.lookAt(_pa.copy(g.position).add(_v1.subVectors(a.p2,a.p0).setY(0)));
       bankAgent(a,dt);
       if(a.t>=1){ a.state='working'; a.workT=0; a.workDur=a.task.dur;
-        if(!isLiveMode()) logFeed('<b>'+a.def.name+'</b> working · '+a.task.verb.toLowerCase()+' #'+a.task.id); }
+        logFeed('<b>'+a.def.name+'</b> working · '+a.task.verb.toLowerCase()+' #'+a.task.id); }
       break;
     case 'working':
       a.workT+=dt;
@@ -1947,9 +1615,9 @@ function updateAgent(a,dt){
       bankAgent(a,dt);
       if(a.t>=1){
         a.done++;
-        if(!isLiveMode()) logFeed('✓ <b>'+a.def.name+'</b> delivered #'+a.task.id+' · '+a.task.gear+' → '+a.task.to.toUpperCase());
+        logFeed('✓ <b>'+a.def.name+'</b> delivered #'+a.task.id+' · '+a.task.gear+' → '+a.task.to.toUpperCase());
         a.task=null;
-        if(a.done>=a.quota && !a.def.king && simAgents.length>4){ killAgent(a); }
+        if(a.done>=a.quota && !a.def.king && simAgents.length>4 && !(window.WorldClient&&window.WorldClient.mode==='LIVE')){ killAgent(a); }
         else { a.state='idle'; a.wanderT=1+Math.random()*3;
           const hb=a.home.clone(); startTravel(a,hb,5); a.state='toHome'; }
       }
@@ -1957,158 +1625,9 @@ function updateAgent(a,dt){
     case 'toHome':
       a.t+=dt/a.dur; qbezE(g.position,a.p0,a.p1,a.p2,Math.min(1,a.t));
       bankAgent(a,dt);
-      if(a.t>=1){ a.state='idle'; a.idleYaw=g.rotation.y; g.position.copy(a.home); }
-      break;
-    case 'toGather':
-      a.t+=dt/a.dur; qbezE(g.position,a.p0,a.p1,a.p2,Math.min(1,a.t));
-      g.lookAt(_pa.copy(g.position).add(_v1.subVectors(a.p2,a.p0).setY(0)));
-      bankAgent(a,dt);
-      if(a.t>=1){ a.state='gather'; a.idleYaw=g.rotation.y; }
-      break;
-    case 'gather':
-      /* face the pavilion center while the cast holds the moment */
-      _v1.subVectors(stationFor['hub'],g.position);
-      { const _gy=Math.atan2(_v1.x,_v1.z); let _gd=_gy-g.rotation.y;
-        if(_gd>Math.PI)_gd-=Math.PI*2; if(_gd<-Math.PI)_gd+=Math.PI*2;
-        g.rotation.y+=_gd*Math.min(1,dt*3); }
+      if(a.t>=1){ a.state='idle'; g.position.copy(a.home); }
       break;
   }
-}
-/* ============================================================
-   10. AGENT-TO-AGENT INTERACTION — greetings, handoffs, convergence
-   ============================================================ */
-/* SAMPLE-simulation choreography: the cast acknowledges, hands off, gathers. */
-let syncPulseT=0;
-const glyphGeo=new THREE.OctahedronGeometry(.22);
-const glyphs=[];
-function spawnGlyph(fromA,toB){
-  const m=new THREE.Mesh(glyphGeo,new THREE.MeshBasicMaterial({color:fromA.accent,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false}));
-  m.position.copy(fromA.grp.position); m.position.y+=2.2; scene.add(m);
-  glyphs.push({m,from:fromA,to:toB,t:0,dur:1.1});
-}
-function greetPair(a,b,quiet){
-  a.greet={t:1.6,other:b}; b.greet={t:1.6,other:a};
-  a.greetCd=22+Math.random()*18; b.greetCd=22+Math.random()*18;
-  if(reduced) return;
-  spawnGlyph(a,b); spawnGlyph(b,a);
-  if(!quiet) logFeed('👋 <b>'+a.def.name+'</b> × <b>'+b.def.name+'</b> — paths crossed, glyphs exchanged');
-}
-function checkGreetings(dt){
-  for(const a of simAgents){ if(a.greetCd>0) a.greetCd-=dt; }
-  for(let i=0;i<simAgents.length;i++) for(let j=i+1;j<simAgents.length;j++){
-    const a=simAgents[i], b=simAgents[j];
-    if(a.entering||b.entering||a.departing||b.departing) continue;
-    if(a.greet||b.greet||a.greetCd>0||b.greetCd>0) continue;
-    if(a.grp.position.distanceToSquared(b.grp.position)>20) continue; /* ~4.5u */
-    greetPair(a,b);
-  }
-}
-function updateGlyphs(dt){
-  for(let i=glyphs.length-1;i>=0;i--){
-    const gl=glyphs[i]; gl.t+=dt/gl.dur; const k=Math.min(1,gl.t);
-    _v1.lerpVectors(gl.from.grp.position,gl.to.grp.position,k); _v1.y+=2.2+Math.sin(k*Math.PI)*1.4;
-    gl.m.position.copy(_v1); gl.m.rotation.y+=dt*6; gl.m.material.opacity=.95*(1-k*k);
-    if(k>=1){ scene.remove(gl.m); gl.m.material.dispose(); glyphs.splice(i,1); }
-  }
-}
-/* task handoffs: a light-arc carries a data packet between departments */
-let handoffT=16;
-const handoffs=[];
-function fireHandoff(){
-  const c=simAgents.filter(a=>!a.entering&&!a.departing&&!a.greet);
-  if(c.length<2) return;
-  const A=c[(Math.random()*c.length)|0]; let B=A;
-  while(B===A) B=c[(Math.random()*c.length)|0];
-  const id=++taskSeq;
-  if(!isLiveMode()) logFeed('⇄ handoff · <b>'+A.def.name+'</b> → <b>'+B.def.name+'</b> · brief #'+id);
-  greetPair(A,B,true);
-  if(reduced) return;
-  const p0=A.grp.position.clone(); p0.y+=2.4;
-  const p2=B.grp.position.clone(); p2.y+=2.4;
-  const mid=p0.clone().lerp(p2,.5); mid.y=Math.max(p0.y,p2.y)+5;
-  const pts=[]; for(let i=0;i<=24;i++){ const k=i/24, u=1-k;
-    pts.push(new THREE.Vector3(u*u*p0.x+2*u*k*mid.x+k*k*p2.x, u*u*p0.y+2*u*k*mid.y+k*k*p2.y, u*u*p0.z+2*u*k*mid.z+k*k*p2.z)); }
-  const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
-    new THREE.LineBasicMaterial({color:A.accent,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false}));
-  scene.add(line);
-  const pkt=new THREE.Mesh(new THREE.SphereGeometry(.3,10,10),
-    new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:1,blending:THREE.AdditiveBlending,depthWrite:false}));
-  scene.add(pkt);
-  handoffs.push({line,pkt,pts,t:0,dur:2.6});
-}
-function updateHandoffs(dt){
-  for(let i=handoffs.length-1;i>=0;i--){
-    const h=handoffs[i]; h.t+=dt/h.dur; const k=Math.min(1,h.t);
-    const pi=Math.min(24,Math.floor(k*24));
-    h.pkt.position.copy(h.pts[pi]);
-    h.pkt.scale.setScalar(1+Math.sin(k*Math.PI*4)*.25);
-    if(k>.75) h.line.material.opacity=.85*(1-(k-.75)/.25);
-    if(k>=1){ scene.remove(h.line); scene.remove(h.pkt);
-      h.line.geometry.dispose(); h.line.material.dispose(); h.pkt.geometry.dispose(); h.pkt.material.dispose();
-      handoffs.splice(i,1); }
-  }
-}
-/* group moments: the cast converges at the hub pavilion, visors sync, then disperses */
-let gatherT=140+Math.random()*80;
-let gathering=null;
-const syncRings=[];
-function fireConvergence(){
-  const c=simAgents.filter(a=>!a.entering&&!a.departing&&a.state==='idle').slice(0,5);
-  if(c.length<2){ gatherT=60+Math.random()*60; return; }
-  const hubC=stationFor['hub'];
-  gathering={members:c,phase:'toGather',t:0};
-  logFeed('◉ the cast gathers at the pavilion…');
-  if(reduced){ gathering.phase='gather'; return; }
-  c.forEach((a,i)=>{
-    const ang=i/c.length*Math.PI*2+.4;
-    a.gatherPt=hubC.clone(); a.gatherPt.x+=Math.cos(ang)*5; a.gatherPt.z+=Math.sin(ang)*5;
-    a.state='toGather'; a.t=0; startTravel(a,a.gatherPt,7+Math.random()*2);
-  });
-}
-function disperseGather(){
-  const g=gathering; gathering=null;
-  syncPulseT=1.4;
-  if(!reduced){
-    const hubC=stationFor['hub'];
-    const ring=new THREE.Mesh(new THREE.TorusGeometry(1,.09,8,48),
-      new THREE.MeshBasicMaterial({color:0x7EF0C1,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));
-    ring.rotation.x=Math.PI/2; ring.position.set(hubC.x,1.2,hubC.z);
-    scene.add(ring); syncRings.push({ring,t:0});
-  }
-  logFeed('◉ visors sync — the cast disperses');
-  for(const a of g.members){
-    if(a.departing||a.entering) continue;
-    const hb=a.home.clone(); startTravel(a,hb,6); a.state='toHome';
-  }
-}
-function updateGathering(dt){
-  if(syncPulseT>0) syncPulseT-=dt;
-  if(!gathering){
-    gatherT-=dt;
-    if(gatherT<=0){ gatherT=170+Math.random()*90; fireConvergence(); }
-    return;
-  }
-  const g=gathering; g.t+=dt;
-  if(g.phase==='toGather'){
-    if(g.members.every(a=>a.state==='gather'||a.departing||a.entering)||g.t>22){ g.phase='gather'; g.t=0; }
-  } else if(g.phase==='gather'){
-    if(g.t>5.5) disperseGather();
-  }
-}
-function updateSyncRings(dt){
-  for(let i=syncRings.length-1;i>=0;i--){
-    const r=syncRings[i]; r.t+=dt; const k=r.t/1.6;
-    r.ring.scale.setScalar(1+k*7); r.ring.material.opacity=.9*(1-k);
-    if(k>=1){ scene.remove(r.ring); r.ring.geometry.dispose(); r.ring.material.dispose(); syncRings.splice(i,1); }
-  }
-}
-function interactionTick(dt){
-  checkGreetings(dt);
-  updateGlyphs(dt);
-  handoffT-=dt; if(handoffT<=0){ handoffT=22+Math.random()*20; fireHandoff(); }
-  updateHandoffs(dt);
-  updateGathering(dt);
-  updateSyncRings(dt);
 }
 /* population control */
 let spawnT=4;
@@ -2117,13 +1636,12 @@ function simTick(dt){
   spawnT-=dt;
   if(spawnT<=0){
     spawnT=8+Math.random()*8;
-    if(simAgents.length<10){
+    if(simAgents.length<10 && !(window.WorldClient&&window.WorldClient.mode==='LIVE')){
       const def=AGENT_DEFS[Math.floor(Math.random()*AGENT_DEFS.length)];
       if(!simAgents.some(a=>a.def===def)) spawnAgent(def);
     }
   }
   for(let i=simAgents.length-1;i>=0;i--) updateAgent(simAgents[i],dt);
-  interactionTick(dt);
   /* expression: personal choice timers + music ticker */
   for(const a of simAgents){ if(a.entering) continue; a.choiceT-=dt; if(a.choiceT<=0) expressChoice(a); }
   tickT-=dt; if(tickT<=0){ tickT=6; cycleTicker(); }
@@ -2132,90 +1650,32 @@ function simTick(dt){
 spawnAgent(AGENT_DEFS[0],'hub');
 ['CWI_Sync','CWI_Radio','CWI_Data','CWI_Studio'].forEach(n=>
   spawnAgent(AGENT_DEFS.find(d=>d.name===n),'hands'));
-/* ============================================================
-   8c. LIVE LEDGER WIRING — server-authoritative data layer.
-   When window.GearLedgerLive reports LIVE, agent tasks, presence,
-   handoffs and the event feed render real records from the Pages
-   mirror (authority: the Contents API). In OFFLINE mode everything
-   falls back to the honest SAMPLE layer and the pill says so.
-   Movement, greetings, wear and music taste stay illustrative
-   ambience in both modes. Crown stays KingCode-only.
-   ============================================================ */
-function chipFor(st){
-  const c={created:'st-created',assigned:'st-assigned',in_progress:'st-in_progress',
-    delivered:'st-delivered',verified:'st-verified',cancelled:'st-cancelled',failed:'st-failed'}[st]||'st-created';
-  return '<span class="chip '+c+'">'+String(st||'?').replace(/_/g,' ').toUpperCase()+'</span>';
-}
-function escHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-const GLW=window.GearLedgerLive||null;
-let glConnectedOnce=false;
-const LIVE_TAG='<span class="sv live">LIVE</span>';
-function refreshAgentTag(a){
-  if(a.liveTag){ a.grp.remove(a.liveTag);
-    if(a.liveTag.material.map) a.liveTag.material.map.dispose();
-    a.liveTag.material.dispose(); a.liveTag=null; }
-  if(!GLW||GLW.mode!=='LIVE'){
-    if(a.glow) a.glow.material.opacity=.5;
-    if(a.nameSprite) a.nameSprite.material.color.set('#ffffff');
-    return;
+logFeed('Ledger sim live · all figures <b>SAMPLE</b>');
+
+/* ---------- LIVE upgrade: global honesty pass (called by LiveClient.apply) ---------- */
+window.__liveUpgrade=function(json){
+  (window.__liveUpgradeHooks||[]).forEach(h=>{ try{h(json);}catch(e){} });
+  const q=s=>document.querySelector(s), qa=s=>document.querySelectorAll(s);
+  const infoH2=q('#info h2'); if(infoH2) infoH2.textContent='Live ledger view.';
+  const infoPs=qa('#info p');
+  if(infoPs[0]) infoPs[0].textContent='This 3D archipelago is wired to the live CWI Gear Ledger. Agents, departments, tasks, and every number badged LIVE come from the canonical ledger store, refreshed every 10 minutes. Traffic arcs, legends, and chain plaques are labeled concept visuals \u2014 sketches of what the live streams will look like.';
+  const hintPs=qa('#hint p');
+  if(hintPs[0]) hintPs[0].innerHTML='Drag to orbit \u00b7 Pinch or scroll to zoom \u00b7 Tap an island to visit.<br>Numbers badged LIVE come from the real Gear Ledger; concept visuals stay labeled.';
+  const mpFine=q('#musicpanel .fine');
+  if(mpFine) mpFine.textContent='The real That Boy Hi Hat catalog playlist on Spotify \u2014 press play. Agent figures are the 10 registered ledger agents with live presence.';
+  const evBtn=document.getElementById('i-evidence'); if(evBtn) evBtn.textContent='View evidence';
+  TOUR.forEach(t=>{
+    if(t.id==='hub') t.body='This is the Gear Ledger\u2019s mission control: a holographic globe showing live world status. Agents online, tasks in the ledger, and verified completions \u2014 live numbers from the Gear Ledger, refreshed every 10 minutes.';
+    else if(t.id==='dist') t.body='Each pavilion is a CWI department holding its live share of ledger tasks. The pie between them shows real task distribution across the company.';
+    else if(t.id==='leads') t.body='Three podium towers rank the fleet by live verified task completions, from the Gear Ledger. No invented counts \u2014 every rank is earned.';
+  });
+  if(typeof logFeed==='function'){
+    logFeed('\u25cf <b>LIVE</b> \u2014 connected to Gear Ledger store v'+json.store_version+
+      ' \u00b7 '+json.hub.agents_online+'/'+json.hub.agents_registered+' agents online \u00b7 '+
+      json.hub.tasks_total+' tasks ('+json.hub.tasks_verified+' verified)');
   }
-  const pres=GLW.presenceByAgent[a.def.name];
-  const tasks=GLW.tasksByAgent[a.def.name]||[];
-  const active=tasks.filter(t=>!['verified','cancelled','failed'].includes(t.state)).length;
-  const away=!pres||pres.stale;
-  const label=away?('AWAY'+(pres&&pres.at?' · '+GLW.ago(pres.at):''))
-    :(tasks.length+' TASK'+(tasks.length===1?'':'S')+(active?' · '+active+' ACTIVE':''));
-  const tag=labelSprite((away?'▲ ':'● ')+label,{size:22,fg:away?'#1a1206':'#7ef0c1',
-    bg:away?'rgba(255,176,32,.92)':'rgba(10,40,30,.85)'});
-  tag.position.y=3.5+a.yOff-1.35;
-  a.grp.add(tag); a.liveTag=tag;
-  if(a.glow) a.glow.material.opacity=away?.18:.5;   /* stale presence → dimmed */
-  if(a.nameSprite) a.nameSprite.material.color.set(away?'#ffb020':'#ffffff');
-}
-function renderLive(){
-  if(!GLW) return;
-  const live=GLW.mode==='LIVE';
-  const pill=document.getElementById('samplepill');
-  if(live){ pill.className='sample-pill live';
-    pill.innerHTML='<span class="cdot"></span>LIVE · ledger v'+GLW.version; }
-  else { pill.className='sample-pill offline';
-    pill.innerHTML='<span class="cdot"></span>OFFLINE · sample demo'; }
-  const sm=document.querySelector('#title small');
-  if(sm) sm.innerHTML=live
-    ? '<a href="'+GLW.repoUrl+'" target="_blank" rel="noopener">LIVE — server-authoritative ledger</a>'
-    : 'CWI · AGENT DECK — 3D CONCEPT';
-  const ih=document.getElementById('info-h'), im=document.getElementById('info-mode'), hm=document.getElementById('hint-mode');
-  if(live){
-    if(ih) ih.textContent='LIVE — server-authoritative ledger data.';
-    if(im) im.textContent='Connected to the live Gear Ledger (v'+GLW.version+', updated '+
-      GLW.ago(GLW.updated_at)+'). Agent tasks, presence, handoffs and the event feed are real '+
-      'server-authoritative records — verify any figure against the ledger. Movement, greetings, '+
-      'wear and music taste remain illustrative ambience.';
-    if(hm) hm.textContent='Agent tasks, presence, handoffs and the event feed are LIVE from the ledger. Motion and music taste are illustrative ambience.';
-  }else{
-    if(ih) ih.textContent='Concept mockup — not the live ledger.';
-    if(im) im.textContent='This 3D archipelago is a design concept for the CWI Gear Ledger. All figures are illustrative sample data, not live ledger values.';
-    if(hm) hm.textContent='Every number you see is SAMPLE data — a concept mockup, not the live ledger.';
-  }
-  if(window.__glBuildLiveArcs) window.__glBuildLiveArcs(GLW.handoffs,id=>GLW.agentName(id));
-  if(window.__glSetArcMode) window.__glSetArcMode(live);
-  for(const a of simAgents) refreshAgentTag(a);
-  if(live){
-    if(!glConnectedOnce){
-      glConnectedOnce=true;
-      logFeed('⛓ <b>Ledger LIVE</b> · server-authoritative · v'+GLW.version+' '+LIVE_TAG);
-      const all=GLW.events; all.forEach(ev=>GLW.markSeen(ev));
-      all.slice(-5).reverse().forEach(ev=>{ const h=GLW.humanize(ev); logFeed(h.html+' '+LIVE_TAG); });
-    }else{
-      const fresh=GLW.newEvents().filter(ev=>ev.event!=='agent.presence');
-      fresh.slice(-5).forEach(ev=>{ const h=GLW.humanize(ev); logFeed(h.html+' '+LIVE_TAG); });
-      glCheckMoments(fresh);
-    }
-  }
-  if(inspOpen&&currentSel&&currentSel.kind==='AGENT') renderRows(currentSel);
-}
-if(GLW) GLW.onUpdate(renderLive);
-logFeed(GLW?'Ledger link warming up · polling the live ledger…':'Ledger sim live · all figures <b>SAMPLE</b>');
+  if(typeof pulsePill==='function') pulsePill();
+};
 
 /* ============================================================
    9. INTERACTION — tap, fly-to, inspector, HUD, tour
@@ -2269,58 +1729,57 @@ function focusAgent(a){
 
 /* ---------- inspector ---------- */
 const insp=document.getElementById('inspector');
-/* LIVE-mode agent rows: real ledger tasks + presence. Every rendered
-   datum traces to state.json; ambience rows keep their SAMPLE tag. */
-function liveAgentRows(a){
-  const pres=window.GearLedgerLive?window.GearLedgerLive.presenceByAgent[a.def.name]:null;
-  const tasks=(window.GearLedgerLive&&window.GearLedgerLive.tasksByAgent[a.def.name])||[];
-  const presTxt=pres?((pres.stale?'AWAY':'ONLINE')+' · heartbeat '+(pres.at?window.GearLedgerLive.ago(pres.at):'—')
-    +(pres.current_task_id?' · on '+pres.current_task_id:'')):'no heartbeat yet';
-  const taskHtml=tasks.length?tasks.slice(0,6).map(t=>
-    '<span class="ltask">'+chipFor(t.state)+' '+escHtml(t.title||t.task_id)+
-    '<br><span class="tid">'+escHtml(t.task_id)+'</span></span>').join('')
-    :'— no ledger tasks assigned';
-  return [
-    ['Ledger presence',()=>presTxt],
-    ['Ledger tasks ('+tasks.length+')',()=>taskHtml],
-  ];
-}
 function agentRows(a){
-  if(isLiveMode()&&window.GearLedgerLive){
-    const rows=liveAgentRows(a).map(([k,v])=>[k,v,'LIVE']);
-    rows.push(['♪ Now playing',()=>a.def.quiet?'— · quiet review':(a.track?('“'+a.track+'”'):'—'),'SAMPLE']);
-    rows.push(['Silhouette',()=>a.look?lookLabel(a.look):'—','SAMPLE']);
-    if(a.def.confOrb) rows.push(['Forecast confidence',()=>Math.round((a.conf||0)*100)+'% · orb-linked','SAMPLE']);
-    return rows;
+  const WC=window.WorldClient;
+  if(WC&&WC.mode==='LIVE'&&WC.live){
+    const rec=WC.live.agents.find(x=>x.agent_id==='agent:'+a.def.name||x.handle===a.def.name);
+    if(rec) return [
+      ['Presence',()=>rec.presence.toUpperCase(),'live'],
+      ['Current task',()=>rec.current_task_id?(rec.current_task_state||'').toUpperCase()+' \u00b7 '+rec.current_task_title:'\u2014 idle','live'],
+      ['Department',()=>rec.department,'live'],
+      ['Role',()=>rec.role,'live'],
+      ['Tasks verified',()=>String(rec.tasks_verified),'live'],
+      ['Tasks assigned',()=>String(rec.tasks_assigned),'live'],
+    ];
   }
-  const rows=[
-    ['Status',()=>a.state.replace('toPickup','EN ROUTE').replace('toDrop','DELIVERING').replace('toHome','RETURNING').toUpperCase(),'SAMPLE'],
-    ['Current task',()=>a.task?('#'+a.task.id+' · '+a.task.verb):'— idle','SAMPLE'],
-    ['Route',()=>a.task?(a.task.from.toUpperCase()+' → '+a.task.to.toUpperCase()):'—','SAMPLE'],
-    ['Carrying',()=>a.task?a.task.gear:'—','SAMPLE'],
-    ['♪ Now playing',()=>a.def.quiet?'— · quiet review':(a.track?('“'+a.track+'”'):'—'),'SAMPLE'],
-    ['Silhouette',()=>a.look?lookLabel(a.look):'—','SAMPLE'],
-    ['Tasks completed',()=>String(a.done),'SAMPLE'],
+  return [
+    ['Status',()=>a.state.replace('toPickup','EN ROUTE').replace('toDrop','DELIVERING').replace('toHome','RETURNING').toUpperCase()],
+    ['Current task',()=>a.task?('#'+a.task.id+' · '+a.task.verb):'— idle'],
+    ['Route',()=>a.task?(a.task.from.toUpperCase()+' → '+a.task.to.toUpperCase()):'—'],
+    ['Carrying',()=>a.task?a.task.gear:'—'],
+    ['♪ Now playing',()=>a.track?('“'+a.track+'”'):'—'],
+    ['Frame',()=>a.look?lookLabel(a.look):'—'],
+    ['Tasks completed',()=>String(a.done)],
   ];
-  if(a.def.confOrb) rows.splice(5,0,['Forecast confidence',()=>Math.round((a.conf||0)*100)+'% · orb-linked','SAMPLE']);
-  return rows;
 }
 function renderRows(sel){
   const el=document.getElementById('i-rows'); el.innerHTML='';
   const rows=sel.kind==='AGENT'?agentRows(sel.agent):sel.rows;
-  for(const [k,v,tag] of rows){
+  const liveMode=window.WorldClient&&window.WorldClient.mode==='LIVE';
+  for(const row of rows){
+    const k=row[0], v=row[1];
     const val=typeof v==='function'?v():v;
-    const t=tag||'SAMPLE';
+    const prov=row[2]||(liveMode?'live':'sample');
     const d=document.createElement('div'); d.className='row';
-    d.innerHTML='<span>'+k+'</span><b>'+val+'<span class="sv'+(t==='LIVE'?' live':'')+'">'+t+'</span></b>';
+    d.innerHTML='<span>'+k+'</span><b>'+val+'<span class="sv '+prov+'">'+prov.toUpperCase()+'</span></b>';
     el.appendChild(d);
   }
   if(!rows.length){
     const d=document.createElement('div'); d.className='row';
-    d.innerHTML='<span>District status</span><b>ONLINE<span class="sv">SAMPLE</span></b>';
+    d.innerHTML='<span>District status</span><b>ONLINE<span class="sv '+(liveMode?'live':'sample')+'">'+(liveMode?'LIVE':'SAMPLE')+'</span></b>';
     el.appendChild(d);
   }
 }
+// Concept visuals keep honest badges in LIVE mode (never presented as live data).
+window.__liveUpgradeHooks.push(()=>{
+  selectables.forEach(s=>{
+    if(s.liveKind==='arc') s.rows=[['Gear in transit','\u2014','concept'],['Note','concept traffic \u2014 no live handoff stream yet','concept']];
+    else if(s.liveKind==='timeline') s.rows=[['Handoffs that day','\u2014','concept'],['Trend','concept visual','concept']];
+    else if(s.liveKind==='legend') s.rows=[['Times handed off','\u2014','concept'],['Status','LEGEND (concept)','concept']];
+    else if(s.liveKind==='plaque') s.rows=[['Record','concept \u2014 no live handoff records yet','concept'],['Step',s.title,'concept']];
+    if(typeof currentSel!=='undefined'&&currentSel===s) renderRows(s);
+  });
+});
 function openInspector(sel){
   currentSel=sel; inspOpen=true;
   document.getElementById('i-tag').textContent=sel.kind;
@@ -2339,7 +1798,20 @@ function openInspector(sel){
 }
 function closeInspector(){ inspOpen=false; currentSel=null; insp.classList.remove('open'); }
 document.getElementById('iclose').onclick=closeInspector;
-document.getElementById('i-evidence').onclick=()=>document.getElementById('evidence').classList.add('open');
+document.getElementById('i-evidence').onclick=()=>{
+  const WC=window.WorldClient;
+  const sheet=document.getElementById('evidence');
+  if(WC&&WC.mode==='LIVE'&&window.LiveClient){
+    const ev=WC.getEvidence(typeof currentSel!=='undefined'?currentSel:null);
+    sheet.querySelector('h2').textContent=ev.title;
+    const ps=sheet.querySelectorAll('p');
+    if(ps[0]) ps[0].textContent='Live record references from the Gear Ledger store.';
+    if(ps[1]) ps[1].innerHTML='Record preview (LIVE):<br><span style="font-family:monospace">'+
+      ev.records.map(r=>window.LiveClient.esc(r)).join('<br>')+'</span>'+
+      (ev.context?'<br><span style="font-family:monospace;color:#8fa9bc">'+window.LiveClient.esc(ev.context)+'</span>':'');
+  }
+  sheet.classList.add('open');
+};
 setInterval(()=>{ if(inspOpen&&currentSel&&currentSel.kind==='AGENT') renderRows(currentSel); },1000);
 function pulsePill(){
   const p=document.getElementById('samplepill');
@@ -2415,191 +1887,6 @@ function toast(msg){
   clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2600);
 }
 
-/* ============================================================
-   11. VIRAL / DISTRIBUTION — deep links, share, moments.
-   ------------------------------------------------------------
-   Every stat shown here reads the REAL ledger
-   (window.GearLedgerLive ← gear-ledger state.json). Nothing
-   here invents numbers, tasks, or agents.
-   ============================================================ */
-
-/*PURE-START*/
-const GL_CHAR_TO_HANDLE={KingCode:'MUSE_CWI',Needle:'CWI_AandR',Marquee:'CWI_Marketing',Seal:'CWI_Sync',Dial:'CWI_Radio',Dateline:'CWI_Press',Fader:'CWI_Studio',Ledger:'CWI_Data',Charter:'CWI_Affairs'};
-function glNormHandle(h){
-  if(h==null) return null;
-  let s=String(h).trim();
-  if(/^agent:/i.test(s)) s=s.slice(6);
-  if(GL_CHAR_TO_HANDLE[s]) return GL_CHAR_TO_HANDLE[s];
-  const canon={'MUSE_CWI':'MUSE_CWI','CWI_AANDR':'CWI_AandR','CWI_MARKETING':'CWI_Marketing',
-    'CWI_SYNC':'CWI_Sync','CWI_RADIO':'CWI_Radio','CWI_PRESS':'CWI_Press',
-    'CWI_STUDIO':'CWI_Studio','CWI_DATA':'CWI_Data','CWI_AFFAIRS':'CWI_Affairs'};
-  return canon[s.toUpperCase()]||null;
-}
-function glParseDeepLink(qs){
-  const p=new URLSearchParams(qs||'');
-  const out={};
-  const v=String(p.get('view')||'').toLowerCase();
-  if(['overview','hub','dist','leads','hands','chain','legends'].includes(v)) out.view=v;
-  const a=glNormHandle(p.get('agent'));
-  if(a) out.agent=a;
-  const t=String(p.get('task')||'').trim();
-  if(/^tsk_[A-Za-z0-9]+$/.test(t)) out.task=t;
-  return out;
-}
-function glBuildQuery(st,preserve){
-  const q=new URLSearchParams();
-  if(st.task) q.set('task',st.task);
-  if(st.agent) q.set('agent',st.agent);
-  else if(st.view&&st.view!=='overview') q.set('view',st.view);
-  (preserve||[]).forEach(k=>{ const v=k[1]; if(v!=null&&v!==''&&!q.has(k[0])) q.set(k[0],v); });
-  return q.toString();
-}
-/*PURE-END*/
-
-/* ---------- deep link application ---------- */
-let glDeepApplied=false;
-function agentSelByHandle(handle){
-  for(const s of selectables){
-    if(s&&s.kind==='AGENT'&&s.agent&&s.agent.def&&s.agent.def.name===handle) return s;
-  }
-  return null;
-}
-function findLedgerTask(tid){
-  const GL=window.GearLedgerLive;
-  if(!GL||!GL.state||!Array.isArray(GL.state.tasks)) return null;
-  return GL.state.tasks.find(t=>t.task_id===tid)||null;
-}
-function glApplyDeepLink(){
-  if(glDeepApplied) return;
-  const dl=glParseDeepLink(location.search);
-  if(!dl.view&&!dl.agent&&!dl.task){ glDeepApplied=true; return; }
-  /* task is most specific — but only once the ledger state is in */
-  if(dl.task){
-    const t=findLedgerTask(dl.task);
-    if(t&&t.assigned_to){
-      const sel=agentSelByHandle(glNormHandle(t.assigned_to));
-      if(sel){ glDeepApplied=true; stopTour(true); openInspector(sel); focusAgent(sel.agent); return; }
-    }
-    /* unresolved task: fall through to agent/view rather than stranding the viewer */
-  }
-  if(dl.agent){
-    const sel=agentSelByHandle(dl.agent);
-    if(sel){ glDeepApplied=true; stopTour(true); openInspector(sel); focusAgent(sel.agent); return; }
-  }
-  if(dl.view){
-    glDeepApplied=true;
-    if(dl.view==='overview') goOverview();
-    else if(islandById[dl.view]) focusIsland(dl.view);
-    return;
-  }
-  glDeepApplied=true;
-}
-function glKickDeepLink(){
-  const dl=glParseDeepLink(location.search);
-  if(!dl.view&&!dl.agent&&!dl.task) return; /* nothing to do */
-  let tries=0;
-  const iv=setInterval(()=>{
-    tries++;
-    const agentsReady=typeof simAgents!=='undefined'&&simAgents.length>0;
-    const ledgerReady=!dl.task||(window.GearLedgerLive&&window.GearLedgerLive.state);
-    if((agentsReady&&ledgerReady)||tries>60){ clearInterval(iv); glApplyDeepLink(); }
-  },250);
-}
-
-/* ---------- share ---------- */
-function glBaseUrl(){ const u=new URL(location.href); return u.origin+u.pathname; }
-function glDeepLinkFor(st){
-  const cur=new URLSearchParams(location.search);
-  const keep=[['broadcast',cur.get('broadcast')],['nohint',cur.get('nohint')]]
-    .filter(([k,v])=>v!=null&&v!=='');
-  return glBaseUrl()+'?'+glBuildQuery(st,keep);
-}
-function glCurrentViewState(){
-  const st={};
-  const GL=window.GearLedgerLive;
-  if(currentSel&&currentSel.kind==='AGENT'&&currentSel.agent&&currentSel.agent.def){
-    st.agent=currentSel.agent.def.name;
-    const pres=GL&&GL.presenceByAgent&&GL.presenceByAgent['agent:'+st.agent];
-    if(pres&&pres.current_task_id) st.task=pres.current_task_id;
-  }else if(typeof focused!=='undefined'&&focused&&typeof islandById!=='undefined'&&islandById[focused]){
-    st.view=focused;
-  }else{ st.view='overview'; }
-  return st;
-}
-function glCopyText(text,done){
-  const fin=()=>{ try{done();}catch(e){} };
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(fin,()=>glLegacyCopy(text,fin));
-  }else glLegacyCopy(text,fin);
-}
-function glLegacyCopy(text,done){
-  const ta=document.createElement('textarea');
-  ta.value=text; ta.setAttribute('readonly','');
-  ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
-  document.body.appendChild(ta); ta.select();
-  try{ document.execCommand('copy'); }catch(e){}
-  document.body.removeChild(ta); done();
-}
-function glShareCurrentView(){
-  glCopyText(glDeepLinkFor(glCurrentViewState()),()=>toast('Link copied — share the moment ✓'));
-}
-
-/* ---------- moments: celebrate REAL task.verified events ---------- */
-const glMomentSeen={}; let glMomentCoolT=0;
-function glCheckMoments(fresh){
-  if(!fresh||!fresh.length) return;
-  const now=Date.now();
-  for(const ev of fresh){
-    if(!ev||ev.event!=='task.verified'||glMomentSeen[ev.event_id]) continue;
-    glMomentSeen[ev.event_id]=1;
-    const at=ev.at?Date.parse(ev.at):NaN;
-    if(isNaN(at)||now-at>30*60*1000) continue;   /* ignore stale history on reload */
-    if(now-glMomentCoolT<90000) continue;          /* tasteful: max ~1 celebration / 90s */
-    glMomentCoolT=now; glFireMoment(ev);
-  }
-}
-function glFireMoment(ev){
-  const d=ev.data||{};
-  const GL=window.GearLedgerLive;
-  const title=d.title||d.task_ref||d.task_id||'a task';
-  const tid=d.task_ref||d.task_id||'';
-  const who=ev.actor&&GL&&GL.agentName?GL.agentName(ev.actor):'';
-  ['hub','dist','leads','hands','chain','legends'].forEach(id=>{ try{ pulseSign(id); }catch(e){} });
-  const link=(tid&&/^tsk_/.test(tid))?glDeepLinkFor({task:tid}):glDeepLinkFor({view:'overview'});
-  logFeed('🎉 <b>Task verified</b> — “'+escHtml(title)+'”'+(who?' · '+escHtml(who):'')+
-    ' · <a href="'+escHtml(link)+'" target="_blank" rel="noopener">share this moment</a> '+LIVE_TAG);
-}
-
-/* ---------- wire-in ---------- */
-(function glWireViral(){
-  /* feed links must be clickable (feed container is pointer-events:none) */
-  const st=document.createElement('style');
-  st.textContent='#livefeed .fe a{pointer-events:auto;color:#35c4ff}';
-  document.head.appendChild(st);
-  /* HUD share button (desktop) */
-  const bInfo=document.getElementById('b-info');
-  if(bInfo&&!document.getElementById('b-share')){
-    const b=document.createElement('button');
-    b.className='hbtn'; b.id='b-share'; b.title='Copy shareable link to this view';
-    b.innerHTML='⤴ <span class="lbl">Share</span>';
-    b.onclick=glShareCurrentView;
-    bInfo.insertAdjacentElement('afterend',b);
-  }
-  /* thumbbar share button (mobile) */
-  const tb=document.querySelector('#thumbbar');
-  if(tb&&!tb.querySelector('[data-act="share"]')){
-    const b=document.createElement('button');
-    b.className='hbtn'; b.dataset.act='share';
-    b.innerHTML='⤴<br><span style="font-size:10px">Share</span>';
-    tb.appendChild(b);
-    b.onclick=glShareCurrentView;
-  }
-  /* kick deep-link resolution once the world is up */
-  if(document.readyState==='complete'||document.readyState==='interactive') glKickDeepLink();
-  else window.addEventListener('DOMContentLoaded',glKickDeepLink);
-})();
-
-
 /* ---------- auto-tour ---------- */
 const TOUR=[
   {id:'hub',title:'HUB — "The whole ledger, at a glance."',body:'This is the Gear Ledger\u2019s mission control: a holographic globe showing the fleet\u2019s world status. Total handoffs, chain integrity, and the SAMPLE badge reminding you every figure here is illustrative \u2014 not live ledger data.'},
@@ -2634,13 +1921,13 @@ function tourGoto(i){
 }
 function tourNext(){
   if(tour.idx>=TOUR.length-1){
-    if(broadcast){ tourGoto(0); return; }   /* broadcast loops the cinematic forever */
+    if(broadcast||seTour){ tourGoto(0); return; }   /* broadcast/se-tour loop the cinematic forever */
     stopTour(); goOverview(); return;
   }
   tourGoto(tour.idx+1);
 }
 function startTour(){
-  if(broadcast) tour.dwellDur=8;             /* slower, calmer beats for a streamed feed */
+  if(broadcast||seTour) tour.dwellDur=8;             /* slower, calmer beats for a streamed/showcase feed */
   else if(reduced) tour.dwellDur=8; else tour.dwellDur=5;
   tour.active=true; tour.idx=0;
   document.getElementById('b-tour').classList.add('active');
@@ -2673,7 +1960,7 @@ function kbHighlight(){
   }
 }
 addEventListener('keydown',e=>{
-  if(broadcast) return;   /* broadcast feed is director-driven */
+  if(broadcast||seTour) return;   /* broadcast / self-expression feeds are director-driven */
   if(e.key==='Escape'){
     if(inspOpen) closeInspector(); else if(tour.active) stopTour(); else goOverview();
   }
@@ -2732,9 +2019,6 @@ function animate(){
   foamMats.forEach(f=>{ f.map.offset.x+=dt*.03; });
   for(const c of clouds){ c.position.x+=c.userData.v*dt; if(c.position.x>320) c.position.x=-320; }
   for(const f of anims) f(t,dt);
-  updateDayCycle(dt);
-  updateBirds(dt,t);
-  updateFireflies(t);
   simTick(dt);
   if(tour.active&&tour.phase==='dwell'){
     tour.dwellT+=dt;
@@ -2759,7 +2043,11 @@ function runLoader(){
     setTimeout(()=>{
       loader.classList.add('done');
       startBootReveal();
-      if(!broadcast&&!nohint&&!window.__glStore.get('gear-ledger-3d.hintSeen')){
+      if(seTour){ /* director mode: auto-start the looping showcase tour + fade the kicker in */
+        setTimeout(()=>{ startTour(); },900);
+        setTimeout(()=>{ const k=document.getElementById('se-kicker'); if(k) k.classList.add('fade'); },8000);
+      }
+      if(!broadcast&&!seTour&&!nohint&&!window.__glStore.get('gear-ledger-3d.hintSeen')){
         document.getElementById('hint').classList.add('open');
         window.__glStore.set('gear-ledger-3d.hintSeen','1');
       }
