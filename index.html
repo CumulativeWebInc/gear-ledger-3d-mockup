@@ -4,6 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Gear Ledger — 3D Archipelago (Concept Mockup)</title>
+<script>
+/* Boot diagnostics: collects page errors so a stuck loader can report them in-DOM. */
+window.__glerrs=[];
+window.addEventListener('error',function(e){window.__glerrs.push('ERR: '+(e.message||'unknown')+' @'+(e.lineno||'?'));});
+window.addEventListener('unhandledrejection',function(e){var r=e.reason;window.__glerrs.push('REJ: '+((r&&r.message)||r));});
+setTimeout(function(){
+  var l=document.getElementById('loader'),m=document.getElementById('lmsg');
+  if(l&&!l.classList.contains('done')&&m){
+    m.textContent=window.__glerrs.length?('Build error: '+window.__glerrs[0]):'Still building — the ocean is big today.';
+    if(window.__glerrs.length)m.style.color='#ff9a9a';
+  }
+},15000);
+</script>
 <style>
   :root{
     --ink:#f5f7fa; --dim:#bfe9ff; --plate:rgba(10,22,34,.78); --plate2:rgba(10,22,34,.92);
@@ -339,7 +352,15 @@ function signTexture(name,tag,accent,sampleBadge){
    2. RENDERER / SCENE / CAMERA / LIGHTS
    ============================================================ */
 const container=document.getElementById('scene');
-const renderer=new THREE.WebGLRenderer({antialias:true});
+let renderer;
+try{
+  renderer=new THREE.WebGLRenderer({antialias:true});
+}catch(e){
+  window.__glerrs.push('WEBGL: '+(e&&e.message||e));
+  const lm=document.getElementById('lmsg');
+  if(lm){lm.style.color='#ffb020';lm.textContent='The 3D archipelago needs WebGL, which this browser has disabled. The concept: six islands visualizing the Gear Ledger\u2019s sections.';}
+  throw e;
+}
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.setSize(innerWidth,innerHeight);
 renderer.shadowMap.enabled=true;
