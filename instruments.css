@@ -1,0 +1,145 @@
+/* ============================================================
+   instruments.css — CWI Agent Stage instruments (Worker B)
+   Every selector prefixed `cwi-`. Hidden under body.broadcast /
+   body.se-tour to match the existing sheet/HUD gating.
+   ============================================================ */
+
+/* ---------- instrument 2: shift countdown chip ---------- */
+.cwi-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 5px 10px;
+  min-height: 30px;
+  border-radius: 999px;
+  background: rgba(10, 14, 20, .78);
+  border: 1px solid rgba(255, 255, 255, .14);
+  color: #e8f4ff;
+  font: 500 11px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: .06em;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.cwi-chip-ico { font-size: 13px; }
+.cwi-chip-shift { letter-spacing: .14em; }
+.cwi-chip-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #ffd479;
+}
+.cwi-chip.cwi-night .cwi-chip-count { color: #9fd8ff; }
+.cwi-chip-next { opacity: .75; }
+
+/* ---------- instrument 1: live presence/activity ticker ---------- */
+.cwi-ticker {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(8, 12, 18, .82);
+  border: 1px solid rgba(255, 255, 255, .12);
+  color: #dfe9f5;
+  font: 400 11.5px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .45);
+}
+.cwi-ticker-mode {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  white-space: nowrap;
+}
+.cwi-mode-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: currentColor;
+}
+.cwi-ticker-mode.cwi-live { color: #3ddc84; }
+.cwi-ticker-mode.cwi-live .cwi-mode-dot {
+  animation: cwi-pulse 1.6s ease-in-out infinite;
+}
+.cwi-ticker-mode.cwi-off { color: #9aa4b2; }
+@keyframes cwi-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(61, 220, 132, .55); }
+  50%      { box-shadow: 0 0 0 6px rgba(61, 220, 132, 0); }
+}
+.cwi-ticker-viewport {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+}
+.cwi-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: cwi-marquee 45s linear infinite;
+}
+.cwi-ticker-run { display: inline-flex; align-items: center; white-space: nowrap; }
+.cwi-ticker-item b { color: #fff; }
+.cwi-ticker-time { font-style: normal; opacity: .55; margin-left: 4px; }
+.cwi-ticker-sep { margin: 0 14px; opacity: .35; }
+@keyframes cwi-marquee { to { transform: translateX(-50%); } }
+.cwi-ticker.cwi-paused .cwi-ticker-track,
+.cwi-ticker:hover .cwi-ticker-track { animation-play-state: paused; }
+.cwi-ticker.cwi-offline .cwi-ticker-track { animation-play-state: paused; }
+
+.cwi-ticker-dots {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cwi-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .25);
+  padding: 6px;              /* roomy touch target around the dot */
+  background-clip: content-box;
+  cursor: default;
+}
+.cwi-dot.cwi-live {
+  background-color: #3ddc84;
+  animation: cwi-pulse 1.6s ease-in-out infinite;
+}
+.cwi-dot.cwi-stale { background-color: #5a6472; }
+
+/* kill-rule collapsed state: honest offline pill, nothing live-claimed */
+.cwi-ticker.cwi-collapsed { right: auto; max-width: 92vw; }
+.cwi-ticker.cwi-collapsed .cwi-ticker-viewport,
+.cwi-ticker.cwi-collapsed .cwi-ticker-dots { display: none; }
+
+/* broadcast / self-expression tour gating (same as .sheet) */
+body.broadcast .cwi-ticker,
+body.se-tour .cwi-ticker { display: none !important; }
+
+/* ---------- narrow screens ---------- */
+@media (max-width: 640px) {
+  .cwi-ticker { left: 8px; right: 8px; gap: 8px; padding: 7px 10px; }
+  .cwi-ticker-dots { display: none; }
+  .cwi-ticker.cwi-collapsed { right: auto; }
+  .cwi-chip { font-size: 10px; padding: 4px 8px; }
+}
+@media (max-width: 420px) {
+  .cwi-ticker-mode .cwi-mode-text { font-size: 9px; }
+  .cwi-chip-next { display: none; }
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .cwi-ticker-track { animation: none; }
+  .cwi-ticker-mode.cwi-live .cwi-mode-dot,
+  .cwi-dot.cwi-live { animation: none; }
+}
