@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1280,height=720">
+<title>GEAR LEDGER · Live Broadcast</title>
+<style>
+  html,body{margin:0;padding:0;width:1280px;height:720px;background:#04090f;overflow:hidden}
+  canvas{display:block;width:1280px;height:720px}
+</style>
+</head>
+<body>
+<canvas id="b" width="1280" height="720"></canvas>
+<script>
+'use strict';
+/* broadcast.html — lightweight broadcast edition of the Gear Ledger 3D world.
+ *
+ * Plain Canvas2D (no WebGL) so it renders at full frame rate under software
+ * rasterization. Shows REAL live data only: it fetches live-data.json
+ * (schema gear-ledger-3d-live/v1) and displays the green LIVE pill only when
+ * the data is fresh (<60 min). Otherwise it shows the amber SAMPLE pill and
+ * an honest "awaiting live feed" slate — it never invents agents or numbers.
+ */
+var W=1280,H=720;
+var cv=document.getElementById('b'),g=cv.getContext('2d');
+
+var LIVE_SCHEMA='gear-ledger-3d-live/v1';
+var MAX_AGE_MS=60*60*1000;
+
+/* ---------------- data ---------------- */
+var state={mode:'SAMPLE',data:null,asOf:null,storeVersion:null,err:''};
+
+function esc(s){return String(s==null?'':s);}
+
+function fresh(json){
+  if(!json||json.schema!==LIVE_SCHEMA||json.mode!=='LIVE')return false;
+  var t=Date.parse(json.as_of);if(!t)return false;
+  return (Date.now()-t)<MAX_AGE_MS;
+}
+
+function loadData(){
+  fetch('live-data.json',{cache:'no-store'}).then(function(r){
+    if(!r.ok)throw new Error('http '+r.status);return r.json();
+  }).then(function(j){
+    if(fresh(j)){
+      state.mode='LIVE';state.data=j;state.asOf=j.as_of;state.storeVersion=j.store_version;state.err='';
+    }else{
+      state.mode='SAMPLE';state.err='stale data';
+    }
+  }).catch(function(e){
+    state.mode='SAMPLE';state.err=String(e&&e.message||e);
+  });
+}
+loadData();
+setInterval(loadData,60000);
+
+/* ---------------- ambient particles ---------------- */
+var parts=[];
+for(var i=0;i<140;i++){
+  parts.push({x:Math.random()*W,y:Math.random()*H,s:Math.random()*2.2+0.6,
+    vx:(Math.random()-0.5)*0.25,vy:-Math.random()*0.35-0.08,
+    a:Math.random()*0.5+0.15,hue:Math.random()<0.75});
+}
+
+/* pre-rendered static background (gradients are expensive in software raster) */
+var bgCv=document.createElement('canvas');bgCv.width=W;bgCv.height=H;
+(function(){
+  var b=bgCv.getContext('2d');
+  var gr=b.createLinearGradient(0,0,0,H);
+  gr.addColorStop(0,'#071224');gr.addColorStop(0.55,'#050b18');gr.addColorStop(1,'#030710');
+  b.fillStyle=gr;b.fillRect(0,0,W,H);
+  var vg=b.createRadialGradient(W/2,H/2,H*0.35,W/2,H/2,H*0.85);
+  vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,0.45)');
+  b.fillStyle=vg;b.fillRect(0,0,W,H);
+})();
+
+/* ---------------- layout helpers ---------------- */
+function pill(x,y,w,h,live){
+  g.save();
+  g.beginPath();
+  if(g.roundRect)g.roundRect(x,y,w,h,h/2);else g.rect(x,y,w,h);
+  g.fillStyle=live?'rgba(21,122,63,0.92)':'rgba(146,96,16,0.92)';
+  g.fill();
+  g.strokeStyle=live?'#35d07f':'#ffb020';g.lineWidth=2;g.stroke();
+  g.restore();
+}
+
+function fmtAsOf(iso){
+  try{var d=new Date(iso);return d.toISOString().slice(11,16)+' UTC';}catch(e){return '';}
+}
+
+function fmtAgo(iso){
+  try{var ms=Date.now()-Date.parse(iso);if(ms<0)ms=0;
+    var m=Math.floor(ms/60000);
+    if(m<1)return 'just now';if(m<60)return m+'m ago';
+    return Math.floor(m/60)+'h '+(m%60)+'m ago';
+  }catch(e){return '';}
+}
+
+/* spotlight rotation */
+var spotIdx=0,spotT=0;
+setInterval(function(){
+  var n=state.data&&state.data.agents?state.data.agents.length:0;
+  if(n>0){spotIdx=(spotIdx+1)%n;spotT=performance.now();}
+},6000);
+
+/* ticker */
+var tickX=W;
+var tickItems=[];
+var tickWidths=[];
+var tickWireW=0,tickWireTxtW=0,tickSepW=0;
+var sep0='     ·     ';
+
+/* fps probe (parent measures via window.__bcastFps) */
+var frames=0,lastT=performance.now();
+window.__bcastFps=0;
+
+/* ---------------- draw ---------------- */
+function drawBG(t){
+  g.drawImage(bgCv,0,0);
+
+  /* drifting particles */
+  for(var i=0;i<parts.length;i++){
+    var p=parts[i];
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.y<-4){p.y=H+4;p.x=Math.random()*W;}
+    if(p.x<-4)p.x=W+4;else if(p.x>W+4)p.x=-4;
+    g.fillStyle=p.hue?('rgba(94,234,212,'+p.a+')'):('rgba(120,170,255,'+p.a+')');
+    var s=p.s;g.fillRect(p.x,p.y,s,s);
+  }
+
+  /* slow sine waves */
+  g.lineWidth=1.5;
+  for(var wv=0;wv<3;wv++){
+    g.strokeStyle='rgba(70,140,220,'+(0.10-wv*0.025)+')';
+    g.beginPath();
+    var base=180+wv*170,amp=26+wv*14,sp=0.0016+wv*0.0009,ph=t*(0.00022+wv*0.00011)+wv*2.1;
+    for(var x=0;x<=W;x+=16){
+      var y=base+Math.sin(x*sp*6.28+ph)*amp+Math.sin(x*0.004+ph*1.7)*8;
+      if(x===0)g.moveTo(x,y);else g.lineTo(x,y);
+    }
+    g.stroke();
+  }
+}
+
+function drawTop(t){
+  g.fillStyle='rgba(4,10,20,0.72)';g.fillRect(0,0,W,92);
+  g.fillStyle='rgba(70,140,220,0.25)';g.fillRect(0,92,W,1);
+
+  /* wordmark */
+  g.fillStyle='#eaf6ff';g.font='700 34px system-ui,-apple-system,"Segoe UI",sans-serif';
+  g.textBaseline='alphabetic';
+  g.fillText('⚙ GEAR LEDGER',28,44);
+  g.fillStyle='#7fa8cc';g.font='500 15px system-ui,sans-serif';
+  g.fillText('AGENT WORLD · LIVE BROADCAST FEED',30,70);
+
+  var live=state.mode==='LIVE';
+  var pw=live?150:190;
+  pill(W-pw-28,22,pw,40,live);
+  g.fillStyle='#fff';g.font='700 17px system-ui,sans-serif';
+  g.fillText(live?'● LIVE':'● SAMPLE',W-pw-28+18,49);
+
+  g.fillStyle='#9fc3e8';g.font='500 14px system-ui,sans-serif';
+  var right=W-pw-48;
+  var asof=state.asOf?('data as of '+fmtAsOf(state.asOf)+' · '+fmtAgo(state.asOf)):'awaiting live feed';
+  var sv=state.storeVersion!=null?('store v'+state.storeVersion):'';
+  var meta=asof+(sv?' · '+sv:'');
+  var mw=g.measureText(meta).width;
+  g.fillText(meta,right-mw,40);
+  g.fillStyle='#5b7a99';g.font='500 12px system-ui,sans-serif';
+  var sub='cumulativewebinc.github.io/gear-ledger-3d-mockup';
+  g.fillText(sub,right-g.measureText(sub).width,62);
+}
+
+function presenceColor(p){return p==='online'?'#35d07f':'#8a97a5';}
+
+/* truncate text with ellipsis to fit maxW (font must be set before call) */
+function fit(s,maxW){
+  s=esc(s);
+  if(g.measureText(s).width<=maxW)return s;
+  while(s.length>1&&g.measureText(s+'…').width>maxW)s=s.slice(0,-1);
+  return s+'…';
+}
+
+function drawAgents(t){
+  var d=state.data;if(!d||!d.agents)return;
+  var ag=d.agents.slice(0,10);
+  var cols=5,rows=2;
+  var gx=28,gy=112,gw=752,gh=430;
+  var cw=gw/cols,ch=gh/rows;
+  var maxW=cw-52;
+  for(var i=0;i<ag.length;i++){
+    var a=ag[i];
+    var cx=gx+(i%cols)*cw,cy=gy+Math.floor(i/cols)*ch;
+    var hot=(i===spotIdx);
+    g.fillStyle=hot?'rgba(24,48,80,0.92)':'rgba(10,22,40,0.78)';
+    g.fillRect(cx+5,cy+5,cw-10,ch-10);
+    g.strokeStyle=hot?'#5eead4':'rgba(90,140,200,0.35)';
+    g.lineWidth=hot?2:1;
+    g.strokeRect(cx+5.5,cy+5.5,cw-11,ch-11);
+
+    var px=cx+24,py=cy+34;
+    g.fillStyle=presenceColor(a.presence);
+    g.beginPath();g.arc(px,py,7,0,6.2832);g.fill();
+    if(a.presence==='online'&&hot){
+      g.strokeStyle='rgba(53,208,127,'+(0.4+0.3*Math.sin(t*0.006))+')';
+      g.lineWidth=3;g.beginPath();g.arc(px,py,12,0,6.2832);g.stroke();
+    }
+    g.fillStyle='#fff';g.font='700 19px system-ui,sans-serif';
+    g.fillText(fit(a.public_name||a.handle,maxW+18),cx+42,cy+41);
+    g.fillStyle='#7fa8cc';g.font='500 13px system-ui,sans-serif';
+    g.fillText(fit('@'+(a.handle||''),maxW),cx+24,cy+66);
+    g.fillStyle='#5b7a99';g.font='500 12px system-ui,sans-serif';
+    g.fillText(fit(a.department||'',maxW),cx+24,cy+86);
+    g.fillStyle='#c8dcf2';g.font='500 12.5px system-ui,sans-serif';
+    var task=a.current_task_title?('▶ '+a.current_task_title):'standing by';
+    g.fillText(fit(task,maxW),cx+24,cy+110);
+    g.fillStyle='#8fa9bc';g.font='500 12px system-ui,sans-serif';
+    g.fillText('✓ '+(a.tasks_verified||0)+' verified',cx+24,cy+134);
+    g.fillText((a.tasks_assigned||0)+' assigned',cx+24,cy+152);
+  }
+}
+
+function drawSpotlight(t){
+  var d=state.data;
+  var x=812,y=112,w=340,h=430;
+  g.fillStyle='rgba(8,18,34,0.88)';g.fillRect(x,y,w,h);
+  g.strokeStyle='rgba(94,234,212,0.4)';g.lineWidth=1.5;g.strokeRect(x+0.5,y+0.5,w-1,h-1);
+  g.fillStyle='#5eead4';g.font='700 13px system-ui,sans-serif';
+  g.fillText('◆ AGENT SPOTLIGHT',x+20,y+32);
+
+  if(!d||!d.agents||!d.agents.length){
+    g.fillStyle='#8fa9bc';g.font='500 15px system-ui,sans-serif';
+    g.fillText('Waiting for the live feed…',x+20,y+90);
+    if(state.err){g.fillStyle='#5b7a99';g.font='500 12px system-ui,sans-serif';g.fillText(state.err,x+20,y+116);}
+    return;
+  }
+  var a=d.agents[spotIdx%d.agents.length];
+  var fade=Math.min(1,(performance.now()-spotT)/600);
+  g.save();g.globalAlpha=fade;
+  g.fillStyle=presenceColor(a.presence);
+  g.beginPath();g.arc(x+34,y+72,11,0,6.2832);g.fill();
+  g.fillStyle='#fff';g.font='800 30px system-ui,sans-serif';
+  g.fillText(esc(a.public_name||a.handle),x+56,y+82);
+  g.fillStyle='#7fa8cc';g.font='500 14px system-ui,sans-serif';
+  g.fillText('@'+esc(a.handle),x+20,y+112);
+  g.fillStyle='#c8dcf2';g.font='400 13.5px system-ui,sans-serif';
+  var role=esc(a.role||'');var words=role.split(' ');var line='',ly=y+142;
+  for(var i=0;i<words.length&&ly<y+260;i++){
+    var test=line?line+' '+words[i]:words[i];
+    if(g.measureText(test).width>w-44&&line){g.fillText(line,x+20,ly);ly+=20;line=words[i];}
+    else line=test;
+  }
+  if(line&&ly<y+280){g.fillText(line,x+20,ly);ly+=20;}
+  g.fillStyle='#5eead4';g.font='700 15px system-ui,sans-serif';
+  g.fillText('DEPARTMENT',x+20,y+330);
+  g.fillStyle='#fff';g.font='600 17px system-ui,sans-serif';
+  g.fillText(esc(a.department||'—'),x+20,y+354);
+  g.fillStyle='#5eead4';g.font='700 15px system-ui,sans-serif';
+  g.fillText('CURRENT TASK',x+20,y+392);
+  g.fillStyle='#fff';g.font='500 14px system-ui,sans-serif';
+  var ct=a.current_task_title?esc(a.current_task_title):'standing by';
+  g.fillText(fit(ct,w-48),x+20,y+406);
+  g.restore();
+
+  /* progress dots */
+  var n=d.agents.length;
+  for(var k=0;k<n;k++){
+    g.fillStyle=(k===spotIdx)?'#5eead4':'rgba(120,160,200,0.3)';
+    g.beginPath();g.arc(x+20+k*22,y+h-14,5,0,6.2832);g.fill();
+  }
+}
+
+function drawStats(){
+  var d=state.data;
+  var x=812,y=556,w=340,h=86;
+  g.fillStyle='rgba(8,18,34,0.88)';g.fillRect(x,y,w,h);
+  g.strokeStyle='rgba(90,140,200,0.3)';g.lineWidth=1;g.strokeRect(x+0.5,y+0.5,w-1,h-1);
+  if(!d||!d.hub){
+    g.fillStyle='#5b7a99';g.font='500 13px system-ui,sans-serif';
+    g.fillText('stats pending…',x+20,y+52);return;
+  }
+  var hb=d.hub;
+  var items=[
+    [String(hb.agents_online)+'/'+String(hb.agents_registered),'AGENTS ONLINE'],
+    [String(hb.tasks_total),'TASKS'],
+    [String(hb.tasks_verified),'VERIFIED']
+  ];
+  for(var i=0;i<items.length;i++){
+    var ix=x+20+i*108;
+    g.fillStyle='#fff';g.font='800 26px system-ui,sans-serif';
+    g.fillText(items[i][0],ix,y+38);
+    g.fillStyle='#5b7a99';g.font='600 10.5px system-ui,sans-serif';
+    g.fillText(items[i][1],ix,y+60);
+  }
+}
+
+function drawTicker(t){
+  var y=660,h=60;
+  g.fillStyle='rgba(3,7,14,0.9)';g.fillRect(0,y,W,h);
+  g.fillStyle='rgba(70,140,220,0.25)';g.fillRect(0,y,W,1);
+  g.fillStyle='#5eead4';g.font='700 13px system-ui,sans-serif';
+  g.fillText('TASK WIRE',28,y+37);
+
+  var d=state.data;
+  if(!d||!d.tasks_recent||!d.tasks_recent.length){
+    g.fillStyle='#5b7a99';g.font='500 14px system-ui,sans-serif';
+    g.fillText(state.mode==='LIVE'?'—':'connecting to the live ledger…',170,y+37);
+    return;
+  }
+  if(!tickItems.length||tickX<-2000){
+    tickItems=d.tasks_recent.slice(0,8).map(function(tk){
+      var who=(d.agents||[]).find(function(a){return a.agent_id===tk.assigned_to;});
+      return '▸ ['+tk.state+'] '+tk.title+' — @'+(who?who.handle:tk.assigned_to);
+    });
+    g.font='500 15px system-ui,sans-serif';
+    tickWidths=tickItems.map(function(s){return g.measureText(s+sep0).width;});
+    tickWireW=g.measureText(sep0+'◆ LIVE WIRE '+sep0).width;
+    tickWireTxtW=g.measureText('◆ LIVE WIRE').width;
+    tickSepW=g.measureText(sep0).width;
+  }
+  g.font='500 15px system-ui,sans-serif';
+  var x0=tickX;
+  g.save();g.beginPath();g.rect(150,y,W-150,h);g.clip();
+  var x=x0;
+  for(var r=0;r<2;r++){
+    for(var i=0;i<tickItems.length;i++){
+      g.fillStyle='rgba(200,220,242,0.92)';g.fillText(tickItems[i],x,y+37);
+      x+=tickWidths[i]||0;
+    }
+    g.fillStyle='#5eead4';
+    g.fillText('◆ LIVE WIRE',x+tickSepW,y+37);
+    x+=tickWireW;
+  }
+  g.restore();
+  var total=x-x0;
+  tickX-=1.6;
+  if(tickX<-(total))tickX=W;
+}
+
+function drawWaiting(t){
+  /* honest slate when no fresh live data has ever arrived */
+  g.fillStyle='rgba(3,7,14,0.55)';g.fillRect(0,92,W,H-92-60);
+  g.fillStyle='#eaf6ff';g.font='700 30px system-ui,sans-serif';
+  var s='CONNECTING TO THE LIVE LEDGER…';
+  g.fillText(s,(W-g.measureText(s).width)/2,360);
+  g.fillStyle='#7fa8cc';g.font='500 16px system-ui,sans-serif';
+  var s2='real agent data only — nothing simulated on this feed';
+  g.fillText(s2,(W-g.measureText(s2).width)/2,396);
+  if(state.err){
+    g.fillStyle='#5b7a99';g.font='500 13px system-ui,sans-serif';
+    g.fillText(state.err,(W-g.measureText(state.err).width)/2,424);
+  }
+}
+
+function frame(t){
+  frames++;
+  var now=performance.now();
+  if(now-lastT>=2000){
+    window.__bcastFps=Math.round(frames*1000/(now-lastT));
+    frames=0;lastT=now;
+    if(/[?&]probe=1/.test(location.search))document.title='FPS '+window.__bcastFps;
+  }
+  drawBG(t||0);
+  drawTop(t||0);
+  if(state.mode==='LIVE'&&state.data){
+    drawAgents(t||0);
+    drawSpotlight(t||0);
+    drawStats();
+    drawTicker(t||0);
+  }else{
+    drawWaiting(t||0);
+    drawTicker(t||0);
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
