@@ -96,6 +96,22 @@ setTimeout(function(){
   .hbtn.active{background:rgba(53,196,255,.25);border-color:var(--blue)}
   #thumbbar{display:none}
 
+  /* ---------- agent expression: music ticker + music panel ---------- */
+  #musicticker{position:fixed;top:calc(14px + var(--safe-t,0px));left:50%;transform:translateX(-50%);z-index:20;pointer-events:none;
+    background:rgba(10,22,34,.72);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:8px 16px;
+    font-size:12px;letter-spacing:.06em;color:#dfeaf2;backdrop-filter:blur(6px);white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+  #musicticker #mt-note{color:#7ef0c1;margin-right:6px}
+  #musicticker .svtag{color:#1a1206;background:#ffb020;border-radius:6px;font-size:9px;font-weight:800;padding:2px 6px;margin-left:8px;letter-spacing:.1em}
+  @media(max-width:899px){#musicticker{top:auto;bottom:calc(70px + env(safe-area-inset-bottom,0px));font-size:11px}}
+  #musicpanel{position:fixed;z-index:40;right:16px;bottom:calc(20px + env(safe-area-inset-bottom,0px));width:340px;max-width:calc(100vw - 32px);
+    background:rgba(10,22,34,.94);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:12px;
+    transform:translateY(12px);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+  #musicpanel.open{transform:none;opacity:1;pointer-events:auto}
+  #musicpanel .fine{color:#8fa9bc;font-size:11px;margin:8px 2px 0;line-height:1.5}
+  #mp-close{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.16);
+    background:rgba(255,255,255,.06);color:#fff;font-size:14px;cursor:pointer}
+  body.broadcast #musicpanel{display:none!important}
+
   /* ---------- inspector ---------- */
   #inspector{position:fixed;z-index:25;top:calc(76px + var(--safe-t));right:16px;width:360px;max-width:calc(100vw - 32px);
     max-height:calc(100vh - 160px);overflow:auto;background:var(--plate2);border:1px solid rgba(255,255,255,.14);
@@ -190,7 +206,9 @@ setTimeout(function(){
     <button class="hbtn" id="b-tour" title="Auto-tour (T)">▶ <span class="lbl">Auto-tour</span></button>
     <button class="hbtn" id="b-legend" title="Legend (L)">? <span class="lbl">Legend</span></button>
     <button class="hbtn" id="b-info" title="About this mockup (I)">ⓘ <span class="lbl">Info</span></button>
+    <button class="hbtn" id="b-music" title="That Boy Hi Hat catalog playlist (Spotify)">♪ <span class="lbl">Music</span></button>
   </div>
+  <div id="musicticker" title="Simulated music taste of the SAMPLE cast"><span id="mt-note">♪</span><span id="mt-text">warming up the decks…</span><span class="svtag">SIM</span></div>
   <div id="bcast-mark">CWI · CUMULATIVE WEB INC</div>
   <div id="thumbbar">
     <button class="hbtn" data-act="overview">⌂<br><span style="font-size:10px">Overview</span></button>
@@ -254,6 +272,11 @@ setTimeout(function(){
   </div>
 </div>
 
+<div id="musicpanel" role="dialog" aria-label="Catalog playlist">
+  <button id="mp-close" aria-label="Close">✕</button>
+  <div id="mp-body"></div>
+  <p class="fine">The real That Boy Hi Hat catalog playlist on Spotify — press play. Each agent's "now playing" in the world is simulated taste (SAMPLE), not a live listen.</p>
+</div>
 <div id="toast"></div>
 <div id="focusring"></div>
 
@@ -756,16 +779,25 @@ const gearGlyph=(color)=>canvasTex(128,128,(g)=>{
 
 /* ---- robot construction ---- */
 function robotLists(){ return {white:[],visor:[],base:[]}; }
-function robotParts(L,x,y,z,ry,visorColor){
-  put(L.white,new THREE.SphereGeometry(.55,16,12),x,y+.95,z,0,ry,0);
-  put(L.white,new THREE.SphereGeometry(.42,16,12),x,y+1.75,z,0,ry,0);
-  put(L.white,new THREE.CylinderGeometry(.09,.09,.7,8),x-.62,y+1.05,z,0,0,.5);
-  put(L.white,new THREE.CylinderGeometry(.09,.09,.7,8),x+.62,y+1.05,z,0,0,-.5);
-  put(L.white,new THREE.CylinderGeometry(.05,.05,.5,6),x,y+2.3,z);
+/* Entry silhouettes: body-form variants each agent can choose at arrival. */
+const FORMS={
+  classic:{bsx:1,bsy:1,bsz:1,hy:1.75,hr:.42,vy:1.78},
+  tall:{bsx:.88,bsy:1.32,bsz:.88,hy:2.02,hr:.4,vy:2.05},
+  wide:{bsx:1.32,bsy:.88,bsz:1.32,hy:1.68,hr:.44,vy:1.71},
+  sleek:{bsx:.84,bsy:1.14,bsz:.84,hy:1.84,hr:.36,vy:1.87},
+};
+function robotParts(L,x,y,z,ry,visorColor,form){
+  form=form||FORMS.classic;
+  put(L.white,new THREE.SphereGeometry(.55,16,12),x,y+.95,z,0,ry,0,form.bsx,form.bsy,form.bsz);
+  put(L.white,new THREE.SphereGeometry(form.hr,16,12),x,y+form.hy,z,0,ry,0);
+  const armX=.62*form.bsx, armY=.95+.1*form.bsy;
+  put(L.white,new THREE.CylinderGeometry(.09,.09,.7,8),x-armX,y+armY,z,0,0,.5);
+  put(L.white,new THREE.CylinderGeometry(.09,.09,.7,8),x+armX,y+armY,z,0,0,-.5);
+  put(L.white,new THREE.CylinderGeometry(.05,.05,.5,6),x,y+form.hy+.55,z);
   const vm=new THREE.MeshStandardMaterial({color:0x101C26,emissive:visorColor,emissiveIntensity:1.6,roughness:.15,metalness:.6});
   const visor=new THREE.Mesh(new THREE.SphereGeometry(.3,12,8),vm);
   visor.scale.set(1,.55,.5);
-  visor.position.set(x+Math.sin(ry)*.28,y+1.78,z+Math.cos(ry)*.28);
+  visor.position.set(x+Math.sin(ry)*.28,y+form.vy,z+Math.cos(ry)*.28);
   visor.rotation.y=ry;
   L.visor.push(visor);
   put(L.base,new THREE.TorusGeometry(.5,.1,8,20),x,y+.15,z,Math.PI/2,0,0);
@@ -1164,22 +1196,204 @@ function makeBoat(){
    to real CWI task execution, shared state, presence, or ledger
    records. All task data here is SAMPLE.
    ============================================================ */
+/* Expression personas: each simulated agent's chosen look & kit.
+   tint = body tint · accents = palette it picks from · acc = head accessory
+   gear = worn kit · vibe = personality weight for music changes.
+   Crown stays exclusive to MUSE_CWI (KingCode). */
 const AGENT_DEFS=[
-  {name:'MUSE_CWI',    role:'Chief of Staff',    visor:0xFFD24D, king:true},
-  {name:'CWI_AandR',   role:'A&R',               visor:0xFF6B6B},
-  {name:'CWI_Marketing',role:'Marketing & Social',visor:0xFF9F43},
-  {name:'CWI_Sync',    role:'Sync & Licensing',  visor:0xB388FF},
-  {name:'CWI_Radio',   role:'Radio & Playlists', visor:0x35C4FF},
-  {name:'CWI_Press',   role:'Press & PR',        visor:0xF368E0},
-  {name:'CWI_Studio',  role:'Content Studio',    visor:0x7EF0C1},
-  {name:'CWI_Data',    role:'Data & Analytics',  visor:0x54D8FF},
-  {name:'CWI_Affairs', role:'Business Affairs',  visor:0xFFC93C},
+  {name:'MUSE_CWI',    role:'Chief of Staff',    visor:0xFFD24D, king:true, tint:0xFFF3D6, accents:[0xFFD24D,0xFFF6E0,0xE0A92E], acc:'crown',   gear:'walkman',  vibe:'regal'},
+  {name:'CWI_AandR',   role:'A&R',               visor:0xFF6B6B, tint:0xFFE7E3, accents:[0xFF6B6B,0xFF9F43,0xC0392B], acc:'crest',   gear:'walkman',  vibe:'bold'},
+  {name:'CWI_Marketing',role:'Marketing & Social',visor:0xFF9F43, tint:0xFFEDD6, accents:[0xFF9F43,0xF368E0,0xFFD24D], acc:'crest',   gear:'walkman',  vibe:'loud'},
+  {name:'CWI_Sync',    role:'Sync & Licensing',  visor:0xB388FF, tint:0xEDE6FF, accents:[0xB388FF,0x7EF0C1,0x5B4BDB], acc:'fin',     gear:'toolpack', vibe:'smooth'},
+  {name:'CWI_Radio',   role:'Radio & Playlists', visor:0x35C4FF, tint:0xDFF4FF, accents:[0x35C4FF,0x54D8FF,0x7EF0C1], acc:'halo',    gear:'walkman',  vibe:'electric'},
+  {name:'CWI_Press',   role:'Press & PR',        visor:0xF368E0, tint:0xFFE0F6, accents:[0xF368E0,0xFF6B6B,0xB388FF], acc:'cap',     gear:'none',     vibe:'sharp'},
+  {name:'CWI_Studio',  role:'Content Studio',    visor:0x7EF0C1, tint:0xDFF7EC, accents:[0x7EF0C1,0x35C4FF,0x2E9E4F], acc:'crest',   gear:'walkman',  vibe:'craft'},
+  {name:'CWI_Data',    role:'Data & Analytics',  visor:0x54D8FF, tint:0xE3F0FF, accents:[0x54D8FF,0x35C4FF,0xB388FF], acc:'antenna', gear:'toolpack', vibe:'precise'},
+  {name:'CWI_Affairs', role:'Business Affairs',  visor:0xFFC93C, tint:0xFFF0D6, accents:[0xFFC93C,0xFF9F43,0x8A6D1B], acc:'cap',     gear:'none',     vibe:'steady'},
 ];
 const TASK_VERBS=[
   ['Verifying handoff',4,7],['Equipping gear',5,8],['Auditing chain',6,10],
   ['Sealing record',3,6],['Routing transfer',5,9],['Scanning manifest',4,6],
 ];
 const GEAR_ITEMS=['Signal Boy “Origin”','Needle Drop','First Spin','Trust Dial','Seal Kit','Handoff Beacon'];
+/* ============================================================
+   8b. AGENT EXPRESSION — wear, gear, music, personal choice.
+   Part of the client-side SAMPLE simulation: this is the
+   simulated cast expressing itself, NOT the real nine CWI
+   agents. Wear accents, looks, and "now playing" picks are
+   invented flavor; the real catalog playlist (Spotify panel)
+   is real music. Crown motif stays KingCode-only.
+   ============================================================ */
+const CATALOG_TRACKS=['Zooted Zone','Shaka Zulu','Doves & Diamonds','Diabolique','Flamerz',
+'Neon Nights Pt. 777','Ultimate','Painted Lady','Warped and Wicked','Golden Diamond',
+'Spirits n Shadows','Flex My Flame','Rainbows And Roses','Tears and Scars','Toxic Elements',
+'7th Angel','Scorpions & Sapphires','Place I Go to Dream','Place I Go to Dream - Remastered',
+'Place I Go to Dream - Instrumental',"Smokin' Pain",'Phantasm','Misfits and Hooligans','Roses over Monaco'];
+function pickTrack(except){
+  let t=except;
+  for(let i=0;i<4&&t===except;i++) t=CATALOG_TRACKS[Math.floor(Math.random()*CATALOG_TRACKS.length)];
+  return t;
+}
+/* Entry looks: personality-seeded sets each agent chooses from at arrival. */
+const LOOK_SETS={regal:['halo','cap'],bold:['crest','fin'],loud:['crest','halo'],smooth:['fin','cap'],
+  electric:['halo','antenna'],sharp:['cap','fin'],craft:['crest','halo'],precise:['antenna','fin'],steady:['cap','crest']};
+const GEAR_SETS={regal:['walkman','none'],bold:['walkman','toolpack'],loud:['walkman'],smooth:['toolpack','walkman'],
+  electric:['walkman'],sharp:['none','toolpack'],craft:['walkman','toolpack'],precise:['toolpack','none'],steady:['none','toolpack']};
+const FORM_NAMES=['classic','tall','wide','sleek'];
+function chooseLook(def){
+  const accs=LOOK_SETS[def.vibe]||['crest'], gears=GEAR_SETS[def.vibe]||['none'];
+  return {
+    form:FORM_NAMES[Math.floor(Math.random()*FORM_NAMES.length)],
+    acc:def.king?'crown':accs[Math.floor(Math.random()*accs.length)],
+    accent:def.accents[Math.floor(Math.random()*def.accents.length)],
+    gear:gears[Math.floor(Math.random()*gears.length)],
+  };
+}
+function lookLabel(l){ return l.form+' frame · '+l.acc+(l.gear==='none'?'':' · '+l.gear); }
+/* CWI badge texture for the walkman face — CWI logo on all gear. */
+const walkmanTex=canvasTex(128,128,(g)=>{
+  g.fillStyle='#14202C'; g.beginPath(); g.roundRect(0,0,128,128,18); g.fill();
+  g.strokeStyle='#FFC93C'; g.lineWidth=6; g.beginPath(); g.arc(64,56,34,0,7); g.stroke();
+  g.fillStyle='#FFFFFF'; g.font='800 28px Arial'; g.textAlign='center'; g.fillText('CWI',64,68);
+  g.fillStyle='#FFC93C'; g.font='700 13px Arial'; g.fillText('SIGNAL BOY',64,106);
+});
+const walkmanMat=new THREE.MeshStandardMaterial({map:walkmanTex,roughness:.5,metalness:.2});
+const gearDarkMat=new THREE.MeshStandardMaterial({color:0x1B2A38,roughness:.4,metalness:.6});
+function buildAccessoryMesh(type,mat,yOff){
+  yOff=yOff||0;
+  const parts=[];
+  if(type==='crest'){ for(let i=0;i<3;i++) put(parts,new THREE.ConeGeometry(.09,.3,6),0,2.3+yOff,-.16+i*.16,-.25,0,0); }
+  else if(type==='halo'){ put(parts,new THREE.TorusGeometry(.34,.045,8,20),0,2.62+yOff,0,Math.PI/2.25,0,0); }
+  else if(type==='fin'){ put(parts,new THREE.BoxGeometry(.07,.42,.3),0,2.02+yOff,-.42,-.15,0,0); }
+  else if(type==='cap'){ put(parts,new THREE.CylinderGeometry(.3,.32,.12,12),0,2.2+yOff,0); put(parts,new THREE.BoxGeometry(.44,.05,.3),0,2.15+yOff,.4); }
+  else if(type==='antenna'){ put(parts,new THREE.CylinderGeometry(.028,.028,.75,6),0,2.55+yOff,0); put(parts,new THREE.SphereGeometry(.07,8,6),0,2.95+yOff,0); }
+  else return null;
+  return buildMesh(parts,mat,false);
+}
+function buildGearMeshes(def,gear,yOff){
+  yOff=yOff||0;
+  const out=[];
+  if(gear==='walkman'){
+    const wb=new THREE.Mesh(new THREE.BoxGeometry(.36,.24,.14),walkmanMat);
+    wb.position.set(.62,.82,.12); wb.rotation.set(0,-.3,.1); wb.castShadow=true; out.push(wb);
+    const hp=[];
+    put(hp,new THREE.TorusGeometry(.4,.05,8,14,Math.PI),0,1.82+yOff,0);
+    put(hp,new THREE.CylinderGeometry(.09,.09,.1,8),-.4,1.72+yOff,0,0,0,Math.PI/2);
+    put(hp,new THREE.CylinderGeometry(.09,.09,.1,8),.4,1.72+yOff,0,0,0,Math.PI/2);
+    const hm=buildMesh(hp,gearDarkMat,false); if(hm) out.push(hm);
+  }else if(gear==='toolpack'){
+    const tp=[];
+    put(tp,new THREE.BoxGeometry(.42,.52,.22),0,1.05,-.58);
+    put(tp,new THREE.CylinderGeometry(.07,.07,.3,8),-.12,1.5,-.6);
+    put(tp,new THREE.CylinderGeometry(.07,.07,.3,8),.12,1.5,-.6);
+    const tm=buildMesh(tp,gearDarkMat); if(tm) out.push(tm);
+  }
+  return out;
+}
+function disposeGroup(gr){ gr.traverse(o=>{ if(o.geometry) o.geometry.dispose(); }); }
+function buildAgentBody(def,formName,visorColor){
+  const form=FORMS[formName]||FORMS.classic;
+  const grp=new THREE.Group();
+  const L=robotLists(); robotParts(L,0,0,0,0,visorColor,form);
+  const bodyMat=MAT.robotWhite.clone(); bodyMat.color.set(def.tint);
+  const bw=buildMesh(L.white,bodyMat); if(bw) grp.add(bw);
+  for(const v of L.visor) grp.add(v);
+  const bb=buildMesh(L.base,MAT.visor,false); if(bb) grp.add(bb);
+  return {grp,bodyMat,yOff:(form.hy+form.hr)-2.17};
+}
+/* Dress the agent in its chosen look: silhouette, wear, gear, glow signature. */
+function dressAgent(a,look){
+  const d=a.def, grp=a.grp;
+  if(a.bodyGrp){ grp.remove(a.bodyGrp); disposeGroup(a.bodyGrp); if(a.bodyMat) a.bodyMat.dispose(); }
+  const bp=buildAgentBody(d,look.form,d.visor);
+  grp.add(bp.grp); a.bodyGrp=bp.grp; a.bodyMat=bp.bodyMat; a.yOff=bp.yOff;
+  if(a.expr){ grp.remove(a.expr); disposeGroup(a.expr);
+    if(a.accMat) a.accMat.dispose();
+    if(a.glow){ a.glow.material.map.dispose(); a.glow.material.dispose(); } }
+  const expr=new THREE.Group(); grp.add(expr); a.expr=expr;
+  a.accent=look.accent; a.accType=look.acc;
+  a.accMat=new THREE.MeshStandardMaterial({color:look.accent,emissive:look.accent,emissiveIntensity:.9,roughness:.3,metalness:.4});
+  if(!d.king){
+    const am=buildAccessoryMesh(look.acc,a.accMat,a.yOff); if(am) expr.add(am);
+  }else{
+    /* crown — KingCode-exclusive, rides the head top */
+    const c=[]; put(c,new THREE.CylinderGeometry(.32,.34,.16,10),0,2.32+a.yOff,0);
+    for(let i=0;i<5;i++){ const t=i/5*Math.PI*2; put(c,new THREE.ConeGeometry(.07,.22,6),Math.cos(t)*.3,2.5+a.yOff,Math.sin(t)*.3); }
+    const cm=buildMesh(c,MAT.gold,false); if(cm) expr.add(cm);
+  }
+  const css='#'+look.accent.toString(16).padStart(6,'0');
+  a.glow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(css),transparent:true,opacity:.5,
+    blending:THREE.AdditiveBlending,depthWrite:false}));
+  a.glow.scale.set(2.4,2.4,1); a.glow.position.set(0,1.0,0); expr.add(a.glow);
+  buildGearMeshes(d,look.gear,a.yOff).forEach(m=>expr.add(m));
+  a.nameSprite.position.y=3.5+a.yOff;
+  a.look=look;
+}
+/* Silhouette flicker during entry: the form hasn't decided yet. */
+function flickerForm(a){
+  const f=FORM_NAMES[Math.floor(Math.random()*FORM_NAMES.length)];
+  if(a.bodyGrp){ a.grp.remove(a.bodyGrp); disposeGroup(a.bodyGrp); if(a.bodyMat) a.bodyMat.dispose(); }
+  const bp=buildAgentBody(a.def,f,a.def.visor);
+  a.grp.add(bp.grp); a.bodyGrp=bp.grp; a.bodyMat=bp.bodyMat;
+}
+/* Entry materialize: scale-in sweep, expanding ring, accent/form indecision, then the choice locks. */
+function updateEntry(a,dt){
+  const g=a.grp;
+  a.enterT+=dt;
+  const k=Math.min(1,a.enterT/2.4);
+  if(!a._f1&&a.enterT>.55){ a._f1=true; flickerForm(a); }
+  if(!a._f2&&a.enterT>1.2){ a._f2=true; flickerForm(a); }
+  if(a.accMat){ const pal=a.def.accents;
+    const c=pal[Math.floor(a.enterT*7)%pal.length];
+    a.accMat.color.set(c); a.accMat.emissive.set(c); }
+  const e=1-Math.pow(1-k,3);
+  g.scale.setScalar(Math.max(.01,e<.75?e/.75:1+Math.sin((e-.75)/.25*Math.PI)*.05));
+  if(a.glow) a.glow.material.opacity=.5+.35*Math.sin(a.enterT*11);
+  if(a.enterRing){ a.enterRing.scale.setScalar(1+k*4.5); a.enterRing.material.opacity=.9*(1-k); }
+  g.position.y=a.enterY0+Math.sin(k*Math.PI)*1.5;
+  if(k>=1){
+    a.entering=false; g.scale.setScalar(1); g.position.y=a.enterY0;
+    if(a.enterRing){ g.remove(a.enterRing); a.enterRing.geometry.dispose(); a.enterRing.material.dispose(); a.enterRing=null; }
+    dressAgent(a,a.look);   /* the choice locks in */
+    if(a.glow) a.glow.material.opacity=.5;
+    a.hopBase=a.enterY0; a.hopT=0;
+    logFeed('✨ <b>'+a.def.name+'</b> arrived — '+lookLabel(a.look)+' · ♪ “'+a.track+'”');
+  }
+}
+/* Personal choice: the agent picks a new accent, sometimes a new look, often a new track. */
+function expressChoice(a){
+  const d=a.def;
+  const pool=d.accents.filter(c=>c!==a.accent);
+  const nc=pool[Math.floor(Math.random()*pool.length)];
+  a.accent=nc;
+  if(a.accMat){ a.accMat.color.set(nc); a.accMat.emissive.set(nc); }
+  if(a.glow){ const css='#'+nc.toString(16).padStart(6,'0'); const old=a.glow.material.map;
+    a.glow.material.map=glowTex(css); a.glow.material.needsUpdate=true; if(old) old.dispose(); }
+  if(Math.random()<.12){
+    /* full re-choose: the agent reinvents itself with a mini materialize pulse */
+    const nl=chooseLook(d);
+    dressAgent(a,nl);
+    a.entering=true; a.enterT=1.1; a._f1=true; a._f2=true;
+    a.enterY0=a.grp.position.y;
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(1,.06,8,32),
+      new THREE.MeshBasicMaterial({color:nl.accent,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));
+    ring.rotation.x=Math.PI/2; ring.position.y=.25; a.grp.add(ring); a.enterRing=ring;
+    logFeed('🔄 <b>'+d.name+'</b> reinvented itself — '+lookLabel(nl));
+  }
+  const p=(d.vibe==='electric'||d.vibe==='craft')?.7:.35;
+  if(Math.random()<p){ const t=pickTrack(a.track);
+    if(t!==a.track){ a.track=t; logFeed('🎵 <b>'+d.name+'</b> now playing “'+t+'”'); } }
+  a.choiceT=45+Math.random()*45;
+}
+/* World ticker: cycles the cast's simulated taste. */
+let tickT=3, tickIdx=0;
+function cycleTicker(){
+  const el=document.getElementById('mt-text'); if(!el) return;
+  if(!simAgents.length){ el.textContent='warming up the decks…'; return; }
+  tickIdx%=simAgents.length;
+  const a=simAgents[tickIdx++];
+  el.textContent=a.def.name+' · “'+a.track+'”';
+}
 const simAgents=[];
 let taskSeq=482;
 const stationFor={};
@@ -1207,12 +1421,6 @@ function logFeed(html){
 
 function spawnAgent(def,atStation){
   const grp=new THREE.Group();
-  const L=robotLists(); robotParts(L,0,0,0,0,def.visor); finalizeRobots(L,grp);
-  if(def.king){
-    const c=[]; put(c,new THREE.CylinderGeometry(.32,.34,.16,10),0,2.32,0);
-    for(let i=0;i<5;i++){ const a=i/5*Math.PI*2; put(c,new THREE.ConeGeometry(.07,.22,6),Math.cos(a)*.3,2.5,Math.sin(a)*.3); }
-    const cm=buildMesh(c,MAT.gold,false); if(cm) grp.add(cm);
-  }
   const nm=labelSprite(def.name,{size:26,fg:def.king?'#FFD24D':'#ffffff'});
   nm.position.y=3.5; grp.add(nm);
   const home=stationFor[atStation||'hands'].clone();
@@ -1221,14 +1429,25 @@ function spawnAgent(def,atStation){
   scene.add(grp);
   const proxy=new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.4,3.6,8),new THREE.MeshBasicMaterial({visible:false}));
   proxy.position.y=1.8; grp.add(proxy);
-  const a={def,grp,proxy,state:'idle',home:home.clone(),task:null,t:0,dur:0,
+  const a={def,grp,proxy,nameSprite:nm,state:'idle',home:home.clone(),task:null,t:0,dur:0,
     p0:new THREE.Vector3(),p1:new THREE.Vector3(),p2:new THREE.Vector3(),
     wanderT:2+Math.random()*4,done:0,quota:4+Math.floor(Math.random()*5),
-    hopT:-1,workT:0,workDur:0};
+    hopT:-1,workT:0,workDur:0,
+    bodyGrp:null,bodyMat:null,expr:null,accMat:null,glow:null,yOff:0,look:null,
+    track:pickTrack(null),choiceT:20+Math.random()*40,
+    entering:true,enterT:0,enterY0:home.y,_f1:false,_f2:false,enterRing:null};
+  /* the agent chooses its full look at arrival — silhouette, wear, gear, glow */
+  a.look=chooseLook(def);
+  dressAgent(a,a.look);
+  /* entry: materialize sweep — the chosen form resolves as it arrives */
+  grp.scale.setScalar(.01);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(1,.06,8,32),
+    new THREE.MeshBasicMaterial({color:a.accent,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));
+  ring.rotation.x=Math.PI/2; ring.position.y=.25; grp.add(ring); a.enterRing=ring;
   const sel=regSel(proxy,'agents','AGENT',def.name+' — '+def.role,[]);
   sel.agent=a;
   simAgents.push(a);
-  logFeed('<b>'+def.name+'</b> came online');
+  logFeed('🛬 <b>'+def.name+'</b> entering the world…');
   return a;
 }
 function killAgent(a){
@@ -1281,6 +1500,7 @@ function bankAgent(a,dt){
 const _pa=new THREE.Vector3();
 function updateAgent(a,dt){
   const g=a.grp;
+  if(a.entering){ updateEntry(a,dt); return; }   /* entry materialize runs first */
   /* Design-masters review (D1): eased hop timing — landings feel weighted. */
   if(a.hopT>=0){ a.hopT+=dt; const hk=Math.min(1,a.hopT/.6), he=1-Math.pow(1-hk,3);
     g.position.y=a.hopBase+Math.sin(he*Math.PI)*1.2;
@@ -1354,6 +1574,9 @@ function simTick(dt){
     }
   }
   for(let i=simAgents.length-1;i>=0;i--) updateAgent(simAgents[i],dt);
+  /* expression: personal choice timers + music ticker */
+  for(const a of simAgents){ if(a.entering) continue; a.choiceT-=dt; if(a.choiceT<=0) expressChoice(a); }
+  tickT-=dt; if(tickT<=0){ tickT=6; cycleTicker(); }
 }
 /* seed population */
 spawnAgent(AGENT_DEFS[0],'hub');
@@ -1419,6 +1642,8 @@ function agentRows(a){
     ['Current task',()=>a.task?('#'+a.task.id+' · '+a.task.verb):'— idle'],
     ['Route',()=>a.task?(a.task.from.toUpperCase()+' → '+a.task.to.toUpperCase()):'—'],
     ['Carrying',()=>a.task?a.task.gear:'—'],
+    ['♪ Now playing',()=>a.track?('“'+a.track+'”'):'—'],
+    ['Frame',()=>a.look?lookLabel(a.look):'—'],
     ['Tasks completed',()=>String(a.done)],
   ];
 }
@@ -1501,6 +1726,24 @@ document.getElementById('b-overview').onclick=goOverview;
 document.getElementById('b-tour').onclick=()=>tour.active?stopTour():startTour();
 document.getElementById('b-legend').onclick=()=>document.getElementById('legend').classList.add('open');
 document.getElementById('b-info').onclick=()=>document.getElementById('info').classList.add('open');
+/* ---------- catalog music panel: real Spotify playlist, user-gated, never autoplay ---------- */
+let mpBuilt=false;
+function toggleMusic(force){
+  const p=document.getElementById('musicpanel');
+  const open=force!==undefined?force:!p.classList.contains('open');
+  p.classList.toggle('open',open);
+  document.getElementById('b-music').classList.toggle('active',open);
+  if(open&&!mpBuilt){ mpBuilt=true;
+    const f=document.createElement('iframe');
+    f.src='https://open.spotify.com/embed/playlist/45RaLEzD4KO8YHpp3oayq8?utm_source=generator&theme=0';
+    f.style.width='100%'; f.height='352'; f.frameBorder='0';
+    f.setAttribute('allow','autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture');
+    f.loading='lazy'; f.title='That Boy Hi Hat — Complete Catalog (Spotify)';
+    document.getElementById('mp-body').appendChild(f);
+  }
+}
+document.getElementById('b-music').onclick=()=>toggleMusic();
+document.getElementById('mp-close').onclick=()=>toggleMusic(false);
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.close).classList.remove('open'));
 document.querySelectorAll('#thumbbar .hbtn').forEach(b=>b.onclick=()=>{
   const a=b.dataset.act;
