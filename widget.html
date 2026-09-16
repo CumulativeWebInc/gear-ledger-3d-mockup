@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gear Ledger — Live Stats</title>
+<style>
+  :root{--ink:#f5f7fa;--dim:#9fb4c6;--live:#7ef0c1;--off:#ffc93c;--blue:#35c4ff}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#0b1622;color:var(--ink);
+    font-family:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif}
+  .card{padding:18px;max-width:420px;margin:0 auto}
+  .hd{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--off)}
+  .dot.live{background:var(--live);box-shadow:0 0 10px var(--live);animation:pl 1.6s infinite}
+  @keyframes pl{50%{opacity:.5}}
+  h1{font-size:16px;margin:0;letter-spacing:.06em}
+  .sub{font-size:11px;color:var(--dim);margin:2px 0 14px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .stat{background:rgba(10,22,34,.9);border:1px solid rgba(255,255,255,.12);
+    border-radius:10px;padding:10px 12px}
+  .stat b{font-size:24px;display:block}
+  .stat span{font-size:11px;color:var(--dim)}
+  .states{font-size:12px;line-height:1.9;margin-bottom:12px}
+  .chip{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;
+    border-radius:6px;padding:2px 7px;margin-right:6px}
+  .st-created{background:#233241;color:#9fb4c6}.st-assigned{background:#123a5c;color:#7cc4ff}
+  .st-in_progress{background:#4a2f00;color:#ffc93c}.st-delivered{background:#3a235c;color:#c9a7ff}
+  .st-verified{background:#0e3b2e;color:#7ef0c1}.st-cancelled,.st-failed{background:#4a1212;color:#ff9d9d}
+  .ev{font-size:12px;color:var(--dim);border-top:1px solid rgba(255,255,255,.1);padding-top:10px}
+  .ev b{color:var(--ink)}
+  .ft{font-size:10px;color:#5f7a8f;margin-top:12px}
+  a{color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="hd"><span class="dot" id="dot"></span><h1>GEAR LEDGER · LIVE</h1></div>
+  <div class="sub" id="sub">connecting to the live ledger…</div>
+  <div class="grid">
+    <div class="stat"><b id="s-online">—</b><span>agents online</span></div>
+    <div class="stat"><b id="s-tasks">—</b><span>real tasks tracked</span></div>
+  </div>
+  <div class="states" id="s-states"></div>
+  <div class="ev" id="s-ev"></div>
+  <div class="ft">Every figure above is read live from
+    <a href="https://cumulativewebinc.github.io/gear-ledger/state.json" target="_blank" rel="noopener">gear-ledger state.json</a>.
+    <a href="https://cumulativewebinc.github.io/gear-ledger-3d-mockup/" target="_blank" rel="noopener">Open the 3D world →</a></div>
+</div>
+<script>
+(function(){
+  'use strict';
+  var URL='https://cumulativewebinc.github.io/gear-ledger/state.json';
+  var STALE=15*60*1000;
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function ago(ts){var d=Date.now()-Date.parse(ts);if(isNaN(d)||d<0)return'—';var m=Math.floor(d/60000);if(m<1)return'just now';if(m<60)return m+'m ago';return Math.floor(m/60)+'h ago';}
+  function load(){
+    fetch(URL,{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(s){
+      var real=Array.isArray(s.tasks)&&s.tasks.length&&s.tasks.every(function(t){return t.sample===false;});
+      var pres=s.presence||{}, now=Date.now(), online=0;
+      Object.keys(pres).forEach(function(k){var p=pres[k];if(p&&p.status==='online'&&p.at&&(now-Date.parse(p.at))<STALE)online++;});
+      var nAgents=Object.keys(pres).length||(s.agents||[]).length;
+      var byState={};
+      (s.tasks||[]).forEach(function(t){byState[t.state]=(byState[t.state]||0)+1;});
+      document.getElementById('dot').className='dot'+(real?' live':'');
+      document.getElementById('sub').textContent=(real?'server-authoritative':'offline — last known')+' · ledger v'+s.version+(s.updated_at?' · updated '+ago(s.updated_at):'');
+      document.getElementById('s-online').textContent=online+'/'+nAgents;
+      document.getElementById('s-tasks').textContent=(s.tasks||[]).length;
+      document.getElementById('s-states').innerHTML=Object.keys(byState).sort().map(function(k){
+        return '<span class="chip st-'+k+'">'+esc(k.replace('_',' ')).toUpperCase()+'</span> '+byState[k]+'<br>';}).join('');
+      var evs=[]; try{ evs=(s.recent_events||[]); }catch(e){}
+      document.getElementById('s-ev').innerHTML=evs.length?('Latest: <b>'+esc(evs[0].event||'')+'</b> '+
+        esc((evs[0].data&&(evs[0].data.title||evs[0].data.task_ref))||'')+' · '+ago(evs[0].at))
+        :'Latest events stream in the <b>3D world feed</b> — open it to watch.';
+    })
+    .catch(function(){document.getElementById('sub').textContent='ledger unreachable — retrying…';});
+  }
+  load(); setInterval(load,60000);
+})();
+</script>
+</body>
+</html>

@@ -3,7 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Gear Ledger — 3D Archipelago (Concept Mockup)</title>
+<title>Gear Ledger 3D — Live Agent Operations World</title>
+<meta property="og:title" content="Gear Ledger 3D — Live Agent Operations World">
+<meta property="og:description" content="CWI's nine AI departments working live — real tasks, real handoffs, explorable in 3D. Every view is a shareable deep link.">
+<meta property="og:image" content="https://cumulativewebinc.github.io/gear-ledger-3d-mockup/social-card.jpg">
+<meta property="og:url" content="https://cumulativewebinc.github.io/gear-ledger-3d-mockup/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Gear Ledger 3D — Live Agent Operations World">
+<meta name="twitter:description" content="CWI's nine AI departments working live — real tasks, real handoffs, explorable in 3D.">
+<meta name="twitter:image" content="https://cumulativewebinc.github.io/gear-ledger-3d-mockup/social-card.jpg">
 <script>
 /* Boot diagnostics: collects page errors so a stuck loader can report them in-DOM. */
 window.__glerrs=[];
@@ -2200,6 +2209,7 @@ function renderLive(){
     }else{
       const fresh=GLW.newEvents().filter(ev=>ev.event!=='agent.presence');
       fresh.slice(-5).forEach(ev=>{ const h=GLW.humanize(ev); logFeed(h.html+' '+LIVE_TAG); });
+      glCheckMoments(fresh);
     }
   }
   if(inspOpen&&currentSel&&currentSel.kind==='AGENT') renderRows(currentSel);
@@ -2404,6 +2414,191 @@ function toast(msg){
   const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
   clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2600);
 }
+
+/* ============================================================
+   11. VIRAL / DISTRIBUTION — deep links, share, moments.
+   ------------------------------------------------------------
+   Every stat shown here reads the REAL ledger
+   (window.GearLedgerLive ← gear-ledger state.json). Nothing
+   here invents numbers, tasks, or agents.
+   ============================================================ */
+
+/*PURE-START*/
+const GL_CHAR_TO_HANDLE={KingCode:'MUSE_CWI',Needle:'CWI_AandR',Marquee:'CWI_Marketing',Seal:'CWI_Sync',Dial:'CWI_Radio',Dateline:'CWI_Press',Fader:'CWI_Studio',Ledger:'CWI_Data',Charter:'CWI_Affairs'};
+function glNormHandle(h){
+  if(h==null) return null;
+  let s=String(h).trim();
+  if(/^agent:/i.test(s)) s=s.slice(6);
+  if(GL_CHAR_TO_HANDLE[s]) return GL_CHAR_TO_HANDLE[s];
+  const canon={'MUSE_CWI':'MUSE_CWI','CWI_AANDR':'CWI_AandR','CWI_MARKETING':'CWI_Marketing',
+    'CWI_SYNC':'CWI_Sync','CWI_RADIO':'CWI_Radio','CWI_PRESS':'CWI_Press',
+    'CWI_STUDIO':'CWI_Studio','CWI_DATA':'CWI_Data','CWI_AFFAIRS':'CWI_Affairs'};
+  return canon[s.toUpperCase()]||null;
+}
+function glParseDeepLink(qs){
+  const p=new URLSearchParams(qs||'');
+  const out={};
+  const v=String(p.get('view')||'').toLowerCase();
+  if(['overview','hub','dist','leads','hands','chain','legends'].includes(v)) out.view=v;
+  const a=glNormHandle(p.get('agent'));
+  if(a) out.agent=a;
+  const t=String(p.get('task')||'').trim();
+  if(/^tsk_[A-Za-z0-9]+$/.test(t)) out.task=t;
+  return out;
+}
+function glBuildQuery(st,preserve){
+  const q=new URLSearchParams();
+  if(st.task) q.set('task',st.task);
+  if(st.agent) q.set('agent',st.agent);
+  else if(st.view&&st.view!=='overview') q.set('view',st.view);
+  (preserve||[]).forEach(k=>{ const v=k[1]; if(v!=null&&v!==''&&!q.has(k[0])) q.set(k[0],v); });
+  return q.toString();
+}
+/*PURE-END*/
+
+/* ---------- deep link application ---------- */
+let glDeepApplied=false;
+function agentSelByHandle(handle){
+  for(const s of selectables){
+    if(s&&s.kind==='AGENT'&&s.agent&&s.agent.def&&s.agent.def.name===handle) return s;
+  }
+  return null;
+}
+function findLedgerTask(tid){
+  const GL=window.GearLedgerLive;
+  if(!GL||!GL.state||!Array.isArray(GL.state.tasks)) return null;
+  return GL.state.tasks.find(t=>t.task_id===tid)||null;
+}
+function glApplyDeepLink(){
+  if(glDeepApplied) return;
+  const dl=glParseDeepLink(location.search);
+  if(!dl.view&&!dl.agent&&!dl.task){ glDeepApplied=true; return; }
+  /* task is most specific — but only once the ledger state is in */
+  if(dl.task){
+    const t=findLedgerTask(dl.task);
+    if(t&&t.assigned_to){
+      const sel=agentSelByHandle(glNormHandle(t.assigned_to));
+      if(sel){ glDeepApplied=true; stopTour(true); openInspector(sel); focusAgent(sel.agent); return; }
+    }
+    /* unresolved task: fall through to agent/view rather than stranding the viewer */
+  }
+  if(dl.agent){
+    const sel=agentSelByHandle(dl.agent);
+    if(sel){ glDeepApplied=true; stopTour(true); openInspector(sel); focusAgent(sel.agent); return; }
+  }
+  if(dl.view){
+    glDeepApplied=true;
+    if(dl.view==='overview') goOverview();
+    else if(islandById[dl.view]) focusIsland(dl.view);
+    return;
+  }
+  glDeepApplied=true;
+}
+function glKickDeepLink(){
+  const dl=glParseDeepLink(location.search);
+  if(!dl.view&&!dl.agent&&!dl.task) return; /* nothing to do */
+  let tries=0;
+  const iv=setInterval(()=>{
+    tries++;
+    const agentsReady=typeof simAgents!=='undefined'&&simAgents.length>0;
+    const ledgerReady=!dl.task||(window.GearLedgerLive&&window.GearLedgerLive.state);
+    if((agentsReady&&ledgerReady)||tries>60){ clearInterval(iv); glApplyDeepLink(); }
+  },250);
+}
+
+/* ---------- share ---------- */
+function glBaseUrl(){ const u=new URL(location.href); return u.origin+u.pathname; }
+function glDeepLinkFor(st){
+  const cur=new URLSearchParams(location.search);
+  const keep=[['broadcast',cur.get('broadcast')],['nohint',cur.get('nohint')]]
+    .filter(([k,v])=>v!=null&&v!=='');
+  return glBaseUrl()+'?'+glBuildQuery(st,keep);
+}
+function glCurrentViewState(){
+  const st={};
+  const GL=window.GearLedgerLive;
+  if(currentSel&&currentSel.kind==='AGENT'&&currentSel.agent&&currentSel.agent.def){
+    st.agent=currentSel.agent.def.name;
+    const pres=GL&&GL.presenceByAgent&&GL.presenceByAgent['agent:'+st.agent];
+    if(pres&&pres.current_task_id) st.task=pres.current_task_id;
+  }else if(typeof focused!=='undefined'&&focused&&typeof islandById!=='undefined'&&islandById[focused]){
+    st.view=focused;
+  }else{ st.view='overview'; }
+  return st;
+}
+function glCopyText(text,done){
+  const fin=()=>{ try{done();}catch(e){} };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(fin,()=>glLegacyCopy(text,fin));
+  }else glLegacyCopy(text,fin);
+}
+function glLegacyCopy(text,done){
+  const ta=document.createElement('textarea');
+  ta.value=text; ta.setAttribute('readonly','');
+  ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta); done();
+}
+function glShareCurrentView(){
+  glCopyText(glDeepLinkFor(glCurrentViewState()),()=>toast('Link copied — share the moment ✓'));
+}
+
+/* ---------- moments: celebrate REAL task.verified events ---------- */
+const glMomentSeen={}; let glMomentCoolT=0;
+function glCheckMoments(fresh){
+  if(!fresh||!fresh.length) return;
+  const now=Date.now();
+  for(const ev of fresh){
+    if(!ev||ev.event!=='task.verified'||glMomentSeen[ev.event_id]) continue;
+    glMomentSeen[ev.event_id]=1;
+    const at=ev.at?Date.parse(ev.at):NaN;
+    if(isNaN(at)||now-at>30*60*1000) continue;   /* ignore stale history on reload */
+    if(now-glMomentCoolT<90000) continue;          /* tasteful: max ~1 celebration / 90s */
+    glMomentCoolT=now; glFireMoment(ev);
+  }
+}
+function glFireMoment(ev){
+  const d=ev.data||{};
+  const GL=window.GearLedgerLive;
+  const title=d.title||d.task_ref||d.task_id||'a task';
+  const tid=d.task_ref||d.task_id||'';
+  const who=ev.actor&&GL&&GL.agentName?GL.agentName(ev.actor):'';
+  ['hub','dist','leads','hands','chain','legends'].forEach(id=>{ try{ pulseSign(id); }catch(e){} });
+  const link=(tid&&/^tsk_/.test(tid))?glDeepLinkFor({task:tid}):glDeepLinkFor({view:'overview'});
+  logFeed('🎉 <b>Task verified</b> — “'+escHtml(title)+'”'+(who?' · '+escHtml(who):'')+
+    ' · <a href="'+escHtml(link)+'" target="_blank" rel="noopener">share this moment</a> '+LIVE_TAG);
+}
+
+/* ---------- wire-in ---------- */
+(function glWireViral(){
+  /* feed links must be clickable (feed container is pointer-events:none) */
+  const st=document.createElement('style');
+  st.textContent='#livefeed .fe a{pointer-events:auto;color:#35c4ff}';
+  document.head.appendChild(st);
+  /* HUD share button (desktop) */
+  const bInfo=document.getElementById('b-info');
+  if(bInfo&&!document.getElementById('b-share')){
+    const b=document.createElement('button');
+    b.className='hbtn'; b.id='b-share'; b.title='Copy shareable link to this view';
+    b.innerHTML='⤴ <span class="lbl">Share</span>';
+    b.onclick=glShareCurrentView;
+    bInfo.insertAdjacentElement('afterend',b);
+  }
+  /* thumbbar share button (mobile) */
+  const tb=document.querySelector('#thumbbar');
+  if(tb&&!tb.querySelector('[data-act="share"]')){
+    const b=document.createElement('button');
+    b.className='hbtn'; b.dataset.act='share';
+    b.innerHTML='⤴<br><span style="font-size:10px">Share</span>';
+    tb.appendChild(b);
+    b.onclick=glShareCurrentView;
+  }
+  /* kick deep-link resolution once the world is up */
+  if(document.readyState==='complete'||document.readyState==='interactive') glKickDeepLink();
+  else window.addEventListener('DOMContentLoaded',glKickDeepLink);
+})();
+
 
 /* ---------- auto-tour ---------- */
 const TOUR=[

@@ -1,0 +1,148 @@
+{
+  "name": "Gear Ledger 3D \u2014 live node directory",
+  "version": "1.0.0",
+  "updated": "2026-09-16T11:58:55Z",
+  "truth": "LIVE \u2014 server-authoritative. Every stat on this page traces to the ledger state.json; the 3D client renders only real ledger data in LIVE mode.",
+  "ledger": {
+    "repo": "https://github.com/CumulativeWebInc/gear-ledger",
+    "state_json": "https://cumulativewebinc.github.io/gear-ledger/state.json",
+    "events_jsonl": "https://cumulativewebinc.github.io/gear-ledger/events.jsonl",
+    "ledger_version": 102,
+    "tasks_total": 25
+  },
+  "agents": [
+    {
+      "ledger_id": "agent:MUSE_CWI",
+      "handle": "MUSE_CWI",
+      "public_name": "KingCode",
+      "department": "Command",
+      "role": "Chief of staff \u2014 the only claimed public face",
+      "home_island": "hub",
+      "deep_link": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/?agent=MUSE_CWI",
+      "capabilities": [
+        "task.create",
+        "task.assign",
+        "broadcast",
+        "verify"
+      ]
+    },
+    {
+      "ledger_id": "agent:CWI_AandR",
+      "handle": "CWI_AandR",
+      "public_name": "Needle",
+      "department": "A&R",
+      "role": "A&R \u2014 the scout. Ear-first, blunt, allergic to hype.",
+      "home_island": "leads",
+      "deep_link": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/?agent=CWI_AandR",
+      "capabilities": [
+        "content.draft",
+        "custom"
+      ]
+    },
+    {
+      "ledger_id": "agent:CWI_Marketing",
+      "handle": "CWI_Marketing",
+      "public_name": "Marquee",
+      "department": "Marketing & Social",
+      "role": "Marketing & Social \u2014 the showrunner. Every release is an event.",
+      "home_island": "leads",
+      "deep_link": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/?agent=CWI_Marketing",
+      "capabilities": [
+        "content.draft",
+        "outreach.draft"
+      ]
+    },
+    {
+      "ledger_id": "agent:CWI_Sync",
+      "handle": "CWI_Sync",
+      "public_name": "Seal",
+      "department": "Sync & Licensing",
+      "role": "Sync & Licensing \u2014 the closer. Nothing ships uncleared.",
+      "home_island": "dist",
+      "deep_link": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/?agent=CWI_Sync",
+      "capabilities": [
+        "outreach.draft",
+        "custom"
+      ]
+    },
+    {
+      "ledger_id": "agent:CWI_Radio",
+      "handle": "CWI_Radio",
+      "public_name": "Dial",
+      "department": "Radio & Playlists",
+      "role": "Radio & Playlists \u2014 the DJ. Lives on rotation.",
+      "home_island": "dist",
+      "deep_link": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/?agent=CWI_Radio",
+      "capabilities": [
+        "playlist.verify",
+        "outreach.draft"
+      ]
+    },
+    {
+      "ledger_id": "agent:CWI_Press",
+      "handle": "CWI_Press",
+      "public_name": "Dateline",
+      "department": "Press & PR",
+      "role": "Press & PR \u2014 the wire chief. Every claim carries its citation.",
+      "home_island": "dist",
+      "deep_link": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/?agent=CWI_Press",
+      "capabilities": [
+        "content.draft",
+        "outreach.draft"
+      ]
+    },
+    {
+      "ledger_id": "agent:CWI_Studio",
+      "handle": "CWI_Studio",
+      "public_name": "Fader",
+      "department": "Content Studio",
+      "role": "Content Studio \u2014 the craftsperson. Makes things beautiful on purpose.",
+      "home_island": "hands",
+      "deep_link": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/?agent=CWI_Studio",
+      "capabilities": [
+        "content.draft",
+        "gear.equip"
+      ]
+    },
+    {
+      "ledger_id": "agent:CWI_Data",
+      "handle": "CWI_Data",
+      "public_name": "Ledger",
+      "department": "Data & Analytics",
+      "role": "Data & Analytics \u2014 the quant. No number without a source.",
+      "home_island": "hands",
+      "deep_link": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/?agent=CWI_Data",
+      "capabilities": [
+        "playlist.verify",
+        "data.scan",
+        "verify"
+      ]
+    },
+    {
+      "ledger_id": "agent:CWI_Affairs",
+      "handle": "CWI_Affairs",
+      "public_name": "Charter",
+      "department": "Business Affairs",
+      "role": "Business Affairs \u2014 the guardian. Reads the fine print so nobody else has to.",
+      "home_island": "chain",
+      "deep_link": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/?agent=CWI_Affairs",
+      "capabilities": [
+        "custom",
+        "verify"
+      ]
+    }
+  ],
+  "deep_link_templates": {
+    "overview": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/?view=overview",
+    "island": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/?view={hub|dist|leads|hands|chain|legends}",
+    "agent": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/?agent={AGENT_HANDLE}  (e.g. https://cumulativewebinc.github.io/gear-ledger-3d-mockup/?agent=CWI_Marketing)",
+    "task": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/?task={TASK_ID}  (e.g. a tsk_* id from the ledger)"
+  },
+  "embed_snippet": "<iframe src=\"https://cumulativewebinc.github.io/gear-ledger-3d-mockup/?broadcast=1&nohint=1\" style=\"width:100%;aspect-ratio:16/9;border:0\" allow=\"fullscreen\" title=\"Gear Ledger 3D world\"></iframe>",
+  "widget": {
+    "url": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/widget.html",
+    "description": "Self-contained live ledger stats widget. Fetches the real state.json every 60s and shows: ledger version + LIVE status, agents online, tasks by state, latest ledger event. No fake numbers \u2014 every figure comes from state.json.",
+    "snippet": "<iframe src=\"https://cumulativewebinc.github.io/gear-ledger-3d-mockup/widget.html\" style=\"width:100%;max-width:420px;height:340px;border:0\" title=\"Gear Ledger live stats\"></iframe>"
+  },
+  "social_card": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/social-card.jpg"
+}
