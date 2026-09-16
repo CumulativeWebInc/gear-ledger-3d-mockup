@@ -9,6 +9,21 @@
 window.__glerrs=[];
 window.addEventListener('error',function(e){window.__glerrs.push('ERR: '+(e.message||'unknown')+' @'+(e.lineno||'?'));});
 window.addEventListener('unhandledrejection',function(e){var r=e.reason;window.__glerrs.push('REJ: '+((r&&r.message)||r));});
+/* roundRect polyfill for older canvas implementations (some mobile browsers). */
+if(typeof CanvasRenderingContext2D!=='undefined'&&!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+    r=Math.max(0,Math.min(r,w/2,h/2));
+    this.moveTo(x+r,y);
+    this.arcTo(x+w,y,x+w,y+h,r);this.arcTo(x+w,y+h,x,y+h,r);
+    this.arcTo(x,y+h,x,y,r);this.arcTo(x,y,x+w,y,r);
+    this.closePath();return this;
+  };
+}
+/* Storage may throw in private/restricted modes; never let it break boot. */
+window.__glStore={
+  get:function(k){try{return localStorage.getItem(k);}catch(e){return null;}},
+  set:function(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+};
 setTimeout(function(){
   var l=document.getElementById('loader'),m=document.getElementById('lmsg');
   if(l&&!l.classList.contains('done')&&m){
@@ -1102,11 +1117,12 @@ function makeBoat(){
 }
 
 /* ============================================================
-   8. LIVE AGENT SIMULATION — agents doing real tasks, live
+   8. SAMPLE AGENT SIMULATION — illustrative motion only, not live ops
    ============================================================
-   A real task engine runs in this page: agents pick tasks from a
-   queue, travel between islands, work, deliver, come and go. The
-   engine genuinely processes the queue; all task *data* is SAMPLE.
+   Client-side SAMPLE simulation: scripted agents move between
+   islands and cycle through invented tasks. This is NOT connected
+   to real CWI task execution, shared state, presence, or ledger
+   records. All task data here is SAMPLE.
    ============================================================ */
 const AGENT_DEFS=[
   {name:'MUSE_CWI',    role:'Chief of Staff',    visor:0xFFD24D, king:true},
@@ -1566,9 +1582,9 @@ function runLoader(){
     lfill.style.width='100%';
     setTimeout(()=>{
       loader.classList.add('done');
-      if(!nohint&&!localStorage.getItem('gear-ledger-3d.hintSeen')){
+      if(!nohint&&!window.__glStore.get('gear-ledger-3d.hintSeen')){
         document.getElementById('hint').classList.add('open');
-        localStorage.setItem('gear-ledger-3d.hintSeen','1');
+        window.__glStore.set('gear-ledger-3d.hintSeen','1');
       }
     },350);
   },1150);
