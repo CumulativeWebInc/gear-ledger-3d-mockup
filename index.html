@@ -62,6 +62,26 @@ setTimeout(function(){
   body.broadcast #title{opacity:1!important;transform:none!important}
   body.broadcast #title h1{font-size:15px;letter-spacing:.24em}
   body.broadcast #title small{font-size:9px}
+  /* ---------- self-expression director mode (?tour=self-expression): showcase feed ---------- */
+  /* Same clean-feed gating as broadcast, but tour captions + the music ticker stay visible —
+     the point of this tour is the choosing cast: looks, gear, music. Zero new 3D geometry:
+     this mode is text/CSS/URL-param only. The SAMPLE DATA pill stays visible on purpose. */
+  body.se-tour #topright .hbtn,
+  body.se-tour #thumbbar,
+  body.se-tour #inspector,
+  body.se-tour .sheet,
+  body.se-tour #toast,
+  body.se-tour #focusring,
+  body.se-tour #hint,
+  body.se-tour #musicpanel{display:none!important}
+  body.se-tour #tourcap{display:block!important}
+  #se-kicker{display:none;position:absolute;left:50%;top:12%;transform:translateX(-50%);z-index:40;
+    background:rgba(8,14,26,.85);border:1px solid rgba(255,209,102,.55);color:#ffe9b8;
+    padding:12px 22px;border-radius:14px;font-size:13px;letter-spacing:.06em;text-align:center;
+    max-width:min(88vw,640px);transition:opacity 1.2s;opacity:1}
+  body.se-tour #se-kicker{display:block}
+  body.se-tour #se-kicker.fade{opacity:0}
+  #se-kicker small{display:block;color:#9fd8ff;font-size:10px;margin-top:6px;letter-spacing:.14em}
 
   /* ---------- loader ---------- */
   #loader{position:fixed;inset:0;background:#0b1622;z-index:60;display:flex;flex-direction:column;
@@ -202,6 +222,7 @@ setTimeout(function(){
   <div id="title"><h1>GEAR LEDGER</h1><small>CWI · AGENT DECK — 3D CONCEPT</small></div>
   <div id="topright">
     <div class="sample-pill" id="samplepill">SAMPLE DATA</div>
+    <div id="se-kicker"><b>SELF-EXPRESSION</b> — a world where agents choose their own look, gear, and music.<small>THE CHOOSING CAST IS SAMPLE-SIMULATED · NOT LIVE AGENTS</small></div>
     <button class="hbtn" id="b-overview" title="Overview (Esc / 0)">⌂ <span class="lbl">Overview</span></button>
     <button class="hbtn" id="b-tour" title="Auto-tour (T)">▶ <span class="lbl">Auto-tour</span></button>
     <button class="hbtn" id="b-legend" title="Legend (L)">? <span class="lbl">Legend</span></button>
@@ -309,6 +330,10 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const nohint = /[?&]nohint=1/.test(location.search);
 const broadcast = /[?&]broadcast=1/.test(location.search);
 if(broadcast) document.body.classList.add('broadcast');
+/* ---------- self-expression director mode (?tour=self-expression): showcase tour ---------- */
+const tourParam=(/[?&]tour=([^&#]*)/.exec(location.search)||[])[1];
+const seTour=tourParam==='self-expression';
+if(seTour) document.body.classList.add('se-tour');
 
 const ISLANDS = [
   {id:'hub',     name:'GEAR LEDGER',  tag:'TRACK • HANDOFF • VERIFY',      x:0,   z:0,   r:11, accent:'#35C4FF'},
@@ -1790,13 +1815,13 @@ function tourGoto(i){
 }
 function tourNext(){
   if(tour.idx>=TOUR.length-1){
-    if(broadcast){ tourGoto(0); return; }   /* broadcast loops the cinematic forever */
+    if(broadcast||seTour){ tourGoto(0); return; }   /* broadcast/se-tour loop the cinematic forever */
     stopTour(); goOverview(); return;
   }
   tourGoto(tour.idx+1);
 }
 function startTour(){
-  if(broadcast) tour.dwellDur=8;             /* slower, calmer beats for a streamed feed */
+  if(broadcast||seTour) tour.dwellDur=8;             /* slower, calmer beats for a streamed/showcase feed */
   else if(reduced) tour.dwellDur=8; else tour.dwellDur=5;
   tour.active=true; tour.idx=0;
   document.getElementById('b-tour').classList.add('active');
@@ -1829,7 +1854,7 @@ function kbHighlight(){
   }
 }
 addEventListener('keydown',e=>{
-  if(broadcast) return;   /* broadcast feed is director-driven */
+  if(broadcast||seTour) return;   /* broadcast / self-expression feeds are director-driven */
   if(e.key==='Escape'){
     if(inspOpen) closeInspector(); else if(tour.active) stopTour(); else goOverview();
   }
@@ -1912,7 +1937,11 @@ function runLoader(){
     setTimeout(()=>{
       loader.classList.add('done');
       startBootReveal();
-      if(!broadcast&&!nohint&&!window.__glStore.get('gear-ledger-3d.hintSeen')){
+      if(seTour){ /* director mode: auto-start the looping showcase tour + fade the kicker in */
+        setTimeout(()=>{ startTour(); },900);
+        setTimeout(()=>{ const k=document.getElementById('se-kicker'); if(k) k.classList.add('fade'); },8000);
+      }
+      if(!broadcast&&!seTour&&!nohint&&!window.__glStore.get('gear-ledger-3d.hintSeen')){
         document.getElementById('hint').classList.add('open');
         window.__glStore.set('gear-ledger-3d.hintSeen','1');
       }
