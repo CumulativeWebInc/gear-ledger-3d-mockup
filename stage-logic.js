@@ -1,4 +1,4 @@
-/* stage-logic.mjs — Agent Stage pure state rules (dependency-free).
+/* stage-logic.js — Agent Stage pure state rules (dependency-free).
  *
  * Single source of truth for operational-state classification and presence-link
  * derivation. Imported by index.html AND by tests/stage-logic.test.mjs, so the
