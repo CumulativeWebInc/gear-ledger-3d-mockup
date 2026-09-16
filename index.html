@@ -233,7 +233,7 @@ setTimeout(function(){
     <button class="hbtn" id="b-legend" title="Legend (L)">? <span class="lbl">Legend</span></button>
     <button class="hbtn" id="b-info" title="About this mockup (I)">ⓘ <span class="lbl">Info</span></button>
     <button class="hbtn" id="b-music" title="That Boy Hi Hat catalog playlist (Spotify)">♪ <span class="lbl">Music</span></button>
-    <button class="hbtn" id="b-shift" title="Day/night shift — KingCode \u21c4 RogueCode">🌙 <span class="lbl">Shift</span></button>
+    <button class="hbtn" id="b-shift" title="Day/night shift — all ten agents (KingCode \u21c4 RogueCode)">🌙 <span class="lbl">Shift</span></button>
   </div>
   <div id="musicticker" title="Simulated music taste of the SAMPLE cast"><span id="mt-note">♪</span><span id="mt-text">warming up the decks…</span><span class="svtag">SIM</span></div>
   <div id="bcast-mark">CWI · CUMULATIVE WEB INC</div>
@@ -270,7 +270,7 @@ setTimeout(function(){
   <div class="li"><i>🟣</i><span><b>Purple arc</b> — gear currently in transit (HANDOFFS island). Animated dash = live-sample movement.</span></div>
   <div class="li"><i>⚪</i><span><b>White walkway plaque</b> — one handoff record in chronological order (CHAIN island).</span></div>
   <div class="li"><i>🌉</i><span><b>Bridge</b> — a handoff relationship between two islands' domains.</span></div>
-  <div class="li"><i>🌙</i><span><b>Night shift</b> — 18:00–06:00 local (or the <b>Shift</b> button): the chief’s node becomes <b>RogueCode</b>. Crown off, crescent mark, obsidian skin. Same agent, alter ego.</span></div>
+  <div class="li"><i>🌙</i><span><b>Night shift</b> — 18:00–06:00 local (or the <b>Shift</b> button): the whole world goes dark. The chief’s node becomes <b>RogueCode</b> — crown off, crescent mark, obsidian skin. Same agent, alter ego. The other nine agents keep their own forms in <b>night-mode expressions</b>: same identity colors, darker palette, dimmed accents. Ten registered agents, ten night expressions.</span></div>
   <p style="color:#bfe9ff;font-size:12px">All colors describe mockup semantics. All underlying figures are SAMPLE data.</p>
 </div>
 
@@ -1339,7 +1339,7 @@ const arcAnims=[];
     grp.add(buildMesh(pl,MAT.metal));
     const trim=new THREE.Mesh(new THREE.TorusGeometry(1.06,.05,8,28),
       new THREE.MeshStandardMaterial({color:0x111111,emissive:new THREE.Color(spec.color),emissiveIntensity:1.3,roughness:.4}));
-    trim.rotation.x=Math.PI/2; trim.position.y=2.09; grp.add(trim);
+    trim.rotation.x=Math.PI/2; trim.position.y=2.09; grp.add(trim); F.trimMat=trim.material;
     buildFormGeometry(spec,F,fmat,smat);
     const nm=labelSprite(spec.public_name,{size:30,fg:'#ffffff'}); nm.position.set(0,5.6,0); grp.add(nm);
     const tag=labelSprite('operational state: SAMPLE',{size:22,fg:'#FFC93C'}); tag.position.set(0,4.8,0); grp.add(tag);
@@ -1412,8 +1412,10 @@ const arcAnims=[];
       const T=F.tgt||EXPR.SAMPLE, m=F.spec.motion, C=F.cur, k=Math.min(1,dt*3);
       C.core+=(T.core-C.core)*k; C.motion+=(T.motion-C.motion)*k;
       C.bob+=(T.bob-C.bob)*k; C.dim+=(T.dim-C.dim)*k; C.wob+=(T.wob-C.wob)*k;
-      for(const cm of F.coreMats) cm.emissiveIntensity=C.core;
-      for(const sm of F.shellMats) sm.emissiveIntensity=.3*C.dim;
+      const NL=1-.45*nightMix; /* night expression: dimmed accents, same identity colors */
+      for(const cm of F.coreMats) cm.emissiveIntensity=C.core*NL;
+      for(const sm of F.shellMats) sm.emissiveIntensity=.3*C.dim*NL;
+      if(F.trimMat) F.trimMat.emissiveIntensity=1.3*NL;
       if(F.wire) F.wire.opacity=.85*C.dim;
       if(F.spin) F.spin.rotation.y=t*m.spin*C.motion*2.2;
       if(F.ring&&m.ring_orbit) F.ring.rotation.z=t*.5*C.motion;
@@ -1540,16 +1542,39 @@ const AGENT_DEFS=[
   {name:'CWI_Studio',  role:'Content Studio',    visor:0x7EF0C1, tint:0xDFF7EC, accents:[0x7EF0C1,0x35C4FF,0x2E9E4F], acc:'crest',   gear:'walkman',  vibe:'craft'},
   {name:'CWI_Data',    role:'Data & Analytics',  visor:0x54D8FF, tint:0xE3F0FF, accents:[0x54D8FF,0x35C4FF,0xB388FF], acc:'antenna', gear:'toolpack', vibe:'precise'},
   {name:'CWI_Affairs', role:'Business Affairs',  visor:0xFFC93C, tint:0xFFF0D6, accents:[0xFFC93C,0xFF9F43,0x8A6D1B], acc:'cap',     gear:'none',     vibe:'steady'},
+  {name:'CWI_Results', role:'Results',             visor:0x3DFF88, tint:0xF5F7FA, accents:[0x3DFF88,0x9AA5B1,0x2E9E4F], acc:'fin',     gear:'toolpack', vibe:'closer'},
 ];
 /* NIGHT SHIFT — RogueCode. Same ledger agent (MUSE_CWI), all different: no crown,
    obsidian skin, crescent-moon mark. Worn 18:00–06:00 local time, or via the Shift toggle. */
 const NIGHT_DEF={name:'MUSE_CWI',role:'Night Shift \u00b7 RogueCode',visor:0x9FB8FF,king:false,
   tint:0x141B33,accents:[0x9FB8FF,0x5B6BA8,0xE8F1FF],acc:'crescent',gear:'toolpack',vibe:'rogue',night:true};
+/* ---------- NIGHT EXPRESSIONS for the whole SAMPLE cast ----------
+   Same character, night palette: darkened body tint, dimmed accents and
+   visor glow. MUSE_CWI keeps its special RogueCode alter-ego (NIGHT_DEF);
+   the other nine get night-mode expressions — no new characters, no new
+   crowns (the crown stays KingCode-only, day shift). */
+function dimHex(hex,f){ const r=Math.min(255,Math.round(((hex>>16)&255)*f)),
+  g=Math.min(255,Math.round(((hex>>8)&255)*f)), b=Math.min(255,Math.round((hex&255)*f));
+  return (r<<16)|(g<<8)|b; }
+function nightDef(def){
+  if(def._night) return def._night;
+  const nd={name:def.name,role:def.role+' \u00b7 night',visor:dimHex(def.visor,.55),king:false,
+    tint:dimHex(def.tint,.30),accents:def.accents.map(a=>dimHex(a,.55)),
+    acc:def.acc,gear:def.gear,vibe:def.vibe,night:true,_day:def};
+  def._night=nd; return nd;
+}
+/* shift-aware def: MUSE_CWI \u21c4 RogueCode, everyone else \u21c4 their night expression */
+function shiftDef(def){
+  const night=currentShift()==='night';
+  if(def.name==='MUSE_CWI') return night?NIGHT_DEF:AGENT_DEFS[0];
+  const day=def._day||def;
+  return night?nightDef(day):day;
+}
 /* ---------- DAY/NIGHT SHIFT state (KingCode \u21c4 RogueCode) ---------- */
 let shiftOverride=null; /* null = auto by local hour */
 function currentShift(){ if(shiftOverride) return shiftOverride; const h=new Date().getHours(); return (h>=18||h<6)?'night':'day'; }
 function activeChiefDef(){ return currentShift()==='night'?NIGHT_DEF:AGENT_DEFS[0]; }
-let appliedShift=null, shiftT=0;
+let appliedShift=null, shiftT=0, nightMix=0; /* eased 0=day,1=night for STAGE forms */
 const TASK_VERBS=[
   ['Verifying handoff',4,7],['Equipping gear',5,8],['Auditing chain',6,10],
   ['Sealing record',3,6],['Routing transfer',5,9],['Scanning manifest',4,6],
@@ -1575,9 +1600,9 @@ function pickTrack(except){
 }
 /* Entry looks: personality-seeded sets each agent chooses from at arrival. */
 const LOOK_SETS={regal:['halo','cap'],rogue:['crescent','antenna'],bold:['crest','fin'],loud:['crest','halo'],smooth:['fin','cap'],
-  electric:['halo','antenna'],sharp:['cap','fin'],craft:['crest','halo'],precise:['antenna','fin'],steady:['cap','crest']};
+  electric:['halo','antenna'],sharp:['cap','fin'],craft:['crest','halo'],precise:['antenna','fin'],steady:['cap','crest'],closer:['fin','antenna']};
 const GEAR_SETS={regal:['walkman','none'],rogue:['toolpack','none'],bold:['walkman','toolpack'],loud:['walkman'],smooth:['toolpack','walkman'],
-  electric:['walkman'],sharp:['none','toolpack'],craft:['walkman','toolpack'],precise:['toolpack','none'],steady:['none','toolpack']};
+  electric:['walkman'],sharp:['none','toolpack'],craft:['walkman','toolpack'],precise:['toolpack','none'],steady:['none','toolpack'],closer:['toolpack','none']};
 const FORM_NAMES=['classic','tall','wide','sleek'];
 function chooseLook(def){
   const accs=LOOK_SETS[def.vibe]||['crest'], gears=GEAR_SETS[def.vibe]||['none'];
@@ -1694,7 +1719,7 @@ function updateEntry(a,dt){
   if(k>=1){
     a.entering=false; g.scale.setScalar(1); g.position.y=a.enterY0;
     if(a.enterRing){ g.remove(a.enterRing); a.enterRing.geometry.dispose(); a.enterRing.material.dispose(); a.enterRing=null; }
-    dressAgent(a,a.look);   /* the choice locks in */
+    a.look=chooseLook(a.def); dressAgent(a,a.look);   /* the choice locks in, shift-aware */
     if(a.glow) a.glow.material.opacity=.5;
     a.hopBase=a.enterY0; a.hopT=0;
     logFeed('✨ <b>'+a.def.name+'</b> arrived — '+lookLabel(a.look)+' · ♪ “'+a.track+'”');
@@ -1910,8 +1935,7 @@ function simTick(dt){
   if(spawnT<=0){
     spawnT=8+Math.random()*8;
     if(simAgents.length<10 && !(window.WorldClient&&window.WorldClient.mode==='LIVE')){
-      let def=AGENT_DEFS[Math.floor(Math.random()*AGENT_DEFS.length)];
-      if(def===AGENT_DEFS[0]) def=activeChiefDef();
+      const def=shiftDef(AGENT_DEFS[Math.floor(Math.random()*AGENT_DEFS.length)]);
       if(!simAgents.some(a=>a.def.name===def.name)) spawnAgent(def);
     }
   }
@@ -1920,19 +1944,20 @@ function simTick(dt){
   for(const a of simAgents){ if(a.entering) continue; a.choiceT-=dt; if(a.choiceT<=0) expressChoice(a); }
   tickT-=dt; if(tickT<=0){ tickT=6; cycleTicker(); }
   shiftT-=dt; if(shiftT<=0){ shiftT=30; const s=currentShift(); if(s!==appliedShift) applyShift(s,true); }
+  nightMix+=(((appliedShift||currentShift())==='night'?1:0)-nightMix)*Math.min(1,dt*2);
 }
 /* seed population */
-spawnAgent(activeChiefDef(),'hub');
-['CWI_Sync','CWI_Radio','CWI_Data','CWI_Studio'].forEach(n=>
-  spawnAgent(AGENT_DEFS.find(d=>d.name===n),'hands'));
+spawnAgent(shiftDef(AGENT_DEFS[0]),'hub');
+['CWI_Sync','CWI_Radio','CWI_Data','CWI_Studio','CWI_Results'].forEach(n=>
+  spawnAgent(shiftDef(AGENT_DEFS.find(d=>d.name===n)),'hands'));
 logFeed('Ledger sim live \u00b7 all figures <b>SAMPLE</b>');
 
 /* ---------- DAY/NIGHT SHIFT — apply, toggle, auto-follow ---------- */
 function applyShift(shift,announce){
   if(appliedShift===shift) return; appliedShift=shift;
   const night=shift==='night';
-  const a=simAgents.find(x=>x.def.name==='MUSE_CWI');
-  if(a&&!a.entering){ a.def=night?NIGHT_DEF:AGENT_DEFS[0]; a.look=chooseLook(a.def); dressAgent(a,a.look); }
+  for(const a of simAgents){ if(a.entering) continue;
+    a.def=shiftDef(a.def); a.look=chooseLook(a.def); dressAgent(a,a.look); }
   sun.intensity=night?0.55:2.6; sun.color.set(night?0x8FA8FF:0xFFF2D8);
   hemi.intensity=night?0.32:0.75; hemi.color.set(night?0x8FA8FF:0xBFE3FF);
   scene.fog.color.set(night?0x0A1428:P.fog);
@@ -1940,7 +1965,7 @@ function applyShift(shift,announce){
   if(badge) badge.innerHTML=night?'\U0001F319 <b>NIGHT SHIFT</b> \u00b7 RogueCode':'\u2600 <b>DAY SHIFT</b> \u00b7 KingCode';
   const tb=document.getElementById('b-shift');
   if(tb){ tb.classList.toggle('active',!!shiftOverride); tb.innerHTML=(night?'\u2600':'\U0001F319')+' <span class="lbl">Shift</span>'; }
-  if(announce) logFeed(night?'\U0001F319 <b>Night shift</b> \u2014 RogueCode takes the world. Crown off.':'\u2600 <b>Day shift</b> \u2014 KingCode resumes. Crown on.');
+  if(announce) logFeed(night?'\U0001F319 <b>Night shift</b> \u2014 RogueCode takes the world. Crown off. All ten agents in night expression.':'\u2600 <b>Day shift</b> \u2014 KingCode resumes. Crown on. All ten agents in day expression.');
 }
 document.getElementById('b-shift').onclick=()=>{
   if(shiftOverride){ shiftOverride=null; toast('Shift: AUTO \u2014 follows local time'); }
