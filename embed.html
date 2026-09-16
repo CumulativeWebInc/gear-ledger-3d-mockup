@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gear Ledger 3D — Embed</title>
+<!--
+  EMBED SNIPPET — paste into any site (white-label ready; CWI badge stays in-frame):
+  <iframe src="https://cumulativewebinc.github.io/gear-ledger-3d-mockup/?broadcast=1&nohint=1"
+          style="width:100%;aspect-ratio:16/9;border:0"
+          allow="fullscreen" title="Gear Ledger 3D world"></iframe>
+  ?broadcast=1 → clean director-driven feed (no HUD chrome, SAMPLE pill + CWI mark stay visible).
+  ?nohint=1    → skips the welcome dialog.
+  Truth: the feed shows the client-side SAMPLE simulation, not live CWI operations.
+-->
+<style>
+  html,body{margin:0;height:100%;background:#06121d;display:flex;align-items:center;justify-content:center}
+  .wrap{position:relative;width:100%;max-width:1280px;aspect-ratio:16/9;max-height:100vh}
+  iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <iframe src="./?broadcast=1&amp;nohint=1" allow="fullscreen" title="Gear Ledger 3D world"></iframe>
+</div>
+</body>
+</html>
