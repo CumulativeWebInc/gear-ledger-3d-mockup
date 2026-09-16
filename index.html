@@ -319,6 +319,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import * as BGU from 'three/addons/utils/BufferGeometryUtils.js';
+import { classifyAgent, deriveLinks } from './stage-logic.js';
 
 /* ============================================================
    0. CONFIG — palette, layout, fixed SAMPLE data
@@ -349,8 +350,9 @@ const ISLANDS = [
   {id:'hands',   name:'HANDOFFS',     tag:'GEAR IN MOTION',                x:-8,  z:24,  r:10, accent:'#35C4FF'},
   {id:'chain',   name:'FULL CHAIN',   tag:'EVERY HANDOFF',                 x:16,  z:22,  r:7,  accent:'#7EF0C1', sx:1.9},
   {id:'legends', name:'LEGENDS',      tag:'MOST-TRAVELED GEAR',            x:34,  z:8,   r:8,  accent:'#FFC93C'},
+  {id:'stage',   name:'AGENT STAGE',  tag:'FORM FROM IDENTITY · LIVE STATE', x:2,  z:46,  r:10, accent:'#FFB224'},
 ];
-const BRIDGES = [['hub','dist'],['hub','leads'],['hub','hands'],['hub','chain'],['chain','legends'],['leads','legends']];
+const BRIDGES = [['hub','dist'],['hub','leads'],['hub','hands'],['hub','chain'],['chain','legends'],['leads','legends'],['hub','stage']];
 
 /* LIVE wiring: dataset lives in sample-engine.js (window.__SAMPLE_DATA).
    window.__liveUpgradeHooks collects per-island LIVE refresh callbacks. */
@@ -670,9 +672,9 @@ ISLANDS.forEach(buildIsland);
 
 /* palms spots per island (world coords) */
 {
-  const counts={hub:8,dist:8,leads:6,hands:7,chain:5,legends:8};
+  const counts={hub:8,dist:8,leads:6,hands:7,chain:5,legends:8,stage:0};
   for(const cfg of ISLANDS){
-    const n=counts[cfg.id]||6, sx=cfg.sx||1;
+    const n=(counts[cfg.id]!==undefined?counts[cfg.id]:6), sx=cfg.sx||1;
     for(let i=0;i<n;i++){
       const a=(i/n)*Math.PI*2+Math.random()*.5;
       const rr=(cfg.r-2.6+Math.random()*1.6);
@@ -1182,6 +1184,264 @@ const arcAnims=[];
   pointLight(0xFFC93C,45,40,34,8,8);
 }
 
+/* ================= AGENT STAGE — form from identity, expression from live data =================
+   The 10 registered ledger agents get 3D forms GENERATED FROM their department
+   identity (forms.json — read as data, never hard-coded shapes). Expression
+   (glow, motion) is a pure function of live-data.json at each refresh, labeled
+   on screen as "operational state". No moods, no emotions, nothing invented.
+   In SAMPLE mode forms render dim/neutral with honest SAMPLE tags. */
+{
+  const {group, cfg}=islandById.stage;
+  const STAGE={forms:[], links:[], prevTasks:{}, ready:false};
+  const linkGroup=new THREE.Group(); group.add(linkGroup);
+
+  /* center dais */
+  const dais=[];
+  put(dais,new THREE.CylinderGeometry(2.7,3.1,.5,24),0,1.8,0);
+  put(dais,new THREE.CylinderGeometry(2.0,2.3,1.3,24),0,2.7,0);
+  group.add(buildMesh(dais,MAT.metal));
+  const daisTrim=new THREE.Mesh(new THREE.TorusGeometry(2.72,.07,8,48),
+    new THREE.MeshStandardMaterial({color:0x111111,emissive:0xFFB224,emissiveIntensity:1.6,roughness:.4}));
+  daisTrim.rotation.x=Math.PI/2; daisTrim.position.y=2.06; group.add(daisTrim);
+  const daisLabel=labelSprite('AGENT STAGE',{size:34,fg:'#FFB224'});
+  daisLabel.position.set(0,5.2,0); group.add(daisLabel);
+  addGlow(cfg.x,4.4,cfg.z,10,'#FFB224',.35);
+  pointLight(0xFFB224,36,36,cfg.x,7,cfg.z);
+
+  /* legend plaque: what the forms and states mean, honestly labeled */
+  const legendTex=canvasTex(700,600,(g)=>{
+    g.fillStyle='#101C26'; g.fillRect(0,0,700,600);
+    g.textAlign='left';
+    const sec=(title,rows,y)=>{
+      g.fillStyle='#FFB224'; g.font='800 28px Arial'; g.fillText(title,30,y); y+=44;
+      g.fillStyle='#BFE9FF'; g.font='400 23px Arial';
+      for(const r of rows){ g.fillText(r,30,y); y+=36; }
+      return y+16;
+    };
+    let y=60;
+    y=sec('FORM FROM IDENTITY',[
+      'Each of the 10 forms is generated from its',
+      'department identity. Every choice derived',
+      'in FORMS.md — no stock avatars.'],y);
+    y=sec('OPERATIONAL STATE (live data only)',[
+      'EXECUTING — holds a genuine live task',
+      'THINKING — task changed since last snapshot',
+      'WAITING — online, no live task',
+      'DORMANT — heartbeat stale or offline',
+      'SAMPLE — awaiting live feed, never faked'],y);
+    sec('LINK PULSE',[
+      'Same live task held by both agents, or',
+      "one agent's task names another agent."],y);
+  });
+  const legendBoard=new THREE.Mesh(new RoundedBoxGeometry(7.8,6.4,.4,3,.2),
+    new THREE.MeshStandardMaterial({color:0x101C26,roughness:.4}));
+  legendBoard.position.set(0,4.8,-8.4); group.add(legendBoard);
+  const legendFace=new THREE.Mesh(new THREE.PlaneGeometry(7.4,6.0),
+    new THREE.MeshBasicMaterial({map:legendTex,transparent:true}));
+  legendFace.position.set(0,4.8,-8.17); group.add(legendFace);
+
+  /* ---- per-form material factories (tracked so state can drive them) ---- */
+  function buildFormGeometry(spec,F,fmat,smat){
+    const c=spec.color, body=F.body;
+    const add=(mesh,y)=>{ if(y!==undefined) mesh.position.y=y; mesh.castShadow=true; body.add(mesh); return mesh; };
+    switch(spec.geometry){
+      case 'spire': /* KingCode — command spire + orbiting ring */
+        F.core=add(new THREE.Mesh(new THREE.OctahedronGeometry(.85),fmat(c)),2.7);
+        F.ring=add(new THREE.Mesh(new THREE.TorusGeometry(1.55,.07,10,44),smat(c,.5)),2.7);
+        F.ring.rotation.x=1.15;
+        add(new THREE.Mesh(new THREE.ConeGeometry(.16,.5,8),smat(c,.6)),3.85);
+        break;
+      case 'needle': /* A&R — sharp cone (blunt verdicts) + ear dish */
+        F.core=add(new THREE.Mesh(new THREE.ConeGeometry(.34,2.4,10),fmat(c)),2.8);
+        F.spin=add(new THREE.Mesh(new THREE.TorusGeometry(.78,.13,10,26),smat(c,.5)),2.3);
+        F.spin.position.x=1.2; F.spin.rotation.y=1.2;
+        break;
+      case 'marquee': /* Marketing — arch + light bars */
+        F.core=add(new THREE.Mesh(new THREE.TorusGeometry(1.05,.14,10,26,Math.PI),fmat(c)),2.6);
+        for(let i=0;i<5;i++){
+          const b=add(new THREE.Mesh(new THREE.BoxGeometry(.14,.5,.14),smat(c,1.2)));
+          const a=Math.PI*(i/4);
+          b.position.set(Math.cos(a)*1.05,2.6+Math.sin(a)*1.05,0);
+        }
+        break;
+      case 'seal': /* Sync — stamp + interlocking ring */
+        F.core=add(new THREE.Mesh(new THREE.CylinderGeometry(.68,.85,.55,14),fmat(c)),2.55);
+        F.ring=add(new THREE.Mesh(new THREE.TorusGeometry(1.0,.09,10,32),smat(c,.55)),2.55);
+        F.ring.rotation.y=Math.PI/2.4; F.ringBaseY=Math.PI/2.4;
+        break;
+      case 'dial': /* Radio — platter + tone arm */
+        F.core=add(new THREE.Mesh(new THREE.CylinderGeometry(.95,.95,.28,20),fmat(c)),2.5);
+        F.spin=add(new THREE.Mesh(new THREE.BoxGeometry(1.5,.09,.14),smat(c,.7)),2.72);
+        F.spin.geometry.translate(.45,0,0);
+        add(new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.4,10),smat(c,.6)),2.7);
+        break;
+      case 'broadcast': /* Press — mast + expanding signal rings */
+        add(new THREE.Mesh(new THREE.CylinderGeometry(.16,.24,2.4,10),smat(c,.5)),2.7);
+        F.core=add(new THREE.Mesh(new THREE.SphereGeometry(.3,12,10),fmat(c,1.4)),4.05);
+        F.rings=[];
+        [0.7,1.15,1.6].forEach((r)=>{
+          const ring=add(new THREE.Mesh(new THREE.TorusGeometry(r,.045,8,32),
+            new THREE.MeshBasicMaterial({color:new THREE.Color(c),transparent:true,opacity:.7})),3.3);
+          ring.rotation.x=Math.PI/2;
+          F.rings.push(ring);
+        });
+        break;
+      case 'fader': /* Studio — console + sliding knob */
+        add(new THREE.Mesh(new THREE.BoxGeometry(1.7,.3,1.0),smat(c,.35)),2.5);
+        add(new THREE.Mesh(new THREE.BoxGeometry(1.2,.06,.12),fmat(c,.8)),2.68);
+        F.slide=add(new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.34,10),fmat(c,1.2)),2.82);
+        break;
+      case 'lattice': /* Data — wireframe lattice + solid core (the verified fact) */
+        F.spin=add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.0,0),
+          new THREE.MeshBasicMaterial({color:new THREE.Color(c),wireframe:true,transparent:true,opacity:.85})),2.8);
+        F.wire=F.spin.material;
+        F.core=add(new THREE.Mesh(new THREE.IcosahedronGeometry(.42,0),fmat(c,1.3)),2.8);
+        break;
+      case 'charter': /* Affairs — protective dome + scroll */
+        F.core=add(new THREE.Mesh(new THREE.SphereGeometry(.95,18,12,0,Math.PI*2,0,Math.PI/2),
+          new THREE.MeshStandardMaterial({color:new THREE.Color(c),transparent:true,opacity:.35,
+            roughness:.2,metalness:.1,side:THREE.DoubleSide})),2.35);
+        const scroll=add(new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,1.3,12,1,true,0,2.4),
+          smat('#FFF3DC',.25)),2.6);
+        scroll.rotation.z=Math.PI/2; scroll.rotation.y=.6;
+        break;
+      case 'receipt': /* Results — spike filing stacked receipt discs */
+        add(new THREE.Mesh(new THREE.ConeGeometry(.14,2.6,8),smat(c,.5)),2.9);
+        F.discs=[];
+        for(let i=0;i<4;i++){
+          const d=add(new THREE.Mesh(new THREE.CylinderGeometry(.55-i*.06,.55-i*.06,.09,14),fmat(c,.9)),2.62+i*.27);
+          F.discs.push(d);
+        }
+        F.core=F.discs[2];
+        break;
+      default:
+        F.core=add(new THREE.Mesh(new THREE.OctahedronGeometry(.8),fmat(c)),2.7);
+    }
+  }
+
+  function buildStageForm(spec,i){
+    const a=(i/10)*Math.PI*2, x=Math.cos(a)*5.6, z=Math.sin(a)*5.6;
+    const F={spec,x,z,phase:Math.random()*6.28,coreMats:[],shellMats:[],
+      cur:{core:.4,motion:.6,bob:.3,dim:.55,wob:.08},tgt:null,st:'SAMPLE'};
+    const grp=new THREE.Group(); grp.position.set(x,0,z); group.add(grp); F.grp=grp;
+    const body=new THREE.Group(); grp.add(body); F.body=body;
+    const fmat=(color,ei)=>{ const m=new THREE.MeshStandardMaterial({color:0x0B1622,
+      emissive:new THREE.Color(color),emissiveIntensity:ei==null?1:ei,roughness:.3,metalness:.25});
+      F.coreMats.push(m); return m; };
+    const smat=(color,ei)=>{ const m=new THREE.MeshStandardMaterial({color:new THREE.Color(color),
+      emissive:new THREE.Color(color),emissiveIntensity:ei==null?.3:ei,roughness:.45,metalness:.5});
+      F.shellMats.push(m); return m; };
+    /* plinth (static — only the form body bobs) */
+    const pl=[]; put(pl,new THREE.CylinderGeometry(1.05,1.28,.55,14),0,1.8,0);
+    grp.add(buildMesh(pl,MAT.metal));
+    const trim=new THREE.Mesh(new THREE.TorusGeometry(1.06,.05,8,28),
+      new THREE.MeshStandardMaterial({color:0x111111,emissive:new THREE.Color(spec.color),emissiveIntensity:1.3,roughness:.4}));
+    trim.rotation.x=Math.PI/2; trim.position.y=2.09; grp.add(trim);
+    buildFormGeometry(spec,F,fmat,smat);
+    const nm=labelSprite(spec.public_name,{size:30,fg:'#ffffff'}); nm.position.set(0,5.6,0); grp.add(nm);
+    const tag=labelSprite('operational state: SAMPLE',{size:22,fg:'#FFC93C'}); tag.position.set(0,4.8,0); grp.add(tag);
+    F.tag=tag;
+    addGlow(cfg.x+x,3.4,cfg.z+z,4,spec.color,.3);
+    /* inspector proxy — reuses the AGENT inspector rows (live-aware) */
+    const proxy=new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,4.6,8),new THREE.MeshBasicMaterial({visible:false}));
+    proxy.position.set(x,3.4,z); group.add(proxy);
+    const sel=regSel(proxy,'stage','AGENT',spec.public_name+' — form from identity',[]);
+    sel.agent={def:{name:spec.agent_id.replace('agent:','')},
+      grp:{position:new THREE.Vector3(cfg.x+x,3,cfg.z+z)},
+      state:'idle',task:null,track:null,look:null,done:0};
+    STAGE.forms.push(F);
+    return F;
+  }
+
+  /* ---- operational-state expression: pure function of live-data.json ---- */
+  const EXPR={
+    EXECUTING:{core:1.9,motion:1.6,bob:.55,dim:1,  wob:0,  tag:'#3DFF88'},
+    THINKING: {core:1.0,motion:.5, bob:.3, dim:.85,wob:.06,tag:'#A8E6FF'},
+    WAITING:  {core:.55,motion:.7, bob:.4, dim:.6, wob:.1, tag:'#8FA9BC'},
+    DORMANT:  {core:.12,motion:.25,bob:.08,dim:.35,wob:0,  tag:'#5A6672'},
+    SAMPLE:   {core:.4, motion:.6, bob:.3, dim:.55,wob:.08,tag:'#FFC93C'},
+  };
+  function setFormState(F,st,detail){
+    F.st=st; F.tgt=EXPR[st];
+    const label='operational state: '+st+(detail?' · '+detail.slice(0,40):'');
+    const ns=labelSprite(label,{size:22,fg:EXPR[st].tag});
+    F.tag.material.map=ns.material.map; F.tag.scale.copy(ns.scale);
+  }
+  function applySampleState(){ for(const F of STAGE.forms) setFormState(F,'SAMPLE','awaiting live feed'); }
+  /* live classification + link rules live in stage-logic.js (shared with tests) */
+  function applyLiveState(json){
+    const now=Date.now(), byId={};
+    (json.agents||[]).forEach((a)=>{ byId[a.agent_id]=a; });
+    for(const F of STAGE.forms){
+      const rec=byId[F.spec.agent_id];
+      const r=classifyAgent(rec,STAGE.prevTasks[F.spec.agent_id],now);
+      setFormState(F,r.state,r.detail);
+      STAGE.prevTasks[F.spec.agent_id]=rec?rec.current_task_id:null;
+    }
+    rebuildLinks(json,byId);
+  }
+
+  /* ---- presence links: drawn ONLY from task data in the same snapshot ---- */
+  function rebuildLinks(json,byId){
+    for(const L of STAGE.links){ linkGroup.remove(L.line); L.line.geometry.dispose(); L.line.material.dispose(); }
+    STAGE.links.length=0;
+    const forms=STAGE.forms.map((F)=>({agent_id:F.spec.agent_id,public_name:F.spec.public_name}));
+    const byF={}; STAGE.forms.forEach((F)=>{ byF[F.spec.agent_id]=F; });
+    for(const {a,b,reason} of deriveLinks(forms,byId||{},json.tasks_recent)){
+      const A=byF[a], B=byF[b];
+      if(!A||!B) continue;
+      const col=new THREE.Color(A.spec.color).lerp(new THREE.Color(B.spec.color),.5);
+      const geo=new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(A.x,4.4,A.z),
+        new THREE.Vector3((A.x+B.x)/2,6.4,(A.z+B.z)/2),
+        new THREE.Vector3(B.x,4.4,B.z)]);
+      const line=new THREE.Line(geo,new THREE.LineBasicMaterial({color:col,transparent:true,
+        opacity:.4,blending:THREE.AdditiveBlending,depthWrite:false}));
+      line.userData.reason=reason;
+      linkGroup.add(line);
+      STAGE.links.push({line,mat:line.material,ph:Math.random()*6.28});
+    }
+  }
+
+  /* one shared animation callback for all forms + link pulses */
+  anims.push((t,dt)=>{
+    for(const F of STAGE.forms){
+      const T=F.tgt||EXPR.SAMPLE, m=F.spec.motion, C=F.cur, k=Math.min(1,dt*3);
+      C.core+=(T.core-C.core)*k; C.motion+=(T.motion-C.motion)*k;
+      C.bob+=(T.bob-C.bob)*k; C.dim+=(T.dim-C.dim)*k; C.wob+=(T.wob-C.wob)*k;
+      for(const cm of F.coreMats) cm.emissiveIntensity=C.core;
+      for(const sm of F.shellMats) sm.emissiveIntensity=.3*C.dim;
+      if(F.wire) F.wire.opacity=.85*C.dim;
+      if(F.spin) F.spin.rotation.y=t*m.spin*C.motion*2.2;
+      if(F.ring&&m.ring_orbit) F.ring.rotation.z=t*.5*C.motion;
+      if(F.ring&&!m.ring_orbit) F.ring.rotation.y=(F.ringBaseY||0)+t*.3*C.motion;
+      if(F.slide) F.slide.position.x=Math.sin(t*1.4)*.45;
+      if(F.rings) F.rings.forEach((r,i)=>{
+        const ph=(t*.8+i/3)%1, s=1+.4*ph;
+        r.scale.set(s,s,1); r.material.opacity=.75*(1-ph)*C.dim;
+      });
+      if(F.discs) F.discs.forEach((d,i)=>{ d.rotation.y=t*(.4+i*.15)*C.motion; });
+      F.body.position.y=Math.sin(t*m.bob+F.phase)*.28*C.bob*(m.amp==null?1:m.amp);
+      F.body.rotation.y=Math.sin(t*6.28/m.turn+F.phase)*.12*C.wob;
+    }
+    for(const L of STAGE.links) L.mat.opacity=.22+.38*Math.abs(Math.sin(t*2.2+L.ph));
+  });
+
+  /* boot: forms.json is data — the scene builds every form from it */
+  fetch('forms.json',{cache:'no-store'})
+    .then((r)=>{ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
+    .then((spec)=>{
+      if(!spec||spec.schema!=='gear-ledger-3d-forms/v1'||!Array.isArray(spec.forms)) throw new Error('bad form spec');
+      spec.forms.forEach((s,i)=>buildStageForm(s,i));
+      STAGE.ready=true;
+      const WC=window.WorldClient;
+      if(WC&&WC.mode==='LIVE'&&WC.live) applyLiveState(WC.live); else applySampleState();
+    })
+    .catch((e)=>{ if(window.__glerrs) window.__glerrs.push('STAGE forms.json: '+(e&&e.message||e)); });
+  window.__liveUpgradeHooks.push((json)=>{ if(STAGE.ready) applyLiveState(json); });
+  pointLight(0xFFB224,30,30,cfg.x,9,cfg.z);
+}
+
 /* ================= PALMS (instanced) ================= */
 {
   const trunkL=[];
@@ -1525,7 +1785,7 @@ function killAgent(a){
 }
 function newTask(){
   const [verb,d0,d1]=TASK_VERBS[Math.floor(Math.random()*TASK_VERBS.length)];
-  const ids=ISLANDS.map(c=>c.id);
+  const ids=ISLANDS.map(c=>c.id).filter(id=>id!=='stage'); /* stage keeps sim robots out: it reads live state, not SAMPLE motion */
   const from=ids[Math.floor(Math.random()*ids.length)];
   let to=ids[Math.floor(Math.random()*ids.length)];
   if(to===from) to='hub';
@@ -1668,6 +1928,7 @@ window.__liveUpgrade=function(json){
     if(t.id==='hub') t.body='This is the Gear Ledger\u2019s mission control: a holographic globe showing live world status. Agents online, tasks in the ledger, and verified completions \u2014 live numbers from the Gear Ledger, refreshed every 10 minutes.';
     else if(t.id==='dist') t.body='Each pavilion is a CWI department holding its live share of ledger tasks. The pie between them shows real task distribution across the company.';
     else if(t.id==='leads') t.body='Three podium towers rank the fleet by live verified task completions, from the Gear Ledger. No invented counts \u2014 every rank is earned.';
+    else if(t.id==='stage') t.body='Ten forms for the ten registered ledger agents \u2014 each shape generated from its department\u2019s identity. Glow and motion show LIVE operational state from the Gear Ledger: executing, thinking, waiting, or dormant. Link pulses mark agents sharing one live task, or a task naming another agent.';
   });
   if(typeof logFeed==='function'){
     logFeed('\u25cf <b>LIVE</b> \u2014 connected to Gear Ledger store v'+json.store_version+
@@ -1895,6 +2156,7 @@ const TOUR=[
   {id:'hands',title:'HANDOFFS — "Gear in motion, day by day."',body:'Watch glowing arcs carry gear between docks while the timeline ribbon scrolls thirty days of activity. The routes and daily counts are SAMPLE traffic \u2014 the real ledger\u2019s rhythm would look like this, with real numbers.'},
   {id:'chain',title:'FULL CHAIN — "The full story, oldest to newest."',body:'Walk the chronological record of every handoff, step by step. In the live product each plaque links to a signed record; here each plaque is SAMPLE text showing what the chain would feel like to stroll.'},
   {id:'legends',title:'LEGENDS — "The gear that\u2019s seen everything."',body:'Monuments to the most-traveled items in the fleet \u2014 gear that\u2019s changed hands more than anything else. The travel counts are SAMPLE legend-making; the real ledger would crown its own veterans here.'},
+  {id:'stage',title:'AGENT STAGE — "Form from identity."',body:'Ten forms for the ten registered ledger agents \u2014 each shape generated from its department\u2019s identity: the scout\u2019s needle, the DJ\u2019s dial, the quant\u2019s crystal. Glow and motion show operational state from the ledger: executing, thinking, waiting, or dormant. Link pulses mark agents sharing one live task, or a task naming another agent.'},
 ];
 const tour={active:false,idx:0,phase:'',dwellT:0,dwellDur:5};
 const tcap=document.getElementById('tourcap');
