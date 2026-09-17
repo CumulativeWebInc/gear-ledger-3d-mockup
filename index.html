@@ -319,7 +319,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import * as BGU from 'three/addons/utils/BufferGeometryUtils.js';
-import { classifyAgent, deriveLinks, proceduralForm } from './stage-logic.js?v=20260917';
+import { classifyAgent, deriveLinks, proceduralForm, ROBOT_PARTS, BODY_ANCHORS, identityMounts, constructPlan, AUTO_COLOR, AUTO_CORE } from './stage-logic.js?v=20260917w2';
+/* Athena districts (2026-09-17): home-district layout + data-driven district life */
+import { districtDefs, districtBridges, districtBeacon, AGENT_ROSTER } from './districts.js';
 
 /* ============================================================
    0. CONFIG — palette, layout, fixed SAMPLE data
@@ -353,6 +355,17 @@ const ISLANDS = [
   {id:'stage',   name:'AGENT STAGE',  tag:'FORM FROM IDENTITY · LIVE STATE', x:2,  z:46,  r:10, accent:'#FFB224'},
 ];
 const BRIDGES = [['hub','dist'],['hub','leads'],['hub','hands'],['hub','chain'],['chain','legends'],['leads','legends'],['hub','stage']];
+
+/* ===== DISTRICTS (Athena, 2026-09-17) — home districts, one per agent =====
+   Twenty Minds decision: data-first. District islands join ISLANDS/BRIDGES
+   here, before the factory loops below, so buildIsland/buildSign/bridges/
+   palms handle them with zero changes to existing builders. Each district's
+   beacon breathes with its agent's live operational state (see DISTRICT LIFE).
+   Note: the hub→district bridges arc high (py≈2.9) and may visually cross an
+   existing island rim at one point — elevated, intentional, no collision. */
+const DISTRICT_DEFS = districtDefs(AGENT_ROSTER);
+for (const d of DISTRICT_DEFS) ISLANDS.push(d);
+for (const b of districtBridges(DISTRICT_DEFS)) BRIDGES.push(b);
 
 /* LIVE wiring: dataset lives in sample-engine.js (window.__SAMPLE_DATA).
    window.__liveUpgradeHooks collects per-island LIVE refresh callbacks. */
@@ -1223,9 +1236,12 @@ const arcAnims=[];
     };
     let y=60;
     y=sec('FORM FROM IDENTITY',[
-      'Each of the 11 forms is generated from its',
-      'department identity. Every choice derived',
-      'in FORMS.md — no stock avatars.'],y);
+      'Each of the 11 agents is an articulated',
+      'robot body generated from its department',
+      'identity, signature gear mounted on.',
+      'Every choice derived in FORMS.md —',
+      'no stock avatars. New agents arrive as',
+      'proto-frames under construction.'],y);
     y=sec('OPERATIONAL STATE (live data only)',[
       'EXECUTING — holds a genuine live task',
       'THINKING — task changed since last snapshot',
@@ -1244,103 +1260,150 @@ const arcAnims=[];
   legendFace.position.set(0,4.8,-8.17); group.add(legendFace);
 
   /* ---- per-form material factories (tracked so state can drive them) ---- */
-  function buildFormGeometry(spec,F,fmat,smat){
-    const c=spec.color, body=F.body;
-    const add=(mesh,y)=>{ if(y!==undefined) mesh.position.y=y; mesh.castShadow=true; body.add(mesh); return mesh; };
-    switch(spec.geometry){
-      case 'spire': /* KingCode — command spire + orbiting ring */
-        F.core=add(new THREE.Mesh(new THREE.OctahedronGeometry(.85),fmat(c)),2.7);
-        F.ring=add(new THREE.Mesh(new THREE.TorusGeometry(1.55,.07,10,44),smat(c,.5)),2.7);
-        F.ring.rotation.x=1.15;
-        add(new THREE.Mesh(new THREE.ConeGeometry(.16,.5,8),smat(c,.6)),3.85);
-        break;
-      case 'needle': /* A&R — sharp cone (blunt verdicts) + ear dish */
-        F.core=add(new THREE.Mesh(new THREE.ConeGeometry(.34,2.4,10),fmat(c)),2.8);
-        F.spin=add(new THREE.Mesh(new THREE.TorusGeometry(.78,.13,10,26),smat(c,.5)),2.3);
-        F.spin.position.x=1.2; F.spin.rotation.y=1.2;
-        break;
-      case 'marquee': /* Marketing — arch + light bars */
-        F.core=add(new THREE.Mesh(new THREE.TorusGeometry(1.05,.14,10,26,Math.PI),fmat(c)),2.6);
-        for(let i=0;i<5;i++){
-          const b=add(new THREE.Mesh(new THREE.BoxGeometry(.14,.5,.14),smat(c,1.2)));
-          const a=Math.PI*(i/4);
-          b.position.set(Math.cos(a)*1.05,2.6+Math.sin(a)*1.05,0);
-        }
-        break;
-      case 'seal': /* Sync — stamp + interlocking ring */
-        F.core=add(new THREE.Mesh(new THREE.CylinderGeometry(.68,.85,.55,14),fmat(c)),2.55);
-        F.ring=add(new THREE.Mesh(new THREE.TorusGeometry(1.0,.09,10,32),smat(c,.55)),2.55);
-        F.ring.rotation.y=Math.PI/2.4; F.ringBaseY=Math.PI/2.4;
-        break;
-      case 'dial': /* Radio — platter + tone arm */
-        F.core=add(new THREE.Mesh(new THREE.CylinderGeometry(.95,.95,.28,20),fmat(c)),2.5);
-        F.spin=add(new THREE.Mesh(new THREE.BoxGeometry(1.5,.09,.14),smat(c,.7)),2.72);
-        F.spin.geometry.translate(.45,0,0);
-        add(new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.4,10),smat(c,.6)),2.7);
-        break;
-      case 'broadcast': /* Press — mast + expanding signal rings */
-        add(new THREE.Mesh(new THREE.CylinderGeometry(.16,.24,2.4,10),smat(c,.5)),2.7);
-        F.core=add(new THREE.Mesh(new THREE.SphereGeometry(.3,12,10),fmat(c,1.4)),4.05);
-        F.rings=[];
-        [0.7,1.15,1.6].forEach((r)=>{
-          const ring=add(new THREE.Mesh(new THREE.TorusGeometry(r,.045,8,32),
-            new THREE.MeshBasicMaterial({color:new THREE.Color(c),transparent:true,opacity:.7})),3.3);
-          ring.rotation.x=Math.PI/2;
-          F.rings.push(ring);
-        });
-        break;
-      case 'fader': /* Studio — console + sliding knob */
-        add(new THREE.Mesh(new THREE.BoxGeometry(1.7,.3,1.0),smat(c,.35)),2.5);
-        add(new THREE.Mesh(new THREE.BoxGeometry(1.2,.06,.12),fmat(c,.8)),2.68);
-        F.slide=add(new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.34,10),fmat(c,1.2)),2.82);
-        break;
-      case 'lattice': /* Data — wireframe lattice + solid core (the verified fact) */
-        F.spin=add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.0,0),
-          new THREE.MeshBasicMaterial({color:new THREE.Color(c),wireframe:true,transparent:true,opacity:.85})),2.8);
-        F.wire=F.spin.material;
-        F.core=add(new THREE.Mesh(new THREE.IcosahedronGeometry(.42,0),fmat(c,1.3)),2.8);
-        break;
-      case 'charter': /* Affairs — protective dome + scroll */
-        F.core=add(new THREE.Mesh(new THREE.SphereGeometry(.95,18,12,0,Math.PI*2,0,Math.PI/2),
-          new THREE.MeshStandardMaterial({color:new THREE.Color(c),transparent:true,opacity:.35,
-            roughness:.2,metalness:.1,side:THREE.DoubleSide})),2.35);
-        const scroll=add(new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,1.3,12,1,true,0,2.4),
-          smat('#FFF3DC',.25)),2.6);
-        scroll.rotation.z=Math.PI/2; scroll.rotation.y=.6;
-        break;
-      case 'receipt': /* Results — spike filing stacked receipt discs */
-        add(new THREE.Mesh(new THREE.ConeGeometry(.14,2.6,8),smat(c,.5)),2.9);
-        F.discs=[];
-        for(let i=0;i<4;i++){
-          const d=add(new THREE.Mesh(new THREE.CylinderGeometry(.55-i*.06,.55-i*.06,.09,14),fmat(c,.9)),2.62+i*.27);
-          F.discs.push(d);
-        }
-        F.core=F.discs[2];
-        break;
-      case 'keystone': /* Athena — keystone wedge + owl eyes + orbiting calibration ring */
-        { const ks=new THREE.CylinderGeometry(.5,.85,1.5,4,1); ks.rotateY(Math.PI/4);
-          F.core=add(new THREE.Mesh(ks,fmat(c)),2.75);
-          const eyeL=add(new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.1,14),fmat(c,1.5)),3.05);
-          eyeL.rotation.x=Math.PI/2; eyeL.position.x=-.34; eyeL.position.z=.62;
-          const eyeR=add(new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.1,14),fmat(c,1.5)),3.05);
-          eyeR.rotation.x=Math.PI/2; eyeR.position.x=.34; eyeR.position.z=.62;
-          F.ring=add(new THREE.Mesh(new THREE.TorusGeometry(1.35,.06,10,40),smat(c,.5)),2.75);
-          F.ring.rotation.x=1.35; }
-        break;
-      case 'construct': /* auto-form — newborn agent, visibly assembling */
-        for(let i=0;i<3;i++){
-          const plate=add(new THREE.Mesh(new THREE.BoxGeometry(1.1-i*.18,.22,1.1-i*.18),smat(c,.4)),2.45+i*.3);
-          plate.rotation.y=i*.5;
-        }
-        F.core=add(new THREE.Mesh(new THREE.OctahedronGeometry(.34),fmat(c,1.4)),3.55);
-        F.spin=add(new THREE.Mesh(new THREE.BoxGeometry(.3,.3,.3),smat(c,.8)),3.55);
-        F.spin.position.x=.85;
-        break;
-      default:
-        F.core=add(new THREE.Mesh(new THREE.OctahedronGeometry(.8),fmat(c)),2.7);
+  /* ---- wave 2: articulated robot bodies (2026-09-17) ----
+     Every form is a real articulated robot — head, torso, arms, legs, visible
+     joints — built from the ROBOT_PARTS plan in stage-logic.js. The agent's
+     identity-derived signature kit (identityMounts) is MOUNTED onto the body.
+     F.core = chest core (drives the bright-core EXECUTING expression).
+     F.joints = pivot groups the shared animation loop articulates. */
+  const ROBOT_BASE=2.12; /* plinth-top offset: robot feet stand on the plinth */
+  const PIVOTS={}; ROBOT_PARTS.forEach((p)=>{ if(p.joint) PIVOTS[p.id]=p.pivot; });
+  /* limb -> body-part ids (for the proto-frame: exposed limbs show struts) */
+  const LIMB_PARTS={
+    'head':['head','visor'],
+    'armL':['pauldronL','upperArmL','elbow-ballL','foreArmL','handL'],
+    'armR':['pauldronR','upperArmR','elbow-ballR','foreArmR','handR'],
+    'legL':['thighL','knee-ballL','shinL','footL'],
+    'legR':['thighR','knee-ballR','shinR','footR'],
+    'chest-plate':['torso'],
+  };
+  const PART_LIMB={}; Object.keys(LIMB_PARTS).forEach((l)=>LIMB_PARTS[l].forEach((id)=>PART_LIMB[id]=l));
+  function shapeGeo(shape,dims){
+    switch(shape){
+      case 'box': return new THREE.BoxGeometry(dims[0],dims[1],dims[2]);
+      case 'cyl': return new THREE.CylinderGeometry(dims[0],dims[1],dims[2],14);
+      case 'sph': return new THREE.SphereGeometry(dims[0],14,12);
+      case 'cone': return new THREE.ConeGeometry(dims[0],dims[1],12);
+      case 'torus': return new THREE.TorusGeometry(dims[0],dims[1],10,36,dims[2]||Math.PI*2);
+      case 'wedge': { const g=new THREE.CylinderGeometry(dims[0],dims[1],dims[2],4,1); g.rotateY(Math.PI/4); return g; }
+      case 'ico': return new THREE.IcosahedronGeometry(dims[0],0);
+      case 'dome': return new THREE.SphereGeometry(dims[0],18,12,0,Math.PI*2,0,Math.PI/2);
+      case 'scroll': return new THREE.CylinderGeometry(dims[0],dims[0],dims[1],12,1,true,0,2.4);
+      default: return new THREE.BoxGeometry(.3,.3,.3);
     }
   }
-
+  function buildRobotBody(spec,F,fmat,smat,opts){
+    opts=opts||{};
+    const c=spec.color, body=F.body, joints={}, groups={};
+    for(const p of ROBOT_PARTS){
+      if(!p.joint) continue;
+      const g=new THREE.Group();
+      g.position.set(p.pivot[0],p.pivot[1]+ROBOT_BASE,p.pivot[2]);
+      (p.parent&&groups[p.parent]?groups[p.parent]:body).add(g);
+      groups[p.id]=g; joints[p.id]=g;
+    }
+    const add=(mesh,parent)=>{ mesh.castShadow=true; (parent||body).add(mesh); return mesh; };
+    const protoMat=(p)=> p.mat==='core' ? fmat(AUTO_CORE,.9) : smat(AUTO_COLOR,.32);
+    for(const p of ROBOT_PARTS){
+      if(p.joint) continue;
+      const limb=PART_LIMB[p.id];
+      if(opts.proto&&limb&&!(opts.assembled&&opts.assembled.has(limb))) continue; /* exposed: strut instead */
+      const mat=opts.proto?protoMat(p):(p.mat==='core'?fmat(spec.core_color||c,1.5):p.mat==='accent'?smat(c,.7):smat(c,.45));
+      const mesh=new THREE.Mesh(shapeGeo(p.shape,p.dims),mat);
+      if(p.parent&&groups[p.parent]){
+        const pv=PIVOTS[p.parent];
+        mesh.position.set(p.at[0]-pv[0],p.at[1]-pv[1],p.at[2]-pv[2]);
+        add(mesh,groups[p.parent]);
+      } else { mesh.position.set(p.at[0],p.at[1]+ROBOT_BASE,p.at[2]); add(mesh,body); }
+      if(p.isCore) F.core=mesh;
+    }
+    if(opts.proto){ /* exposed frame: thin struts ride the joints so the frame articulates */
+      const sm=smat(AUTO_COLOR,.3);
+      const strut=(w,h,d,pos,parent)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),sm);
+        m.position.set(pos[0],pos[1],pos[2]); m.castShadow=true; (parent||body).add(m); };
+      const asm=opts.assembled||new Set();
+      if(!asm.has('head')) strut(.09,.62,.09,[0,.34,0],groups.neck);
+      if(!asm.has('armL')){ strut(.09,.56,.09,[0,-.28,0],groups.shoulderL); strut(.09,.62,.09,[0,-.31,0],groups.elbowL); }
+      if(!asm.has('armR')){ strut(.09,.56,.09,[0,-.28,0],groups.shoulderR); strut(.09,.62,.09,[0,-.31,0],groups.elbowR); }
+      if(!asm.has('legL')){ strut(.09,.5,.09,[0,-.25,0],groups.hipL); strut(.09,.46,.09,[0,-.22,0],groups.kneeL); }
+      if(!asm.has('legR')){ strut(.09,.5,.09,[0,-.25,0],groups.hipR); strut(.09,.46,.09,[0,-.22,0],groups.kneeR); }
+      if(!asm.has('chest-plate')){ strut(.08,.8,.08,[-.3,1.68+ROBOT_BASE,0]); strut(.08,.8,.08,[.3,1.68+ROBOT_BASE,0]); }
+    }
+    F.joints=joints;
+  }
+  function buildIdentityKit(spec,F,fmat,smat){
+    const c=spec.color, body=F.body;
+    const matFor=(k)=> k==='core'?fmat(spec.core_color||c,1.4):k==='accent'?smat(c,.7):smat(c,.5);
+    const place=(mesh,anchor,off)=>{
+      const a=BODY_ANCHORS[anchor]; off=off||[0,0,0];
+      const ax=a.at[0]+off[0], ay=a.at[1]+off[1], az=a.at[2]+off[2];
+      if(a.parent&&F.joints[a.parent]){
+        const pv=PIVOTS[a.parent];
+        mesh.position.set(ax-pv[0],ay-pv[1],az-pv[2]); F.joints[a.parent].add(mesh);
+      } else { mesh.position.set(ax,ay+ROBOT_BASE,az); body.add(mesh); }
+      mesh.castShadow=true; return mesh;
+    };
+    const wireMat=(color)=>{ const m=new THREE.MeshBasicMaterial({color:new THREE.Color(color),
+      wireframe:true,transparent:true,opacity:.85}); F.wire=m; return m; };
+    for(const el of identityMounts(spec.geometry)){
+      const mat=el.shape==='wire'?wireMat(c):matFor(el.mat);
+      const rot=el.rot||[0,0,0];
+      if(el.shape==='disc-pair'){ /* Athena owl eyes: twin discs on the visor */
+        for(const s of [-1,1]){
+          const e=new THREE.Mesh(new THREE.CylinderGeometry(el.dims[0],el.dims[0],el.dims[1],14),mat);
+          e.rotation.x=Math.PI/2; place(e,el.anchor,[s*.17,0,0]);
+        }
+        continue;
+      }
+      if(el.count&&el.count>1&&el.arc){ /* marquee light bars along the arch */
+        for(let i=0;i<el.count;i++){
+          const a=Math.PI*(i/(el.count-1));
+          const b=new THREE.Mesh(shapeGeo(el.shape,el.dims),mat);
+          b.position.set(Math.cos(a)*el.arc,1.72+Math.sin(a)*el.arc+ROBOT_BASE,-.42);
+          b.castShadow=true; body.add(b);
+        }
+        const arch=new THREE.Mesh(shapeGeo('torus',[el.arc,.12,Math.PI]),matFor('shell'));
+        place(arch,el.anchor); continue;
+      }
+      if(el.count&&el.count>1&&el.motion==='rings'){ /* press signal rings */
+        F.rings=[];
+        for(let i=0;i<el.count;i++){
+          const r=new THREE.Mesh(shapeGeo('torus',[el.dims[0]+i*.45,el.dims[1]]),mat);
+          r.rotation.x=Math.PI/2; place(r,el.anchor,[0,.75+i*(el.stack||.4),0]); F.rings.push(r);
+        }
+        continue;
+      }
+      if(el.count&&el.count>1&&el.motion==='discs'){ /* results receipt discs */
+        F.discs=[];
+        for(let i=0;i<el.count;i++){
+          const w=el.dims[0]-i*.05;
+          const d=new THREE.Mesh(shapeGeo('cyl',[w,w,el.dims[2]]),mat);
+          place(d,el.anchor,[0,-.12+i*(el.stack||.24),.12]); F.discs.push(d);
+        }
+        continue;
+      }
+      const mesh=new THREE.Mesh(shapeGeo(el.shape,el.dims),mat);
+      if(el.shape==='scroll') mesh.rotation.z=Math.PI/2;
+      else mesh.rotation.set(rot[0],rot[1],rot[2]);
+      if(el.motion==='spin'&&el.id==='tone-arm') mesh.geometry.translate(.35,0,0);
+      place(mesh,el.anchor,el.off);
+      if(el.motion==='ring'){ F.ring=mesh; F.ringOrbit=!!el.orbit; if(!el.orbit) F.ringBaseY=rot[1]||0; }
+      if(el.motion==='spin') F.spin=mesh;
+      if(el.motion==='slide'){ F.slide=mesh; F.slideBase=mesh.position.clone(); }
+    }
+  }
+  function buildFormGeometry(spec,F,fmat,smat){
+    if(spec.geometry==='construct'){ /* proto-frame: robot under construction */
+      const plan=constructPlan(spec.agent_id);
+      buildRobotBody({color:AUTO_COLOR,core_color:AUTO_CORE},F,fmat,smat,
+        {proto:true,assembled:new Set(plan.assembled)});
+      buildIdentityKit({geometry:'construct',color:AUTO_COLOR,core_color:AUTO_CORE,
+        agent_id:spec.agent_id},F,fmat,smat);
+      return;
+    }
+    buildRobotBody(spec,F,fmat,smat,{});
+    buildIdentityKit(spec,F,fmat,smat);
+  }
   function buildStageForm(spec,i,n,at){
     const a=(i/(n||11))*Math.PI*2;
     let x=Math.cos(a)*5.6, z=Math.sin(a)*5.6;
@@ -1362,8 +1425,8 @@ const arcAnims=[];
       new THREE.MeshStandardMaterial({color:0x111111,emissive:new THREE.Color(spec.color),emissiveIntensity:1.3,roughness:.4}));
     trim.rotation.x=Math.PI/2; trim.position.y=2.09; grp.add(trim);
     buildFormGeometry(spec,F,fmat,smat);
-    const nm=labelSprite(spec.public_name,{size:30,fg:'#ffffff'}); nm.position.set(0,5.6,0); grp.add(nm);
-    const tag=labelSprite('operational state: SAMPLE',{size:22,fg:'#FFC93C'}); tag.position.set(0,4.8,0); grp.add(tag);
+    const nm=labelSprite(spec.public_name,{size:30,fg:'#ffffff'}); nm.position.set(0,6.2,0); grp.add(nm);
+    const tag=labelSprite('operational state: SAMPLE',{size:22,fg:'#FFC93C'}); tag.position.set(0,5.45,0); grp.add(tag);
     F.tag=tag;
     addGlow(cfg.x+x,3.4,cfg.z+z,4,spec.color,.3);
     /* inspector proxy — reuses the AGENT inspector rows (live-aware) */
@@ -1452,9 +1515,22 @@ const arcAnims=[];
       for(const sm of F.shellMats) sm.emissiveIntensity=.3*C.dim;
       if(F.wire) F.wire.opacity=.85*C.dim;
       if(F.spin) F.spin.rotation.y=t*m.spin*C.motion*2.2;
-      if(F.ring&&m.ring_orbit) F.ring.rotation.z=t*.5*C.motion;
-      if(F.ring&&!m.ring_orbit) F.ring.rotation.y=(F.ringBaseY||0)+t*.3*C.motion;
-      if(F.slide) F.slide.position.x=Math.sin(t*1.4)*.45;
+      if(F.ring){ const orb=F.ringOrbit!=null?F.ringOrbit:!!m.ring_orbit;
+        if(orb) F.ring.rotation.z=t*.5*C.motion;
+        else F.ring.rotation.y=(F.ringBaseY||0)+t*.3*C.motion; }
+      if(F.slide) F.slide.position.x=(F.slideBase?F.slideBase.x:0)+Math.sin(t*1.4)*.45;
+      /* wave 2: articulated joints — arms/legs swing, head scans, arms lift when executing */
+      if(F.joints){
+        const sw=Math.sin(t*m.bob*1.7+F.phase)*.3*C.motion;
+        const raise=Math.max(0,C.motion-1)*.55;
+        if(F.joints.shoulderL) F.joints.shoulderL.rotation.x=sw-raise;
+        if(F.joints.shoulderR) F.joints.shoulderR.rotation.x=-sw-raise;
+        if(F.joints.elbowL) F.joints.elbowL.rotation.x=-.25*C.motion;
+        if(F.joints.elbowR) F.joints.elbowR.rotation.x=-.25*C.motion;
+        if(F.joints.hipL) F.joints.hipL.rotation.x=-sw*.45;
+        if(F.joints.hipR) F.joints.hipR.rotation.x=sw*.45;
+        if(F.joints.neck) F.joints.neck.rotation.y=Math.sin(t*.6+F.phase)*.5*C.motion;
+      }
       if(F.rings) F.rings.forEach((r,i)=>{
         const ph=(t*.8+i/3)%1, s=1+.4*ph;
         r.scale.set(s,s,1); r.material.opacity=.75*(1-ph)*C.dim;
@@ -1504,6 +1580,41 @@ const arcAnims=[];
     })
     .catch((e)=>{ if(window.__glerrs) window.__glerrs.push('STAGE forms.json: '+(e&&e.message||e)); });
   window.__liveUpgradeHooks.push((json)=>{ if(STAGE.ready) applyLiveState(json); });
+
+  /* ===== DISTRICT LIFE (Athena, 2026-09-17) — beacons breathe with live state =====
+     Data-first: each district's beacon pulse/intensity is a pure function of
+     its agent's classifyAgent() state via districtBeacon() — never timer-faked.
+     This hook is pushed AFTER applyLiveState's, so it reads fresh F.st values. */
+  const DISTRICT_BEACONS=[];
+  for(const d of DISTRICT_DEFS){
+    const isl=islandById[d.id]; if(!isl) continue;
+    const col=new THREE.Color(d.accent);
+    const pillar=new THREE.Mesh(
+      new THREE.CylinderGeometry(0.35,0.55,7,12,1,true),
+      new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.25,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+    pillar.position.set(d.x,5,d.z); scene.add(pillar);
+    const halo=new THREE.Mesh(
+      new THREE.RingGeometry(d.r*0.55,d.r*0.8,40),
+      new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.15,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+    halo.rotation.x=-Math.PI/2; halo.position.set(d.x,1.62,d.z); scene.add(halo);
+    DISTRICT_BEACONS.push({def:d,pillar,halo,target:0.4,pulse:1,haloT:0.19});
+  }
+  window.__liveUpgradeHooks.push(()=>{
+    const stById={};
+    for(const F of STAGE.forms) stById[F.spec.agent_id]=F.st||'SAMPLE';
+    for(const b of DISTRICT_BEACONS){
+      const bc=districtBeacon(stById[b.def.agent_id]);
+      b.target=bc.intensity; b.pulse=bc.pulseHz; b.haloT=bc.haloOpacity;
+    }
+  });
+  anims.push((t,dt)=>{
+    const k=Math.min(1,(dt||0.016)*3);
+    for(const b of DISTRICT_BEACONS){
+      const want=b.target*(0.65+0.35*Math.sin(t*6.2832*b.pulse));
+      const pm=b.pillar.material; pm.opacity+=(want-pm.opacity)*k;
+      const hm=b.halo.material; hm.opacity+=(b.haloT-hm.opacity)*k;
+    }
+  });
   pointLight(0xFFB224,30,30,cfg.x,9,cfg.z);
 }
 
@@ -2225,7 +2336,7 @@ const TOUR=[
   {id:'hands',title:'HANDOFFS — "Gear in motion, day by day."',body:'Watch glowing arcs carry gear between docks while the timeline ribbon scrolls thirty days of activity. The routes and daily counts are SAMPLE traffic \u2014 the real ledger\u2019s rhythm would look like this, with real numbers.'},
   {id:'chain',title:'FULL CHAIN — "The full story, oldest to newest."',body:'Walk the chronological record of every handoff, step by step. In the live product each plaque links to a signed record; here each plaque is SAMPLE text showing what the chain would feel like to stroll.'},
   {id:'legends',title:'LEGENDS — "The gear that\u2019s seen everything."',body:'Monuments to the most-traveled items in the fleet \u2014 gear that\u2019s changed hands more than anything else. The travel counts are SAMPLE legend-making; the real ledger would crown its own veterans here.'},
-  {id:'stage',title:'AGENT STAGE — "Form from identity."',body:'Ten forms for the ten registered ledger agents \u2014 each shape generated from its department\u2019s identity: the scout\u2019s needle, the DJ\u2019s dial, the quant\u2019s crystal. Glow and motion show operational state from the ledger: executing, thinking, waiting, or dormant. Link pulses mark agents sharing one live task, or a task naming another agent.'},
+  {id:'stage',title:'AGENT STAGE — "Form from identity."',body:'Eleven articulated robot bodies for the eleven registered ledger agents \u2014 each body generated from its department\u2019s identity, with the agent\u2019s signature gear mounted on: the chief\u2019s crown and command ring, the scout\u2019s verdict fin, the DJ\u2019s deck, the quant\u2019s lattice core, Athena\u2019s owl eyes and keystone chest. New agents appear as proto-frames under construction until their identity is chartered. Glow, joints, and motion show operational state from the ledger: executing, thinking, waiting, or dormant. Link pulses mark agents sharing one live task, or a task naming another agent.'},
 ];
 const tour={active:false,idx:0,phase:'',dwellT:0,dwellDur:5};
 const tcap=document.getElementById('tourcap');
