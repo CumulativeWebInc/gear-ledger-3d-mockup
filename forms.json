@@ -21,7 +21,7 @@
       "color": "#3DFF88",
       "core_color": "#D6FFE4",
       "department": "A&R",
-      "derivation": "The scout \u2014 'ear-first, blunt, allergic to hype': a sharp needle cone (blunt verdicts) beside a tilted ear-dish torus (ear-first listening). Phosphor green = go/no-go signal.",
+      "derivation": "The scout — 'ear-first, blunt, allergic to hype': a sharp needle cone (blunt verdicts) beside a tilted ear-dish torus (ear-first listening). Phosphor green = go/no-go signal.",
       "geometry": "needle",
       "motion": {
         "spin": 0.55,
@@ -36,7 +36,7 @@
       "color": "#FF5C5C",
       "core_color": "#FFD9D9",
       "department": "Marketing & Social",
-      "derivation": "The showrunner \u2014 'every release is an event': a marquee arch (half-torus) ringed with radiating light bars. Warm red = showtime.",
+      "derivation": "The showrunner — 'every release is an event': a marquee arch (half-torus) ringed with radiating light bars. Warm red = showtime.",
       "geometry": "marquee",
       "motion": {
         "spin": 0.2,
@@ -51,7 +51,7 @@
       "color": "#B388FF",
       "core_color": "#E6DAFF",
       "department": "Sync & Licensing",
-      "derivation": "The closer \u2014 'nothing ships uncleared': a seal stamp (cylinder) locked with an interlocking ring (the closed deal). Violet = royalty/deal ink.",
+      "derivation": "The closer — 'nothing ships uncleared': a seal stamp (cylinder) locked with an interlocking ring (the closed deal). Violet = royalty/deal ink.",
       "geometry": "seal",
       "motion": {
         "spin": 0.4,
@@ -66,7 +66,7 @@
       "color": "#35C4FF",
       "core_color": "#D6F1FF",
       "department": "Radio & Playlists",
-      "derivation": "The DJ \u2014 'lives on rotation': a turntable platter (cylinder) with a rotating tone arm. Glow blue = airwaves.",
+      "derivation": "The DJ — 'lives on rotation': a turntable platter (cylinder) with a rotating tone arm. Glow blue = airwaves.",
       "geometry": "dial",
       "motion": {
         "spin": 0.6,
@@ -81,7 +81,7 @@
       "color": "#4DE3C2",
       "core_color": "#D8FFF4",
       "department": "Press & PR",
-      "derivation": "The wire chief \u2014 'every claim carries its citation': a transmission mast with expanding signal rings (the wire). Teal = newsroom ticker.",
+      "derivation": "The wire chief — 'every claim carries its citation': a transmission mast with expanding signal rings (the wire). Teal = newsroom ticker.",
       "geometry": "broadcast",
       "motion": {
         "spin": 0.25,
@@ -96,7 +96,7 @@
       "color": "#FF9F43",
       "core_color": "#FFE8CF",
       "department": "Content Studio",
-      "derivation": "The craftsperson \u2014 house style neon/cyberpunk, makes things beautiful: a fader console (box) with a sliding knob (the mix). Orange = studio warmth.",
+      "derivation": "The craftsperson — house style neon/cyberpunk, makes things beautiful: a fader console (box) with a sliding knob (the mix). Orange = studio warmth.",
       "geometry": "fader",
       "motion": {
         "spin": 0.2,
@@ -111,7 +111,7 @@
       "color": "#A8E6FF",
       "core_color": "#FFFFFF",
       "department": "Data & Analytics",
-      "derivation": "The quant \u2014 'no number without a source': a crystalline icosahedron lattice (wireframe) around a solid core (the verified fact). Ice blue = precision.",
+      "derivation": "The quant — 'no number without a source': a crystalline icosahedron lattice (wireframe) around a solid core (the verified fact). Ice blue = precision.",
       "geometry": "lattice",
       "motion": {
         "spin": 0.45,
@@ -126,7 +126,7 @@
       "color": "#D8B36A",
       "core_color": "#FFF3DC",
       "department": "Business Affairs",
-      "derivation": "The guardian \u2014 'reads the fine print': a protective dome over a charter scroll (partial cylinder). Parchment gold = documents.",
+      "derivation": "The guardian — 'reads the fine print': a protective dome over a charter scroll (partial cylinder). Parchment gold = documents.",
       "geometry": "charter",
       "motion": {
         "spin": 0.2,
@@ -141,7 +141,7 @@
       "color": "#F5F7FA",
       "core_color": "#3DFF88",
       "department": "Results",
-      "derivation": "The closer of outcomes \u2014 result \u2192 mechanism \u2192 verification \u2192 kill rule: a receipt spike filing stacked receipt discs. Paper white; core glows phosphor green when executing.",
+      "derivation": "The closer of outcomes — result → mechanism → verification → kill rule: a receipt spike filing stacked receipt discs. Paper white; core glows phosphor green when executing.",
       "geometry": "receipt",
       "motion": {
         "spin": 0.35,
@@ -150,6 +150,22 @@
         "amp": 0.5
       },
       "public_name": "Receipt"
+    },
+    {
+      "agent_id": "agent:CWI_Athena",
+      "color": "#C9D6EA",
+      "core_color": "#FFE9A8",
+      "department": "Reasoning",
+      "derivation": "The architect — apex reasoning and masterful building: a keystone wedge (the locking stone that holds the arch — strategy locked into structure), twin owl-eye discs (Athena’s owl — wisdom watching the whole board), and an orbiting calibration ring (quantitative learning — every prediction scored). Moonlight silver; core glows warm gold.",
+      "geometry": "keystone",
+      "motion": {
+        "spin": 0.28,
+        "bob": 1.0,
+        "turn": 5.2,
+        "amp": 0.4,
+        "ring_orbit": true
+      },
+      "public_name": "Athena"
     }
   ],
   "links": {
@@ -157,11 +173,12 @@
     "name_reference": "one agent's task title names another agent (handle or public name)",
     "note": "Link pulses are drawn ONLY from task data in the same snapshot."
   },
-  "note": "Form Spec for the Agent Stage. Each agent's 3D form is generated FROM its department identity \u2014 never picked from a stock avatar set. The scene (index.html, AGENT STAGE section) reads this file as data and builds every form from it. Full derivation of each choice lives in FORMS.md.",
+  "note": "Form Spec for the Agent Stage. Each agent's 3D form is generated FROM its department identity — never picked from a stock avatar set. The scene (index.html, AGENT STAGE section) reads this file as data and builds every form from it. Full derivation of each choice lives in FORMS.md.",
   "palette": {
     "amber": "#FFB224",
     "glow_blue": "#35C4FF",
     "ice": "#A8E6FF",
+    "moonlight": "#C9D6EA",
     "orange": "#FF9F43",
     "paper": "#F5F7FA",
     "parchment": "#D8B36A",
@@ -172,11 +189,11 @@
   },
   "schema": "gear-ledger-3d-forms/v1",
   "states": {
-    "DORMANT": "presence not online, or heartbeat older than 30 minutes \u2192 dimmed, minimal motion",
-    "EXECUTING": "agent holds a live task with state in_progress \u2192 focused motion, bright core, stable geometry",
-    "SAMPLE": "no live data (SAMPLE pill) \u2192 neutral dim expression, labeled as sample",
-    "THINKING": "agent's current_task_id changed since the previous snapshot \u2192 slower pulse",
-    "WAITING": "presence online, no live task \u2192 low-energy drift, dimmed core",
+    "DORMANT": "presence not online, or heartbeat older than 30 minutes → dimmed, minimal motion",
+    "EXECUTING": "agent holds a live task with state in_progress → focused motion, bright core, stable geometry",
+    "SAMPLE": "no live data (SAMPLE pill) → neutral dim expression, labeled as sample",
+    "THINKING": "agent's current_task_id changed since the previous snapshot → slower pulse",
+    "WAITING": "presence online, no live task → low-energy drift, dimmed core",
     "note": "Operational state is derived ONLY from live-data.json at each refresh. Never emotions, never invented."
   }
 }
