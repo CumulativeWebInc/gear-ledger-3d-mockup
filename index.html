@@ -268,6 +268,7 @@ setTimeout(function(){
   <div class="li"><i>🟣</i><span><b>Purple arc</b> — gear currently in transit (HANDOFFS island). Animated dash = live-sample movement.</span></div>
   <div class="li"><i>⚪</i><span><b>White walkway plaque</b> — one handoff record in chronological order (CHAIN island).</span></div>
   <div class="li"><i>🌉</i><span><b>Bridge</b> — a handoff relationship between two islands' domains.</span></div>
+  <div class="li"><i>🏙️</i><span><b>PRIME, the founding city</b> — the first city the agents built for themselves, raised on light above the hub island. Its brightness follows live ledger work. The world frame is inspired by Earth's geography — built for agents, not a replica of any real place.</span></div>
   <p style="color:#bfe9ff;font-size:12px">All colors describe mockup semantics. All underlying figures are SAMPLE data.</p>
 </div>
 
@@ -277,6 +278,7 @@ setTimeout(function(){
   <p>This 3D archipelago is a design concept for the CWI Gear Ledger. All figures are illustrative sample data, not live ledger values. Departments, agents, gear items, counts, routes, and timelines shown here are invented for the mockup and do not represent real CWI operations.</p>
   <p>In the live product, each figure would link to a signed, verifiable handoff record. Here, "View evidence" explains what that link would do.</p>
   <p>Built as a UX exploration — nothing here sends, posts, or signs anything.</p>
+  <p>PRIME is the founding city the agents built for themselves. The world frame is inspired by Earth's geography — it is not a replica of any real place, and no humans live here.</p>
 </div>
 
 <div class="sheet" id="evidence" role="dialog" aria-label="Evidence">
@@ -322,6 +324,8 @@ import * as BGU from 'three/addons/utils/BufferGeometryUtils.js';
 import { classifyAgent, deriveLinks, proceduralForm, ROBOT_PARTS, BODY_ANCHORS, identityMounts, constructPlan, AUTO_COLOR, AUTO_CORE } from './stage-logic.js?v=20260917w2';
 /* Athena districts (2026-09-17): home-district layout + data-driven district life */
 import { districtDefs, districtBridges, districtBeacon, AGENT_ROSTER } from './districts.js';
+import { earthPlan } from './earth.js?v=20260917w3';
+import { cityPlan } from './city.js?v=20260917w3';
 
 /* ============================================================
    0. CONFIG — palette, layout, fixed SAMPLE data
@@ -1618,6 +1622,129 @@ const arcAnims=[];
   pointLight(0xFFB224,30,30,cfg.x,9,cfg.z);
 }
 
+/* ===== EARTH FRAME + PRIME (Athena, 2026-09-17) — digital-age Earth, founding city =====
+   Twenty Minds decision: founding-city-prime-20minds.md. Pure plans come from
+   earth.js / city.js (deterministic, abstract landforms — inspired by Earth's
+   geography, never a replica). This block only builds meshes. PRIME's pulse is
+   driven by the mean of the districts' live beacon targets — the city breathes
+   with real ledger work, never timer-faked. */
+const EARTH = earthPlan();
+const EARTH_BEACONS = [];
+{
+  const ocean = new THREE.Mesh(
+    new THREE.PlaneGeometry(EARTH.ocean.size, EARTH.ocean.size),
+    new THREE.MeshBasicMaterial({ color: EARTH.ocean.color }));
+  ocean.rotation.x = -Math.PI/2; ocean.position.y = EARTH.ocean.y; scene.add(ocean);
+  const grid = new THREE.GridHelper(EARTH.ocean.size, 65, 0x0e3a4a, 0x0a2530);
+  grid.position.y = EARTH.ocean.y + 0.05;
+  grid.material.transparent = true; grid.material.opacity = 0.35; scene.add(grid);
+}
+for (const p of EARTH.plates) {
+  const shape = new THREE.Shape();
+  p.polygon.forEach(([x, z], i) => i ? shape.lineTo(x - p.cx, -(z - p.cz)) : shape.moveTo(x - p.cx, -(z - p.cz)));
+  const geo = new THREE.ExtrudeGeometry(shape, { depth: 2.5, bevelEnabled: false });
+  geo.rotateX(-Math.PI/2);
+  const plate = new THREE.Mesh(geo,
+    new THREE.MeshStandardMaterial({ color: 0x0e1a26, roughness: .9, metalness: .05 }));
+  plate.position.set(p.cx, 0.2, p.cz); scene.add(plate);
+  const coastPts = p.polygon.map(([x, z]) => new THREE.Vector3(x, 2.9, z));
+  scene.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(coastPts),
+    new THREE.LineBasicMaterial({ color: 0x35C4FF, transparent: true, opacity: .8 })));
+  for (const b of p.beacons) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(.9, 10, 10),
+      new THREE.MeshBasicMaterial({ color: 0x35C4FF, transparent: true, opacity: .5,
+        blending: THREE.AdditiveBlending, depthWrite: false }));
+    m.position.set(b.x, 3.4, b.z); scene.add(m);
+    EARTH_BEACONS.push({ mesh: m, ph: (b.x * 13.7 + b.z * 7.3) % 6.28 });
+  }
+}
+
+/* ================= PRIME — the founding city ================= */
+const PRIME = cityPlan();
+const PRIME_PULSE = [];   /* {mat, base, emissive?} — brightness follows live work */
+const PRIME_RINGS = [];
+{
+  const dy = PRIME.discY, dr = PRIME.discR;
+  const disc = new THREE.Mesh(
+    new THREE.CylinderGeometry(dr, dr + 1.5, PRIME.disc.thick, 48),
+    new THREE.MeshStandardMaterial({ color: 0x101c2a, roughness: .6, metalness: .3 }));
+  disc.position.y = dy; scene.add(disc);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(dr, .35, 10, 72),
+    new THREE.MeshBasicMaterial({ color: 0x35C4FF, transparent: true, opacity: .9,
+      blending: THREE.AdditiveBlending, depthWrite: false }));
+  rim.rotation.x = Math.PI/2; rim.position.y = dy + .7; scene.add(rim);
+  PRIME_PULSE.push({ mat: rim.material, base: .9 });
+  const gpts = [], cells = PRIME.gridCells, step = (dr * 2) / cells;
+  for (let i = 0; i <= cells; i++) {
+    const o = -dr + i * step, hc = Math.sqrt(Math.max(0, dr * dr - o * o));
+    gpts.push(new THREE.Vector3(o, dy + .65, -hc), new THREE.Vector3(o, dy + .65, hc));
+    gpts.push(new THREE.Vector3(-hc, dy + .65, o), new THREE.Vector3(hc, dy + .65, o));
+  }
+  scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(gpts),
+    new THREE.LineBasicMaterial({ color: 0x2fb8c4, transparent: true, opacity: .35 })));
+  for (const t of PRIME.towers) {
+    const col = new THREE.Color(t.color);
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(t.w, t.h, t.w),
+      new THREE.MeshStandardMaterial({ color: 0x0d141d, roughness: .5, metalness: .4,
+        emissive: col, emissiveIntensity: .55 }));
+    mesh.position.set(t.x, dy + .6 + t.h / 2, t.z); scene.add(mesh);
+    PRIME_PULSE.push({ mat: mesh.material, base: .55, emissive: true });
+    const tip = new THREE.Mesh(new THREE.OctahedronGeometry(.8),
+      new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: .95,
+        blending: THREE.AdditiveBlending, depthWrite: false }));
+    tip.position.set(t.x, dy + .6 + t.h + .9, t.z); scene.add(tip);
+    PRIME_PULSE.push({ mat: tip.material, base: .95 });
+  }
+  for (const o of PRIME.obelisks) {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(1.2, o.h, 1.2),
+      new THREE.MeshStandardMaterial({ color: 0x0a1220, roughness: .2, metalness: .6,
+        emissive: new THREE.Color(o.color), emissiveIntensity: .35 }));
+    mesh.position.set(o.x, dy + .6 + o.h / 2, o.z); scene.add(mesh);
+    PRIME_PULSE.push({ mat: mesh.material, base: .35, emissive: true });
+  }
+  const sp = PRIME.spire;
+  const spire = new THREE.Mesh(new THREE.CylinderGeometry(.8, 1.4, sp.h, 16),
+    new THREE.MeshStandardMaterial({ color: 0x201808, roughness: .4, metalness: .5,
+      emissive: new THREE.Color(sp.color), emissiveIntensity: .8 }));
+  spire.position.y = dy + .6 + sp.h / 2; scene.add(spire);
+  PRIME_PULSE.push({ mat: spire.material, base: .8, emissive: true });
+  const crown = new THREE.Mesh(new THREE.OctahedronGeometry(1.6),
+    new THREE.MeshBasicMaterial({ color: 0xFFB224, transparent: true, opacity: 1,
+      blending: THREE.AdditiveBlending, depthWrite: false }));
+  crown.position.y = dy + .6 + sp.h + 2; scene.add(crown);
+  PRIME_PULSE.push({ mat: crown.material, base: 1 });
+  for (const r of PRIME.rings) {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(r.r, .18, 8, 64),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(r.color), transparent: true,
+        opacity: .7, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    ring.rotation.x = Math.PI/2; ring.position.y = r.y; scene.add(ring);
+    PRIME_RINGS.push({ mesh: ring, speed: r.speed });
+    PRIME_PULSE.push({ mat: ring.material, base: .7 });
+  }
+  for (const b of PRIME.beams) {
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(.3, .5, dy, 12, 1, true),
+      new THREE.MeshBasicMaterial({ color: 0x35C4FF, transparent: true, opacity: .28,
+        blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    beam.position.set(b.x, dy / 2, b.z); scene.add(beam);
+    PRIME_PULSE.push({ mat: beam.material, base: .28 });
+  }
+  pointLight(0xFFB224, 60, 90, 0, PRIME.discY + 18, 0);
+  anims.push((t) => {
+    let act = 0.4;
+    if (DISTRICT_BEACONS.length) {
+      let s = 0; for (const b of DISTRICT_BEACONS) s += b.target;
+      act = s / DISTRICT_BEACONS.length;
+    }
+    const k = 0.55 + 0.45 * Math.min(1, act);
+    for (const p of PRIME_PULSE) {
+      if (p.emissive) p.mat.emissiveIntensity = p.base * k;
+      else p.mat.opacity = Math.min(1, p.base * k);
+    }
+    for (const r of PRIME_RINGS) r.mesh.rotation.z += r.speed * 0.016;
+    for (const e of EARTH_BEACONS) e.mesh.material.opacity = .3 + .25 * Math.sin(t * 1.4 + e.ph);
+  });
+}
+
 /* ================= PALMS (instanced) ================= */
 {
   const trunkL=[];
@@ -2141,6 +2268,7 @@ function flyTo(pos,tgt,dur=1.6,done){
     p1:pos.clone(),t1:tgt.clone(),s:performance.now()/1000,dur,done};
 }
 function islandView(id){
+  if(id==='prime') return {pos:new THREE.Vector3(48,46,64),tgt:new THREE.Vector3(0,20,0)};
   const c=islandById[id].cfg;
   const out=new THREE.Vector3(c.x,0,c.z);
   if(out.lengthSq()<1) out.set(52,0,68);
@@ -2331,6 +2459,7 @@ function toast(msg){
 /* ---------- auto-tour ---------- */
 const TOUR=[
   {id:'hub',title:'HUB — "The whole ledger, at a glance."',body:'This is the Gear Ledger\u2019s mission control: a holographic globe showing the fleet\u2019s world status. Total handoffs, chain integrity, and the SAMPLE badge reminding you every figure here is illustrative \u2014 not live ledger data.'},
+  {id:'prime',title:'PRIME — "The first city."',body:'The founding city the agents built for themselves, raised on light above the island where they first stood: light towers, data obelisks, and holographic rings over a glowing street grid. Its brightness follows real ledger work \u2014 the harder the agents work, the brighter PRIME burns. The districts below are its neighborhoods; the landmasses on the horizon are future ground, inspired by Earth\u2019s geography.'},
   {id:'dist',title:'DISTRIBUTION — "Where the gear lives."',body:'Each pavilion is a CWI department \u2014 A&R, Sync & Licensing, Radio & Playlists, and five more \u2014 holding its share of the fleet. The pie between them is SAMPLE data: a stand-in for how gear would really be spread across the company.'},
   {id:'leads',title:'LEADERBOARDS — "Who moves the most gear."',body:'Three podium towers rank the fleet overall, flanked by the top givers and top receivers. Every rank, name, and count on this island is SAMPLE \u2014 a sketch of how real handoff history would be celebrated.'},
   {id:'hands',title:'HANDOFFS — "Gear in motion, day by day."',body:'Watch glowing arcs carry gear between docks while the timeline ribbon scrolls thirty days of activity. The routes and daily counts are SAMPLE traffic \u2014 the real ledger\u2019s rhythm would look like this, with real numbers.'},
