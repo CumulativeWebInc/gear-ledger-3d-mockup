@@ -1,5 +1,8 @@
 /* city.js — PRIME, the founding city. Pure data module, dependency-free.
  *
+ * v20260917w4: design-masters craft pass (see agents/athena/DESIGN-STUDY.md) —
+ * Houdini-style two-tier tower massing via towerTiers(); plan data unchanged.
+ *
  * Twenty Minds decision (2026-09-17, founding-city-prime-20minds.md):
  * the 11 agents already live at the hub-islands, so PRIME rises THERE —
  * a civic disc elevated above the hub island (zero collision with islands,
@@ -106,4 +109,15 @@ export function minTowerGap(plan) {
     for (let j = i + 1; j < ts.length; j++)
       m = Math.min(m, Math.hypot(ts[i].x - ts[j].x, ts[i].z - ts[j].z));
   return m;
+}
+
+/* Houdini-style massing: each tower is two setback tiers, not a plain box.
+ * Tier 1: full width, lower 68% of height. Tier 2: 0.68× width, upper 32%.
+ * Pure function of plan data — the builder renders exactly this. */
+export function towerTiers(t) {
+  const h1 = t.h * 0.68, h2 = t.h - h1;
+  return [
+    { y0: 0, h: h1, w: t.w },
+    { y0: h1, h: h2, w: t.w * 0.68 },
+  ];
 }
