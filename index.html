@@ -339,6 +339,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import * as BGU from 'three/addons/utils/BufferGeometryUtils.js';
 import { classifyAgent, deriveLinks, proceduralForm, ROBOT_PARTS, BODY_ANCHORS, identityMounts, constructPlan, AUTO_COLOR, AUTO_CORE } from './stage-logic.js?v=20260917w2';
+/* Honest activity layer (2026-09-17): pure snapshot differ — flares, pulses, ribbons fire ONLY on real new ledger events */
+import { diffPointers, deriveCollabMoments, recentEvents, MAX_CONCURRENT_EFFECTS } from './activity.js?v=20260917a1';
 /* Athena districts (2026-09-17): home-district layout + data-driven district life */
 import { districtDefs, districtBridges, districtBeacon, districtNameplate, AGENT_ROSTER } from './districts.js?v=20260917w5';
 import { earthPlan } from './earth.js?v=20260917w4';
@@ -1527,6 +1529,178 @@ const arcAnims=[];
     }
   }
 
+  /* ===== HONEST ACTIVITY LAYER (2026-09-17) — Twenty Minds decision:
+     build/twenty-minds-dryruns/2026-09-17/honest-activity-layer-20minds.md.
+     Flares, pulses and ribbons fire ONLY on real new ledger events, diffed
+     from re-polled live-data.json snapshots. Idle agents stay honestly idle.
+     Kill rule: any element that cannot be fed by real data is cut, never faked. */
+  const ACT = { prevLive: null, effects: [], pollInFlight: false, armed: false };
+  const ACT_COLORS = { assigned: 0xFFD24D, verified: 0x7EF0C1, delivered: 0xB388FF,
+    'cross-assign': 0xFFD24D, 'cross-verify': 0x7EF0C1, 'cross-deliver': 0xB388FF, flare: 0xFFD24D };
+  const ACT_POLL_MS = 5 * 60 * 1000;
+  const ACT_MAX_AGE_MS = 60 * 60 * 1000; /* same staleness bar as world-bridge.js */
+
+  function actFormOf(agentId) {
+    for (const F of STAGE.forms) if (F.spec.agent_id === agentId) return F;
+    return null;
+  }
+  function actName(agentId) {
+    const F = actFormOf(agentId);
+    return F ? F.spec.public_name : String(agentId).slice(6);
+  }
+  function actShortId(taskId) { return String(taskId || '').slice(-6) || '—'; }
+  function actCurve(a, b, lift) {
+    const A = new THREE.Vector3(a.x, 4.4, a.z), B = new THREE.Vector3(b.x, 4.4, b.z);
+    const mid = A.clone().add(B).multiplyScalar(0.5); mid.y += lift;
+    return new THREE.QuadraticBezierCurve3(A, mid, B);
+  }
+  function actPushEffect(fx) {
+    /* Hard budget: drop the oldest effect rather than stacking unbounded work. */
+    while (ACT.effects.length >= MAX_CONCURRENT_EFFECTS) {
+      const old = ACT.effects.shift();
+      try { old.dispose(); } catch (e) {}
+    }
+    ACT.effects.push(fx);
+    scene.add(fx.obj);
+  }
+  function actDisposeObj(root) {
+    root.traverse((o) => {
+      if (o.geometry) o.geometry.dispose();
+      if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((mt) => { if (mt.map) mt.map.dispose(); mt.dispose(); });
+    });
+    scene.remove(root);
+  }
+
+  /* Flare: expanding gold ring + core flash on the agent's own form. */
+  function actSpawnFlare(F) {
+    F.flash = 1;
+    const grp = new THREE.Group();
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.9, 1.1, 48),
+      new THREE.MeshBasicMaterial({ color: ACT_COLORS.flare, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    ring.rotation.x = -Math.PI / 2;
+    grp.add(ring);
+    grp.position.set(F.x, 4.4, F.z);
+    const t0 = performance.now(), dur = 1400;
+    actPushEffect({ obj: grp, t0, dur,
+      update(k) { const s = 1 + k * 5; ring.scale.set(s, s, 1); ring.material.opacity = 0.9 * (1 - k); },
+      dispose() { actDisposeObj(grp); } });
+  }
+
+  /* Pulse: a light that travels the collaboration arc from agent A to agent B. */
+  function actSpawnPulse(A, B, color) {
+    const curve = actCurve(A, B, 3.0);
+    const grp = new THREE.Group();
+    const dot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 12, 12),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const trail = new THREE.Mesh(
+      new THREE.TubeGeometry(curve, 32, 0.05, 6, false),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending, depthWrite: false }));
+    grp.add(trail); grp.add(dot);
+    const t0 = performance.now(), dur = 2200;
+    actPushEffect({ obj: grp, t0, dur,
+      update(k) { const p = curve.getPoint(k); dot.position.copy(p); trail.material.opacity = 0.28 * (1 - k * 0.6); },
+      dispose() { actDisposeObj(grp); } });
+  }
+
+  function actLabel(text, fg) {
+    const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64;
+    const g = cv.getContext('2d');
+    g.fillStyle = 'rgba(4,14,22,0.78)'; g.fillRect(0, 0, 256, 64);
+    g.strokeStyle = fg; g.lineWidth = 3; g.strokeRect(3, 3, 250, 58);
+    g.fillStyle = fg; g.font = '700 30px system-ui,sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(String(text).slice(0, 22), 128, 34);
+    const tex = new THREE.CanvasTexture(cv);
+    const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, fog: false }));
+    spr.scale.set(6.4, 1.6, 1);
+    return spr;
+  }
+
+  /* Ribbon: a colored arc for a real assigned/verified/delivered ledger event,
+     labeled with the task id + transition (sanitized: id pattern + enum only,
+     never the free-text note). */
+  function actSpawnRibbon(ev) {
+    const A = actFormOf(ev.by), B = actFormOf(ev.assigned_to);
+    if (!A || !B) return;
+    const color = ACT_COLORS[ev.to] || 0xFFFFFF;
+    const curve = actCurve(A, B, 4.2);
+    const grp = new THREE.Group();
+    const tube = new THREE.Mesh(
+      new THREE.TubeGeometry(curve, 40, 0.07, 6, false),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false }));
+    grp.add(tube);
+    const label = actLabel(actShortId(ev.task_id) + ' · ' + ev.to, '#' + new THREE.Color(color).getHexString());
+    const mid = curve.getPoint(0.5); mid.y += 1.4;
+    label.position.copy(mid);
+    grp.add(label);
+    const t0 = performance.now(), dur = 3600;
+    actPushEffect({ obj: grp, t0, dur,
+      update(k) { const fade = k < 0.75 ? 1 : 1 - (k - 0.75) / 0.25;
+        tube.material.opacity = 0.75 * fade; label.material.opacity = 0.95 * fade; },
+      dispose() { actDisposeObj(grp); } });
+  }
+
+  /* The differ: compare the fresh snapshot against the previous one and fire
+     effects ONLY for genuine changes. The first snapshot arms the layer
+     silently — no false flares on load. */
+  function runActivityDiff(json) {
+    if (!STAGE.ready || !json || !Array.isArray(json.agents)) return;
+    const prev = ACT.prevLive;
+    ACT.prevLive = json;
+    if (!prev) {
+      if (!ACT.armed) {
+        ACT.armed = true;
+        logFeed('⚡ Activity layer armed — flares, pulses and ribbons fire only on <b>real new ledger events</b>. A quiet world means no new work, not a broken world.');
+      }
+      return;
+    }
+    for (const ch of diffPointers(prev.agents || [], json.agents || [])) {
+      const F = actFormOf(ch.agent_id);
+      if (!F) continue;
+      actSpawnFlare(F);
+      const what = !ch.from ? 'started' : (!ch.to ? 'cleared' : 'switched');
+      logFeed('⚡ <b>' + actName(ch.agent_id) + '</b> ' + what + ' task <b>' + actShortId(ch.to || ch.from) + '</b>');
+    }
+    for (const mo of deriveCollabMoments(prev.tasks_recent || [], json.tasks_recent || [], prev.events_recent || [], json.events_recent || [])) {
+      const A = actFormOf(mo.a), B = actFormOf(mo.b);
+      if (!A || !B) continue;
+      actSpawnPulse(A, B, ACT_COLORS[mo.kind] || 0x35C4FF);
+      logFeed('⚡ collaboration: <b>' + actName(mo.a) + '</b> → <b>' + actName(mo.b) + '</b> (' + mo.kind + ')');
+    }
+    const since = Date.parse(prev.as_of) || 0;
+    for (const ev of recentEvents(json.events_recent || [], since)) {
+      actSpawnRibbon(ev);
+      logFeed('⚡ ledger: <b>' + actShortId(ev.task_id) + '</b> → ' + ev.to);
+    }
+  }
+
+  /* Re-poll the live feed every 5 minutes and run the differ. Honest failure
+     mode: on poll failure keep the last good snapshot and say so. */
+  function actPollLive() {
+    if (ACT.pollInFlight || !STAGE.ready) return;
+    ACT.pollInFlight = true;
+    fetch('live-data.json', { cache: 'no-store' })
+      .then((r) => { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+      .then((json) => {
+        ACT.pollInFlight = false;
+        const age = Date.now() - Date.parse(json.as_of);
+        if (!json || json.schema !== 'gear-ledger-3d-live/v1' || json.mode !== 'LIVE' || !(age >= 0) || age > ACT_MAX_AGE_MS) {
+          logFeed('LIVE re-poll ignored — snapshot failed the freshness check; holding last good data.');
+          return;
+        }
+        for (const h of (window.__liveUpgradeHooks || [])) { try { h(json); } catch (e) {} }
+      })
+      .catch(() => {
+        ACT.pollInFlight = false;
+        const v = ACT.prevLive && ACT.prevLive.store_version;
+        logFeed('LIVE re-poll failed — holding last good snapshot' + (v ? ' (store v' + v + ')' : '') + '.');
+      });
+  }
+  window.__liveUpgradeHooks.push((json) => { if (STAGE.ready) runActivityDiff(json); });
+  setInterval(actPollLive, ACT_POLL_MS);
+
   /* one shared animation callback for all forms + link pulses */
   anims.push((t,dt)=>{
     for(const F of STAGE.forms){
@@ -1562,6 +1736,23 @@ const arcAnims=[];
       F.body.rotation.y=Math.sin(t*6.28/m.turn+F.phase)*.12*C.wob;
     }
     for(const L of STAGE.links) L.mat.opacity=.22+.38*Math.abs(Math.sin(t*2.2+L.ph));
+  });
+
+  /* honest activity layer: effect lifecycle + core flash (runs after the forms
+     loop above, so the flash adds on top of the state-driven core value). */
+  anims.push((t,dt)=>{
+    const now=performance.now();
+    for(let i=ACT.effects.length-1;i>=0;i--){
+      const fx=ACT.effects[i], k=(now-fx.t0)/fx.dur;
+      if(k>=1){ try{fx.dispose();}catch(e){} ACT.effects.splice(i,1); continue; }
+      try{fx.update(k);}catch(e){}
+    }
+    for(const F of STAGE.forms){
+      if(F.flash>0){
+        F.flash=Math.max(0,F.flash-dt/1.4);
+        for(const cm of F.coreMats) cm.emissiveIntensity+=F.flash*2.2;
+      }
+    }
   });
 
   /* ---- day/night life: the world keeps local time ----
