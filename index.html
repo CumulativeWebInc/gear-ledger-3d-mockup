@@ -797,6 +797,7 @@ ISLANDS.forEach(buildSign);
    7. MONUMENTS / PROPS
    ============================================================ */
 const anims=[];   // fn(t,dt)
+const DISTRICT_BEACONS=[]; // module scope: district-life block fills it, PRIME pulse reads it (was block-scoped -> ReferenceError @1797)
 function addGlow(x,y,z,size,color,op=.6){
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(color),
     blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:op}));
@@ -1606,7 +1607,6 @@ const arcAnims=[];
      Data-first: each district's beacon pulse/intensity is a pure function of
      its agent's classifyAgent() state via districtBeacon() — never timer-faked.
      This hook is pushed AFTER applyLiveState's, so it reads fresh F.st values. */
-  const DISTRICT_BEACONS=[];
   for(const d of DISTRICT_DEFS){
     const isl=islandById[d.id]; if(!isl) continue;
     const col=new THREE.Color(d.accent);
