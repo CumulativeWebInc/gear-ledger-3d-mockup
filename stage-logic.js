@@ -100,3 +100,37 @@ export function deriveLinks(forms, recById, tasksRecent) {
     return { a: p[0], b: p[1], reason };
   });
 }
+
+/* ---- procedural auto-forms: the world extends itself ----
+ * Any live agent with no hand-built forms.json entry gets a deterministic
+ * procedural "construct" form — visibly unfinished (stacked plates, orbiting
+ * part), so newborn agents (e.g. Athena's children) appear in the world the
+ * moment the ledger knows them, and graduate to a true identity-derived form
+ * when one is chartered for them. Pure function: same agent_id -> same spec.
+ * Proto-silver is reserved for the unformed; no chartered form may use it. */
+export const AUTO_COLOR = '#B9C6DC';
+export const AUTO_CORE = '#FFFFFF';
+function fnv1a(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  return h >>> 0;
+}
+export function proceduralForm(agent_id) {
+  const id = String(agent_id == null ? '' : agent_id);
+  const h = fnv1a(id);
+  const tail = id.split(':').pop().split('_').pop() || 'unit';
+  const name = tail.charAt(0).toUpperCase() + tail.slice(1).toLowerCase();
+  const jitter = 0.9 + (h % 21) / 100; /* deterministic ±10% motion variety */
+  const r2 = (v) => Math.round(v * 100) / 100;
+  return {
+    agent_id: id,
+    public_name: name,
+    department: 'Unformed',
+    color: AUTO_COLOR,
+    core_color: AUTO_CORE,
+    geometry: 'construct',
+    derivation: 'Procedural auto-form: this agent has no chartered form yet and renders as an assembling construct until its identity is built.',
+    motion: { spin: r2(0.5 * jitter), bob: r2(1.8 * jitter), turn: r2(3 * jitter), amp: 0.7 },
+    auto: true,
+  };
+}
