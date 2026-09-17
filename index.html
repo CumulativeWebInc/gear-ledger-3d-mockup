@@ -72,7 +72,7 @@ setTimeout(function(){
   body.se-tour .sheet,
   body.se-tour #toast,
   body.se-tour #focusring,
-  body.se-tour #hint,
+  body.se-tour #welcome,
   body.se-tour #musicpanel{display:none!important}
   body.se-tour #tourcap{display:block!important}
   #se-kicker{display:none;position:absolute;left:50%;top:12%;transform:translateX(-50%);z-index:40;
@@ -182,8 +182,27 @@ setTimeout(function(){
     background:rgba(255,255,255,.1);color:var(--ink);font-size:18px;cursor:pointer}
   #legend .li{display:flex;gap:12px;align-items:flex-start;margin:10px 0;font-size:13.5px;line-height:1.5}
   #legend .li i{font-style:normal;font-size:18px}
-  #hint{z-index:40;text-align:center}
-  #hint .row{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+  /* ---------- welcome card: ONE entry card, bottom-docked, never center-screen ---------- */
+  #welcome{position:fixed;z-index:30;left:10px;right:10px;bottom:calc(76px + var(--safe-b));
+    background:var(--plate2);border:1px solid rgba(255,255,255,.16);border-radius:16px;
+    padding:16px 16px 14px;backdrop-filter:blur(12px);box-shadow:0 8px 30px rgba(0,0,0,.5)}
+  #welcome[hidden]{display:none}
+  #welcome h2{margin:0 0 6px;font-size:15px;letter-spacing:.04em;padding-right:44px}
+  #welcome p{margin:0 0 8px;font-size:12.5px;line-height:1.55;color:#dfeaf2}
+  #welcome p.wlegend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11.5px;color:#bfe9ff}
+  #welcome .row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+  #welcome .x{position:absolute;top:8px;right:8px;width:44px;height:44px;border-radius:12px;border:0;
+    background:rgba(255,255,255,.1);color:var(--ink);font-size:18px;cursor:pointer}
+  @media(min-width:900px){#welcome{left:auto;right:16px;bottom:16px;max-width:380px}}
+  /* while the welcome card is up, transient chrome stays out of the way: scene + one card */
+  body.cwi-welcoming #livefeed,
+  body.cwi-welcoming #toast,
+  body.cwi-welcoming #tourcap,
+  body.cwi-welcoming #musicticker,
+  body.cwi-welcoming #cwi-presence,
+  body.cwi-welcoming #cwi-ticker,
+  body.cwi-welcoming #cwi-shift-chip,
+  body.cwi-welcoming .cwi-cv-handle{display:none!important}
   #toast{position:fixed;z-index:35;left:50%;bottom:calc(90px + var(--safe-b));transform:translateX(-50%) translateY(10px);
     background:var(--plate2);border:1px solid rgba(255,255,255,.16);color:var(--ink);font-size:13px;font-weight:600;
     padding:12px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .25s;max-width:calc(100vw - 40px)}
@@ -292,10 +311,12 @@ setTimeout(function(){
   <span style="font-family:monospace">handoff #0482 · gear: signal-boy/origin · from AGENT-07 → AGENT-12 · day 21 of 30 · seal: SAMPLE</span></p>
 </div>
 
-<div class="sheet" id="hint" role="dialog" aria-label="Welcome">
+<div id="welcome" role="dialog" aria-label="Welcome" hidden>
+  <button class="x" id="welcome-close" aria-label="Dismiss">✕</button>
   <h2>Welcome to the Gear Ledger archipelago.</h2>
   <p>Drag to orbit · Pinch or scroll to zoom · Tap an island to visit.<br>
   Every number you see is SAMPLE data — a concept mockup, not the live ledger.</p>
+  <p class="wlegend" aria-label="Color key"><span>🟢 departments</span><span>🟡 most-traveled gear</span><span>🔵 leaderboard rank</span><span>🟣 gear in transit</span><span>⚪ handoff record</span></p>
   <div class="row">
     <button class="ibtn" id="hint-explore">Start exploring</button>
     <button class="ibtn ghost" id="hint-tour">Take the auto-tour</button>
@@ -1771,24 +1792,32 @@ let taskSeq=482;
 const stationFor={};
 ISLANDS.forEach(c=>{ stationFor[c.id]=new THREE.Vector3(c.x,1.55,c.z); });
 
-/* live activity feed (DOM) */
+/* live activity feed (DOM) — transient arrival toasts:
+   max 2 visible, auto-expire ~4s, docked to a screen edge, never the viewport center. */
 const feedEl=document.createElement('div');
 feedEl.id='livefeed';
-feedEl.style.cssText='position:fixed;left:16px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:20;pointer-events:none;max-width:min(340px,60vw);display:flex;flex-direction:column;gap:6px';
+feedEl.setAttribute('role','status');
+feedEl.setAttribute('aria-live','polite');
 document.body.appendChild(feedEl);
 const feedStyle=document.createElement('style');
-feedStyle.textContent=`#livefeed .fe{background:rgba(10,22,34,.72);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 12px;font-size:12px;color:#dfeaf2;backdrop-filter:blur(6px);animation:fein .3s}
-@keyframes fein{from{opacity:0;transform:translateY(6px)}}
-#livefeed .fe b{color:#7ef0c1}#livefeed .fe .t{color:#8fa9bc;font-size:10px;margin-right:6px}
-@media(max-width:899px){#livefeed{display:none}}`;
+feedStyle.textContent=
+ '#livefeed{position:fixed;left:16px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:20;pointer-events:none;max-width:min(340px,60vw);display:flex;flex-direction:column;gap:6px}\n'+
+ '#livefeed .fe{background:rgba(10,22,34,.72);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 12px;font-size:12px;color:#dfeaf2;backdrop-filter:blur(6px);animation:fein .3s;transition:opacity .5s}\n'+
+ '@keyframes fein{from{opacity:0;transform:translateY(6px)}}\n'+
+ '#livefeed .fe b{color:#7ef0c1}#livefeed .fe .t{color:#8fa9bc;font-size:10px;margin-right:6px}\n'+
+ '#livefeed .fe.fe-out{opacity:0}\n'+
+ '/* mobile: dock to the top-left edge under the HUD — compact, transient, off the islands */\n'+
+ '@media(max-width:899px){#livefeed{left:10px;right:auto;top:calc(64px + env(safe-area-inset-top,0px));bottom:auto;max-width:min(300px,74vw);z-index:24}}';
 document.head.appendChild(feedStyle);
 let simClock=0;
 function fmtClock(){ const m=String(Math.floor(simClock/60)%60).padStart(2,'0'),s=String(Math.floor(simClock)%60).padStart(2,'0'); return m+':'+s; }
+const FEED_MAX=2, FEED_TTL_MS=4000;
 function logFeed(html){
   const d=document.createElement('div'); d.className='fe';
   d.innerHTML='<span class="t">'+fmtClock()+'</span>'+html;
   feedEl.prepend(d);
-  while(feedEl.children.length>5) feedEl.lastChild.remove();
+  while(feedEl.children.length>FEED_MAX) feedEl.lastChild.remove();
+  setTimeout(()=>{ d.classList.add('fe-out'); setTimeout(()=>d.remove(),550); },FEED_TTL_MS);
 }
 
 function spawnAgent(def,atStation){
@@ -1988,7 +2017,7 @@ window.__liveUpgrade=function(json){
   const infoH2=q('#info h2'); if(infoH2) infoH2.textContent='Live ledger view.';
   const infoPs=qa('#info p');
   if(infoPs[0]) infoPs[0].textContent='This 3D archipelago is wired to the live CWI Gear Ledger. Agents, departments, tasks, and every number badged LIVE come from the canonical ledger store, refreshed every 10 minutes. Traffic arcs, legends, and chain plaques are labeled concept visuals \u2014 sketches of what the live streams will look like.';
-  const hintPs=qa('#hint p');
+  const hintPs=qa('#welcome p');
   if(hintPs[0]) hintPs[0].innerHTML='Drag to orbit \u00b7 Pinch or scroll to zoom \u00b7 Tap an island to visit.<br>Numbers badged LIVE come from the real Gear Ledger; concept visuals stay labeled.';
   const mpFine=q('#musicpanel .fine');
   if(mpFine) mpFine.textContent='The real That Boy Hi Hat catalog playlist on Spotify \u2014 press play. Agent figures are the 10 registered ledger agents with live presence.';
@@ -2156,7 +2185,7 @@ dom.addEventListener('pointerdown',e=>{
   lastInteract=performance.now()/1000; controls.autoRotate=false;
   dPos=[e.clientX,e.clientY]; dTime=performance.now(); dragged=false;
   if(tween) tween=null;
-  hideHint();
+  dismissWelcome();
 });
 dom.addEventListener('pointermove',e=>{
   if(broadcast) return;
@@ -2315,11 +2344,17 @@ addEventListener('resize',()=>{
    ============================================================ */
 const loader=document.getElementById('loader'), lmsg=document.getElementById('lmsg'),
       lfill=document.querySelector('#lbar i');
-let hintHidden=false;
-function hideHint(){ if(hintHidden) return; hintHidden=true;
-  document.getElementById('hint').classList.remove('open'); }
-document.getElementById('hint-explore').onclick=hideHint;
-document.getElementById('hint-tour').onclick=()=>{ hideHint(); startTour(); };
+let welcomeDone=false;
+/* Dismiss the entry welcome card; the dismissal is persisted so returning
+   visits show NO welcome/legend panels at all. */
+function dismissWelcome(){ if(welcomeDone) return; welcomeDone=true;
+  const w=document.getElementById('welcome');
+  if(w) w.hidden=true;
+  document.body.classList.remove('cwi-welcoming');
+  try{ window.__glStore.set('gear-ledger-3d.hintSeen','1'); }catch(e){} }
+document.getElementById('hint-explore').onclick=dismissWelcome;
+document.getElementById('hint-tour').onclick=()=>{ dismissWelcome(); startTour(); };
+document.getElementById('welcome-close').onclick=dismissWelcome;
 
 const clock=new THREE.Clock();
 let firstFrame=true;
@@ -2378,9 +2413,11 @@ function runLoader(){
         setTimeout(()=>{ startTour(); },900);
         setTimeout(()=>{ const k=document.getElementById('se-kicker'); if(k) k.classList.add('fade'); },8000);
       }
+      /* Entry: ONE compact bottom-docked welcome card on first visit only.
+         Returning visits (hintSeen persisted at dismissal) get scene + chrome, zero entry panels. */
       if(!broadcast&&!seTour&&!nohint&&!window.__glStore.get('gear-ledger-3d.hintSeen')){
-        document.getElementById('hint').classList.add('open');
-        window.__glStore.set('gear-ledger-3d.hintSeen','1');
+        const w=document.getElementById('welcome');
+        if(w){ w.hidden=false; document.body.classList.add('cwi-welcoming'); }
       }
     },350);
   },1150);
