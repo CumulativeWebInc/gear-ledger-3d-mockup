@@ -107,6 +107,10 @@
       tourcap: doc.getElementById('tourcap'),
       musicpanel: doc.getElementById('musicpanel'),
       musicticker: doc.getElementById('musicticker'),
+      welcome: doc.getElementById('welcome'),
+      livefeed: doc.getElementById('livefeed'),
+      presence: doc.getElementById('cwi-presence'),
+      ticker: doc.getElementById('cwi-ticker'),
       scene: doc.getElementById('scene')
     };
     var hudFound = !!(el.hud || el.inspector || el.toast || el.tourcap || el.musicpanel);
@@ -211,6 +215,8 @@
           if (!t || !t.classList) continue;
           var shown = t.classList.contains('show') || t.classList.contains('open');
           if (shown && (t.id === 'toast' || t.classList.contains('sheet'))) bumpUnread();
+          /* the welcome card shows via the hidden attribute, not a class */
+          if (t.id === 'welcome' && !t.hidden) bumpUnread();
           /* keep drawer state honest when the page itself opens/closes the inspector */
           if (t === el.inspector && !clear) {
             if (t.classList.contains('open') && drawer !== 'open') {
@@ -221,7 +227,7 @@
           }
         }
       });
-      mo.observe(doc.body, { attributes: true, attributeFilter: ['class'], subtree: true });
+      mo.observe(doc.body, { attributes: true, attributeFilter: ['class', 'hidden'], subtree: true });
     } catch (e) {}
 
     /* ---- render ---- */

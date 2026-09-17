@@ -36,13 +36,24 @@
 .cwi-cv-menu-row b{color:#35c4ff;font-weight:800}
 
 /* ---------- CLEAR VIEW hidden state: everything gone but the pill ---------- */
+/* Hide ALL chrome: HUD, panels, sheets, toasts, feeds, FLEET/ticker/shift overlays.
+   Only #scene (the 3D world) and the restore pill survive. */
 body.cwi-cv-hidden #hud,
 body.cwi-cv-hidden #inspector,
 body.cwi-cv-hidden .sheet,
+body.cwi-cv-hidden #welcome,
 body.cwi-cv-hidden #toast,
 body.cwi-cv-hidden #tourcap,
 body.cwi-cv-hidden #musicpanel,
 body.cwi-cv-hidden #musicticker,
+body.cwi-cv-hidden #livefeed,
+body.cwi-cv-hidden #cwi-presence,
+body.cwi-cv-hidden #cwi-ticker,
+body.cwi-cv-hidden #cwi-shift-chip,
+body.cwi-cv-hidden #cwi-wash,
+body.cwi-cv-hidden #cwi-shiftcap,
+body.cwi-cv-hidden #se-kicker,
+body.cwi-cv-hidden #genome-panel,
 body.cwi-cv-hidden .cwi-cv-handle,
 body.cwi-cv-hidden .cwi-cv-toggle{display:none!important}
 body.cwi-cv-hidden .cwi-cv-pill{display:flex}
@@ -52,10 +63,15 @@ body.cwi-cv-hidden .cwi-cv-pill{display:flex}
 body.cwi-cv-faded #hud,
 body.cwi-cv-faded #inspector,
 body.cwi-cv-faded .sheet,
+body.cwi-cv-faded #welcome,
 body.cwi-cv-faded #toast,
 body.cwi-cv-faded #tourcap,
 body.cwi-cv-faded #musicpanel,
-body.cwi-cv-faded #musicticker{opacity:.15!important;transition:opacity .4s ease}
+body.cwi-cv-faded #musicticker,
+body.cwi-cv-faded #livefeed,
+body.cwi-cv-faded #cwi-presence,
+body.cwi-cv-faded #cwi-ticker,
+body.cwi-cv-faded #cwi-shift-chip{opacity:.15!important;transition:opacity .4s ease}
 /* restore pill, toggle and drawer handle never fade */
 body.cwi-cv-faded .cwi-cv-pill,
 body.cwi-cv-faded .cwi-cv-toggle,
@@ -111,6 +127,7 @@ body.cwi-cv-drawer-open #inspector.open{transform:none!important}
 @media (prefers-reduced-motion:reduce){
   .cwi-cv-toggle,.cwi-cv-handle{transition:none}
   body.cwi-cv-faded #hud,body.cwi-cv-faded #inspector,body.cwi-cv-faded .sheet,
-  body.cwi-cv-faded #toast,body.cwi-cv-faded #tourcap,body.cwi-cv-faded #musicpanel,
-  body.cwi-cv-faded #musicticker{transition:none}
+  body.cwi-cv-faded #welcome,body.cwi-cv-faded #toast,body.cwi-cv-faded #tourcap,
+  body.cwi-cv-faded #musicpanel,body.cwi-cv-faded #musicticker,body.cwi-cv-faded #livefeed,
+  body.cwi-cv-faded #cwi-presence,body.cwi-cv-faded #cwi-ticker,body.cwi-cv-faded #cwi-shift-chip{transition:none}
 }
