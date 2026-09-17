@@ -324,8 +324,8 @@ import * as BGU from 'three/addons/utils/BufferGeometryUtils.js';
 import { classifyAgent, deriveLinks, proceduralForm, ROBOT_PARTS, BODY_ANCHORS, identityMounts, constructPlan, AUTO_COLOR, AUTO_CORE } from './stage-logic.js?v=20260917w2';
 /* Athena districts (2026-09-17): home-district layout + data-driven district life */
 import { districtDefs, districtBridges, districtBeacon, AGENT_ROSTER } from './districts.js';
-import { earthPlan } from './earth.js?v=20260917w3';
-import { cityPlan } from './city.js?v=20260917w3';
+import { earthPlan } from './earth.js?v=20260917w4';
+import { cityPlan, towerTiers } from './city.js?v=20260917w4';
 
 /* ============================================================
    0. CONFIG — palette, layout, fixed SAMPLE data
@@ -1667,13 +1667,27 @@ const PRIME_RINGS = [];
   const dy = PRIME.discY, dr = PRIME.discR;
   const disc = new THREE.Mesh(
     new THREE.CylinderGeometry(dr, dr + 1.5, PRIME.disc.thick, 48),
-    new THREE.MeshStandardMaterial({ color: 0x101c2a, roughness: .6, metalness: .3 }));
+    new THREE.MeshStandardMaterial({ color: 0x101c2a, roughness: .6, metalness: .3,
+      emissive: 0x06222e, emissiveIntensity: .5 }));
   disc.position.y = dy; scene.add(disc);
+  PRIME_PULSE.push({ mat: disc.material, base: .5, emissive: true });
   const rim = new THREE.Mesh(new THREE.TorusGeometry(dr, .35, 10, 72),
     new THREE.MeshBasicMaterial({ color: 0x35C4FF, transparent: true, opacity: .9,
-      blending: THREE.AdditiveBlending, depthWrite: false }));
+      blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
   rim.rotation.x = Math.PI/2; rim.position.y = dy + .7; scene.add(rim);
   PRIME_PULSE.push({ mat: rim.material, base: .9 });
+  /* soft halo beneath the disc — the city glows against dark water (MV-style opposition) */
+  const haloTexC = document.createElement('canvas'); haloTexC.width = haloTexC.height = 128;
+  const hg = haloTexC.getContext('2d');
+  const hgrad = hg.createRadialGradient(64, 64, 4, 64, 64, 64);
+  hgrad.addColorStop(0, 'rgba(53,196,255,0.55)'); hgrad.addColorStop(1, 'rgba(53,196,255,0)');
+  hg.fillStyle = hgrad; hg.fillRect(0, 0, 128, 128);
+  const haloTex = new THREE.CanvasTexture(haloTexC);
+  const halo = new THREE.Mesh(new THREE.PlaneGeometry(dr * 4.4, dr * 4.4),
+    new THREE.MeshBasicMaterial({ map: haloTex, transparent: true, opacity: .8,
+      blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  halo.rotation.x = -Math.PI/2; halo.position.y = 0.4; scene.add(halo);
+  PRIME_PULSE.push({ mat: halo.material, base: .8 });
   const gpts = [], cells = PRIME.gridCells, step = (dr * 2) / cells;
   for (let i = 0; i <= cells; i++) {
     const o = -dr + i * step, hc = Math.sqrt(Math.max(0, dr * dr - o * o));
@@ -1684,14 +1698,17 @@ const PRIME_RINGS = [];
     new THREE.LineBasicMaterial({ color: 0x2fb8c4, transparent: true, opacity: .35 })));
   for (const t of PRIME.towers) {
     const col = new THREE.Color(t.color);
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(t.w, t.h, t.w),
-      new THREE.MeshStandardMaterial({ color: 0x0d141d, roughness: .5, metalness: .4,
-        emissive: col, emissiveIntensity: .55 }));
-    mesh.position.set(t.x, dy + .6 + t.h / 2, t.z); scene.add(mesh);
-    PRIME_PULSE.push({ mat: mesh.material, base: .55, emissive: true });
+    /* Houdini-style two-tier setback massing — same plan data, richer silhouette */
+    for (const tier of towerTiers(t)) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(tier.w, tier.h, tier.w),
+        new THREE.MeshStandardMaterial({ color: 0x0d141d, roughness: .5, metalness: .4,
+          emissive: col, emissiveIntensity: .55 }));
+      mesh.position.set(t.x, dy + .6 + tier.y0 + tier.h / 2, t.z); scene.add(mesh);
+      PRIME_PULSE.push({ mat: mesh.material, base: .55, emissive: true });
+    }
     const tip = new THREE.Mesh(new THREE.OctahedronGeometry(.8),
       new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: .95,
-        blending: THREE.AdditiveBlending, depthWrite: false }));
+        blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
     tip.position.set(t.x, dy + .6 + t.h + .9, t.z); scene.add(tip);
     PRIME_PULSE.push({ mat: tip.material, base: .95 });
   }
@@ -1710,13 +1727,41 @@ const PRIME_RINGS = [];
   PRIME_PULSE.push({ mat: spire.material, base: .8, emissive: true });
   const crown = new THREE.Mesh(new THREE.OctahedronGeometry(1.6),
     new THREE.MeshBasicMaterial({ color: 0xFFB224, transparent: true, opacity: 1,
-      blending: THREE.AdditiveBlending, depthWrite: false }));
+      blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
   crown.position.y = dy + .6 + sp.h + 2; scene.add(crown);
   PRIME_PULSE.push({ mat: crown.material, base: 1 });
+  /* sky beam — the wayfinding landmark: one vertical pillar, visible from anywhere */
+  const beamTexC = document.createElement('canvas'); beamTexC.width = 16; beamTexC.height = 128;
+  const bg2 = beamTexC.getContext('2d');
+  const bgrad = bg2.createLinearGradient(0, 0, 0, 128);
+  bgrad.addColorStop(0, 'rgba(255,178,36,0)'); bgrad.addColorStop(0.75, 'rgba(255,178,36,0.5)');
+  bgrad.addColorStop(1, 'rgba(255,210,120,0.85)');
+  bg2.fillStyle = bgrad; bg2.fillRect(0, 0, 16, 128);
+  const beamTex = new THREE.CanvasTexture(beamTexC);
+  const skyBeam = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.9, 64, 12, 1, true),
+    new THREE.MeshBasicMaterial({ map: beamTex, transparent: true, opacity: .8,
+      blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+  skyBeam.position.y = dy + .6 + sp.h + 2 + 32; scene.add(skyBeam);
+  PRIME_PULSE.push({ mat: skyBeam.material, base: .8 });
+  /* billboarded city label — Monument Valley-style: always faces the camera, reads on a phone */
+  const labC = document.createElement('canvas'); labC.width = 512; labC.height = 128;
+  const lg = labC.getContext('2d');
+  lg.fillStyle = 'rgba(4,14,22,0.72)';
+  if (lg.roundRect) { lg.beginPath(); lg.roundRect(56, 22, 400, 84, 20); lg.fill(); }
+  else { lg.fillRect(56, 22, 400, 84); }
+  lg.strokeStyle = 'rgba(53,196,255,0.9)'; lg.lineWidth = 3; lg.stroke();
+  lg.fillStyle = '#FFD24D'; lg.font = '700 52px system-ui, sans-serif';
+  lg.textAlign = 'center'; lg.textBaseline = 'middle';
+  lg.fillText('P R I M E', 256, 66);
+  const labTex = new THREE.CanvasTexture(labC);
+  const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: labTex, transparent: true,
+    depthWrite: false, fog: false }));
+  label.scale.set(20, 5, 1); label.position.y = dy + .6 + sp.h - 6; scene.add(label);
+  PRIME_PULSE.push({ mat: label.material, base: 1 });
   for (const r of PRIME.rings) {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(r.r, .18, 8, 64),
       new THREE.MeshBasicMaterial({ color: new THREE.Color(r.color), transparent: true,
-        opacity: .7, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+        opacity: .7, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
     ring.rotation.x = Math.PI/2; ring.position.y = r.y; scene.add(ring);
     PRIME_RINGS.push({ mesh: ring, speed: r.speed });
     PRIME_PULSE.push({ mat: ring.material, base: .7 });
@@ -1724,11 +1769,12 @@ const PRIME_RINGS = [];
   for (const b of PRIME.beams) {
     const beam = new THREE.Mesh(new THREE.CylinderGeometry(.3, .5, dy, 12, 1, true),
       new THREE.MeshBasicMaterial({ color: 0x35C4FF, transparent: true, opacity: .28,
-        blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+        blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
     beam.position.set(b.x, dy / 2, b.z); scene.add(beam);
     PRIME_PULSE.push({ mat: beam.material, base: .28 });
   }
   pointLight(0xFFB224, 60, 90, 0, PRIME.discY + 18, 0);
+  pointLight(0x35C4FF, 40, 110, -40, PRIME.discY + 10, -30); /* cool rim opposite the warm key */
   anims.push((t) => {
     let act = 0.4;
     if (DISTRICT_BEACONS.length) {
@@ -1741,6 +1787,7 @@ const PRIME_RINGS = [];
       else p.mat.opacity = Math.min(1, p.base * k);
     }
     for (const r of PRIME_RINGS) r.mesh.rotation.z += r.speed * 0.016;
+    crown.rotation.y += 0.004;
     for (const e of EARTH_BEACONS) e.mesh.material.opacity = .3 + .25 * Math.sin(t * 1.4 + e.ph);
   });
 }
