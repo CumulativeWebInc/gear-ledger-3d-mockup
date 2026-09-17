@@ -7,6 +7,8 @@
  * political boundaries, no human likenesses. Names are neutral geographic
  * descriptors. $0, dependency-free. Imported by index.html AND by
  * tests/earth.test.mjs — one source of truth.
+ *
+ * v20260917w4: design-masters craft pass (see agents/athena/DESIGN-STUDY.md).
  */
 
 export const WORLD_OCEAN = { size: 2600, y: -0.6, color: 0x06121e };
