@@ -1,6 +1,6 @@
 # FORMS.md — Agent Stage form derivation
 
-The Agent Stage (7th island of the Gear Ledger 3D world) gives each of the 10
+The Agent Stage (7th island of the Gear Ledger 3D world) gives each of the 11
 registered ledger agents a 3D form **generated from its department identity**.
 The scene reads `forms.json` as data and builds every form from it — no form
 is hand-placed or picked from a stock avatar set.
@@ -23,6 +23,7 @@ strings in `live-data.json` (which come from the canonical Gear Ledger store).
 | CWI_Data (Ledger) | "The quant. No number without a source." | **lattice**: icosahedron wireframe + solid core | ice blue `#A8E6FF` | The lattice is the model; the solid core is the verified fact inside it. |
 | CWI_Affairs (Charter) | "The guardian. Reads the fine print." | **charter**: protective dome + scroll (partial cylinder) | parchment gold `#D8B36A` | The dome guards; the scroll is the paperwork. Gold = documents. |
 | CWI_Results (Receipt) | "The closer of outcomes." Result → mechanism → verification → kill rule. | **receipt**: spike + stacked discs | paper white `#F5F7FA`, green core | A receipt spike filing finished outcomes; the core glows phosphor green while executing. |
+| CWI_Athena (Athena) | "The architect." Apex reasoning + masterful building; precise, warm, exacting; quantitative learning. | **keystone**: tapered wedge + twin owl-eye discs + orbiting calibration ring | moonlight silver `#C9D6EA`, warm gold core | The keystone locks the arch — strategy locked into structure. The owl eyes are Athena's wisdom watching the whole board. The orbiting ring is calibration — every prediction scored. |
 
 Motion signatures (per form, from `forms.json`): each form carries
 `spin` (rad/s weight for its rotating part), `bob` (vertical bob frequency),
@@ -63,6 +64,34 @@ No links are drawn in SAMPLE mode. The stage legend plaque states both rules.
 
 ## Performance
 
-10 forms × ~5 low-poly meshes each; one shared animation callback. No new
+11 forms × ~5 low-poly meshes each; one shared animation callback. No new
 dependencies, zero backend. Broadcast edition (`broadcast.html`) is a
 standalone Canvas2D page and is unaffected.
+
+## Auto-forms: the world extends itself (2026-09-17)
+
+Any agent present in `live-data.json` with no chartered entry in
+`forms.json` gets a deterministic procedural form built by
+`proceduralForm()` in `stage-logic.js` (same agent_id → same spec,
+forever). It renders as a **construct** — stacked proto-silver plates
+(`#B9C6DC`, reserved for the unformed) with an orbiting part — on the
+nursery ring (radius 9.4), visibly apart from the chartered circle.
+When a true identity-derived form is chartered for the agent, the
+construct graduates and the hand-built form takes its place. This is
+how Athena's children appear in the world the moment the ledger knows
+them, with no hand edit required.
+
+## Day/night life (2026-09-17)
+
+The world keeps local time. A smooth day/night factor (1 at midnight,
+0 at noon, soft dawn/dusk shoulders) drives the sky dome tint, fog
+color, sun/hemi color and intensity, and exposure — at night the scene
+deepens and the agent cores carry it. Updates once per minute; paused
+while the boot sunrise ramp runs.
+
+## Live activity feed (2026-09-17 fix)
+
+Arrival/ambient notifications auto-dismiss after 9 seconds and are
+capped (5 desktop, 2 mobile); on phones the feed moves to a compact
+strip under the header so it can never bury the scene. (Root cause:
+an inline `display:flex` was overriding the mobile hide rule.)
