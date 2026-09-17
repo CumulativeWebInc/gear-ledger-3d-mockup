@@ -181,6 +181,14 @@ setTimeout(function(){
   .sheet .x{position:absolute;top:12px;right:12px;width:44px;height:44px;border-radius:12px;border:0;
     background:rgba(255,255,255,.1);color:var(--ink);font-size:18px;cursor:pointer}
   #legend .li{display:flex;gap:12px;align-items:flex-start;margin:10px 0;font-size:13.5px;line-height:1.5}
+  /* ---------- agent roster ---------- */
+  #agent-rows .arow{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid rgba(255,255,255,.1);border-radius:12px;margin-bottom:8px;cursor:pointer;background:rgba(255,255,255,.03);min-height:48px}
+  #agent-rows .arow:active{background:rgba(53,196,255,.15)}
+  #agent-rows .adot{width:10px;height:10px;border-radius:50%;background:#8fa9bc;flex:none}
+  #agent-rows .adot.on{background:#3DFF88;box-shadow:0 0 8px #3DFF88}
+  #agent-rows .aname{font-weight:700;font-size:15px;color:#fff}
+  #agent-rows .arole{font-size:11px;color:var(--dim)}
+  #agent-rows .aspot{margin-left:auto;font-size:10px;letter-spacing:.1em;color:#FFD24D;font-weight:800;white-space:nowrap}
   #legend .li i{font-style:normal;font-size:18px}
   #hint{z-index:40;text-align:center}
   #hint .row{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
@@ -232,6 +240,7 @@ setTimeout(function(){
     <button class="hbtn" id="b-legend" title="Legend (L)">? <span class="lbl">Legend</span></button>
     <button class="hbtn" id="b-info" title="About this mockup (I)">ⓘ <span class="lbl">Info</span></button>
     <button class="hbtn" id="b-music" title="That Boy Hi Hat catalog playlist (Spotify)">♪ <span class="lbl">Music</span></button>
+    <button class="hbtn" id="b-agents" title="Agents (A)">👥 <span class="lbl">Agents</span></button>
   </div>
   <div id="musicticker" title="Simulated music taste of the SAMPLE cast"><span id="mt-note">♪</span><span id="mt-text">warming up the decks…</span><span class="svtag">SIM</span></div>
   <div id="bcast-mark">CWI · CUMULATIVE WEB INC</div>
@@ -240,6 +249,7 @@ setTimeout(function(){
     <button class="hbtn" data-act="tour">▶<br><span style="font-size:10px">Tour</span></button>
     <button class="hbtn" data-act="legend">?<br><span style="font-size:10px">Legend</span></button>
     <button class="hbtn" data-act="info">ⓘ<br><span style="font-size:10px">Info</span></button>
+    <button class="hbtn" data-act="agents">👥<br><span style="font-size:10px">Agents</span></button>
   </div>
 </div>
 
@@ -270,6 +280,13 @@ setTimeout(function(){
   <div class="li"><i>🌉</i><span><b>Bridge</b> — a handoff relationship between two islands' domains.</span></div>
   <div class="li"><i>🏙️</i><span><b>PRIME, the founding city</b> — the first city the agents built for themselves, raised on light above the hub island. Its brightness follows live ledger work. The world frame is inspired by Earth's geography — built for agents, not a replica of any real place.</span></div>
   <p style="color:#bfe9ff;font-size:12px">All colors describe mockup semantics. All underlying figures are SAMPLE data.</p>
+</div>
+
+<div class="sheet" id="agents" role="dialog" aria-label="Agents">
+  <button class="x" data-close="agents" aria-label="Close">✕</button>
+  <h2>Agents</h2>
+  <div id="agent-rows"></div>
+  <p class="fine">Tap an agent to fly to its robot body and open its live inspector.</p>
 </div>
 
 <div class="sheet" id="info" role="dialog" aria-label="About">
@@ -2497,7 +2514,36 @@ document.querySelectorAll('#thumbbar .hbtn').forEach(b=>b.onclick=()=>{
   if(a==='overview')goOverview(); if(a==='tour')tour.active?stopTour():startTour();
   if(a==='legend')document.getElementById('legend').classList.add('open');
   if(a==='info')document.getElementById('info').classList.add('open');
+  if(a==='agents')openAgentRoster();
 });
+/* ---------- agent roster: tap any agent to fly to its robot body + open its inspector.
+   Athena and KingCode are spotlighted at the top. ---------- */
+function openAgentRoster(){
+  const box=document.getElementById('agent-rows'); box.innerHTML='';
+  const WC=window.WorldClient, live=(WC&&WC.mode==='LIVE'&&WC.live)?WC.live.agents:[];
+  const isSpot=aid=>aid==='agent:CWI_Athena'||aid==='agent:MUSE_CWI';
+  const stage=selectables.filter(s=>s.kind==='AGENT'&&s.island==='stage'&&s.agent&&s.agent.grp&&s.agent.def);
+  stage.sort((a,b)=>{
+    const ai='agent:'+a.agent.def.name, bi='agent:'+b.agent.def.name;
+    return (isSpot(ai)?0:1)-(isSpot(bi)?0:1)||a.agent.def.name.localeCompare(b.agent.def.name);
+  });
+  if(!stage.length){
+    box.innerHTML='<div class="arow"><span class="arole">Agent bodies still materializing — try again in a moment.</span></div>';
+  }
+  for(const s of stage){
+    const aid='agent:'+s.agent.def.name;    const rec=live.find(x=>x.agent_id===aid);
+    const on=rec&&String(rec.presence).toLowerCase()==='online';
+    const row=document.createElement('div'); row.className='arow';
+    const pub=(s.title||'').split(' — ')[0]||s.agent.def.name;
+    row.innerHTML='<span class="adot'+(on?' on':'')+'"></span>'+
+      '<span><span class="aname">'+pub+'</span><br><span class="arole">'+(rec?(rec.role+' · '+rec.department):aid)+'</span></span>'+
+      (isSpot(aid)?'<span class="aspot">★ SPOTLIGHT</span>':'');
+    row.onclick=()=>{ document.getElementById('agents').classList.remove('open'); stopTour(); openInspector(s); focusAgent(s.agent); };
+    box.appendChild(row);
+  }
+  document.getElementById('agents').classList.add('open'); pulsePill();
+}
+document.getElementById('b-agents').onclick=openAgentRoster;
 function toast(msg){
   const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
   clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2600);
@@ -2586,6 +2632,7 @@ addEventListener('keydown',e=>{
   else if(e.key==='t'||e.key==='T') tour.active?stopTour():startTour();
   else if(e.key==='l'||e.key==='L') document.getElementById('legend').classList.toggle('open');
   else if(e.key==='i'||e.key==='I') document.getElementById('info').classList.toggle('open');
+  else if(e.key==='a'||e.key==='A') openAgentRoster();
   else if(e.key==='ArrowRight'||e.key==='ArrowDown'){ kbIdx=(kbIdx+1)%6; kbHighlight(); }
   else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){ kbIdx=(kbIdx+5)%6; kbHighlight(); }
   else if(e.key==='Enter'||e.key===' '){ if(document.activeElement===container||e.key==='Enter'){ e.preventDefault(); focusIsland(KB_ORDER[kbIdx]); } }
