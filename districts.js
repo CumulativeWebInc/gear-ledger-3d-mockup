@@ -133,3 +133,19 @@ export function validateDistricts(defs, islandIds) {
   }
   return problems;
 }
+
+/* Nameplate spec for a district def — pure charter facts for the billboarded
+ * floating label (agent public name + department + accent). The page builds
+ * the canvas sprite from this; the logic stays dependency-free and testable.
+ * Names are static charter data — the beacon pillars (not the labels) carry
+ * live operational state. */
+export function districtNameplate(d) {
+  const def = d || {};
+  const tag = String(def.tag || '');
+  const publicName = tag.split('·')[0].trim() || String(def.name || 'DISTRICT');
+  return {
+    name: publicName.toUpperCase(),
+    dept: String(def.name || 'DEPARTMENT').toUpperCase(),
+    accent: def.accent || '#35C4FF',
+  };
+}
