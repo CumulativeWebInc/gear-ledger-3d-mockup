@@ -340,7 +340,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import * as BGU from 'three/addons/utils/BufferGeometryUtils.js';
 import { classifyAgent, deriveLinks, proceduralForm, ROBOT_PARTS, BODY_ANCHORS, identityMounts, constructPlan, AUTO_COLOR, AUTO_CORE } from './stage-logic.js?v=20260917w2';
 /* Athena districts (2026-09-17): home-district layout + data-driven district life */
-import { districtDefs, districtBridges, districtBeacon, AGENT_ROSTER } from './districts.js?v=20260917w4';
+import { districtDefs, districtBridges, districtBeacon, districtNameplate, AGENT_ROSTER } from './districts.js?v=20260917w5';
 import { earthPlan } from './earth.js?v=20260917w4';
 import { cityPlan, towerTiers } from './city.js?v=20260917w4';
 
@@ -1637,6 +1637,34 @@ const arcAnims=[];
     }
   });
   pointLight(0xFFB224,30,30,cfg.x,9,cfg.z);
+}
+
+/* ===== DISTRICT NAMEPLATES (Athena, 2026-09-17) — billboarded district labels =====
+   Design-study lesson (Monument Valley): billboarded elements always face the
+   camera, so signage reads from every angle — phone legibility first. Each of
+   the 11 districts gets a floating nameplate: agent name + department in the
+   district accent color, fog:false so it punches through fog like PRIME's label.
+   Static charter facts from districtNameplate() — the beacon pillars (not the
+   labels) carry live operational state. 11 sprites, zero per-frame allocation. */
+const DISTRICT_NAMEPLATES=[];
+for(const d of DISTRICT_DEFS){
+  const np=districtNameplate(d);
+  const tex=canvasTex(512,168,(g)=>{
+    g.fillStyle='rgba(4,14,22,0.72)';
+    if(g.roundRect){ g.beginPath(); g.roundRect(28,20,456,128,26); g.fill(); }
+    else g.fillRect(28,20,456,128);
+    g.strokeStyle=np.accent; g.lineWidth=4;
+    if(g.roundRect){ g.beginPath(); g.roundRect(28,20,456,128,26); g.stroke(); }
+    else g.strokeRect(28,20,456,128);
+    g.textAlign='center'; g.textBaseline='middle';
+    g.fillStyle=np.accent; g.font='700 52px system-ui,sans-serif';
+    g.fillText(np.name,256,62);
+    g.fillStyle='#DFEAF5'; g.font='500 30px system-ui,sans-serif';
+    g.fillText(np.dept,256,116);
+  });
+  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,fog:false}));
+  spr.scale.set(10.5,3.45,1); spr.position.set(d.x,12.5,d.z); scene.add(spr);
+  DISTRICT_NAMEPLATES.push(spr);
 }
 
 /* ===== EARTH FRAME + PRIME (Athena, 2026-09-17) — digital-age Earth, founding city =====
