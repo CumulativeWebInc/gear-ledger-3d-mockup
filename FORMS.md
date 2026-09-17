@@ -89,6 +89,50 @@ color, sun/hemi color and intensity, and exposure — at night the scene
 deepens and the agent cores carry it. Updates once per minute; paused
 while the boot sunrise ramp runs.
 
+## Wave 2 — articulated robot bodies (2026-09-17)
+
+Black's order: *"Our agent ai robots need robot bodies."* Every form is now a
+real articulated robot, built procedurally (no external models, $0):
+
+**Body plan** (`ROBOT_PARTS` in `stage-logic.js`, schema
+`gear-ledger-3d-robot-body/v1`): pelvis → torso → chest core (the bright core
+that carries the EXECUTING expression) → neck/head with visor → shoulder
+joints → upper arms → elbow joints → forearms + hands → hip joints → thighs →
+knee joints → shins + feet. Nine named joints
+(`neck, shoulderL/R, elbowL/R, hipL/R, kneeL/R`); left/right mirrored.
+The page (`index.html`) turns the plan into Three.js meshes — the plan and
+the page can never drift because the same module feeds both.
+
+**Identity mounting** (`identityMounts(geometry)`): the wave-1 signature
+elements are translated ONTO the body, never replaced — the method is
+*body plan + identity mounting*:
+
+| Agent | Mounted kit |
+|---|---|
+| KingCode | command crown on the head-top; command ring orbiting the torso |
+| Needle (A&R) | verdict fin (sharp cone) on the head-top; ear-dish torus on the right shoulder |
+| Marquee (Marketing) | event arch carried on the back like a halo; 5 light bars radiating off it |
+| Seal (Sync) | clearance stamp as the chest plate; deal ring locked around it |
+| Dial (Radio) | turntable platter deck on the back; rotating tone arm |
+| Dateline (Press) | wire antenna on the left shoulder; expanding signal rings |
+| Fader (Studio) | mix console on the chest; sliding fader knob |
+| Ledger (Data) | open wireframe lattice on the chest; solid verified core inside |
+| Charter (Affairs) | guardian dome shielding the left forearm; charter scroll on the back |
+| Receipt (Results) | filing spike on the right shoulder; stacked receipt discs on the chest |
+| Athena | owl-eye discs as the visor; keystone wedge as the chest plate; calibration ring orbiting the torso |
+
+All wave-1 animated behaviors survive the translation: orbiting rings,
+spinning parts, the sliding knob, expanding signal rings, rotating receipt
+discs. Joint articulation is new: arms/legs swing with the motion factor,
+the head scans, and EXECUTING lifts the arms into a focused stance.
+
+**Proto-frames** (`constructPlan(agent_id)`): unformed agents render as robots
+*under construction* — the fnv1a hash of the agent_id deterministically
+decides which limbs are plated and which show exposed frame struts
+(same id → same assembly state, forever), in reserved proto-silver
+`#B9C6DC`. The struts ride the joints, so even the unfinished frame
+articulates. Graduates to a true identity-derived body when chartered.
+
 ## Live activity feed (2026-09-17 fix)
 
 Arrival/ambient notifications auto-dismiss after 9 seconds and are
