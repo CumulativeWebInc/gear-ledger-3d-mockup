@@ -246,15 +246,20 @@ export function buildNightCity(THREE, scene, env) {
       const sx = cfg.sx || 1;
       spots.push({ x: cfg.x, z: cfg.z, w: (cfg.r || 10) * sx * 1.7, id: `blade:island:${id}` });
     }
-    for (const s of spots) {
-      const geo = new THREE.BoxGeometry(s.w, SHAFT_DEPTH, s.w);
-      const shaft = new THREE.Mesh(geo, shaftMat);
-      shaft.position.set(s.x, SHAFT_TOP_Y - SHAFT_DEPTH / 2, s.z);
-      shaft.userData.bladeAnchorId = s.id;
-      shaft.userData.bladeX = s.x;
-      shaft.userData.bladeZ = s.z;
-      scene.add(shaft);
+    /* One InstancedMesh for all shafts (1 draw call): unit box scaled per instance. */
+    const unitGeo = new THREE.BoxGeometry(1, 1, 1);
+    const shaftMesh = new THREE.InstancedMesh(unitGeo, shaftMat, spots.length);
+    shaftMesh.frustumCulled = false;
+    for (let i = 0; i < spots.length; i++) {
+      const s = spots[i];
+      dummy.position.set(s.x, SHAFT_TOP_Y - SHAFT_DEPTH / 2, s.z);
+      dummy.rotation.set(0, 0, 0);
+      dummy.scale.set(s.w, SHAFT_DEPTH, s.w);
+      dummy.updateMatrix();
+      shaftMesh.setMatrixAt(i, dummy.matrix);
     }
+    shaftMesh.instanceMatrix.needsUpdate = true;
+    scene.add(shaftMesh);
     return spots; // blade anchors
   }
 
@@ -582,26 +587,17 @@ export function buildNightCity(THREE, scene, env) {
     carMesh.frustumCulled = false;
     scene.add(carMesh);
 
-    const headTex = glowTex(cssOf(NIGHT_PALETTE.anchorWhite));
-    const tailTex = glowTex(cssOf(NIGHT_PALETTE.neonPink));
-    const headMat = new THREE.SpriteMaterial({
-      map: headTex, transparent: true, opacity: 0.9,
-      blending: THREE.AdditiveBlending, depthWrite: false
-    });
-    const tailMat = new THREE.SpriteMaterial({
-      map: tailTex, transparent: true, opacity: 0.9,
-      blending: THREE.AdditiveBlending, depthWrite: false
-    });
+    /* Head/tail lights as two InstancedMeshes of small emissive boxes (2 draw
+       calls total, billboard behavior traded for instancing). */
+    const lampGeo = new THREE.BoxGeometry(0.55, 0.3, 0.18);
+    const headLampMat = new THREE.MeshBasicMaterial({ color: colOf(NIGHT_PALETTE.anchorWhite) });
+    const tailLampMat = new THREE.MeshBasicMaterial({ color: colOf(NIGHT_PALETTE.neonPink) });
+    const headMesh = new THREE.InstancedMesh(lampGeo, headLampMat, cars.length);
+    const tailMesh = new THREE.InstancedMesh(lampGeo, tailLampMat, cars.length);
+    headMesh.frustumCulled = false;
+    tailMesh.frustumCulled = false;
+    scene.add(headMesh, tailMesh);
     const pos = { x: 0, z: 0, yaw: 0 };
-    for (const car of cars) {
-      const head = new THREE.Sprite(headMat);
-      head.scale.set(2.2, 1.1, 1);
-      const tail = new THREE.Sprite(tailMat);
-      tail.scale.set(1.8, 0.9, 1);
-      scene.add(head, tail);
-      car.head = head;
-      car.tail = tail;
-    }
 
     anims.push((t, dt) => {
       for (let i = 0; i < cars.length; i++) {
@@ -614,10 +610,19 @@ export function buildNightCity(THREE, scene, env) {
         dummy.updateMatrix();
         carMesh.setMatrixAt(i, dummy.matrix);
         const fx = Math.sin(pos.yaw), fz = Math.cos(pos.yaw);
-        car.head.position.set(pos.x + fx * (CAR_L / 2 + 0.3), CAR_Y, pos.z + fz * (CAR_L / 2 + 0.3));
-        car.tail.position.set(pos.x - fx * (CAR_L / 2 + 0.3), CAR_Y, pos.z - fz * (CAR_L / 2 + 0.3));
+        const off = CAR_L / 2 + 0.3;
+        dummy.rotation.set(0, pos.yaw, 0);
+        dummy.scale.set(1, 1, 1);
+        dummy.position.set(pos.x + fx * off, CAR_Y, pos.z + fz * off);
+        dummy.updateMatrix();
+        headMesh.setMatrixAt(i, dummy.matrix);
+        dummy.position.set(pos.x - fx * off, CAR_Y, pos.z - fz * off);
+        dummy.updateMatrix();
+        tailMesh.setMatrixAt(i, dummy.matrix);
       }
       carMesh.instanceMatrix.needsUpdate = true;
+      headMesh.instanceMatrix.needsUpdate = true;
+      tailMesh.instanceMatrix.needsUpdate = true;
     });
   }
 
