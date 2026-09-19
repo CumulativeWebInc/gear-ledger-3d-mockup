@@ -51,8 +51,6 @@ const TRUNK_R_TOP = 0.18;
 const TRUNK_R_BOT = 0.3;
 const FROND_W = 3;
 const FROND_H = 1.2;
-const SWAY_AMPL = 0.06;
-const SWAY_FREQ = 1.2;
 const CAR_W = 2.2;
 const CAR_H = 0.9;
 const CAR_L = 4.5;
@@ -85,6 +83,34 @@ function roundRectPath(g, x, y, w, h, r) {
   g.closePath();
 }
 
+/* ============ draw-call diet helpers (Phase-2, Child E) ============ */
+
+/**
+ * Six-vertex non-indexed quad matching PlaneGeometry(w, h) triangles and UVs,
+ * so merged static geometry needs no BufferGeometryUtils import.
+ */
+function quadArrays(w, h) {
+  const x = w / 2, y = h / 2;
+  return {
+    pos: [
+      -x, y, 0,   x, y, 0,  -x, -y, 0,
+       x, y, 0,   x, -y, 0,  -x, -y, 0
+    ],
+    uv: [
+      0, 1,  1, 1,  0, 0,
+      1, 1,  1, 0,  0, 0
+    ]
+  };
+}
+
+/** '#rrggbb' or hex number -> [r, g, b] floats for vertex-color baking. */
+function hexRgb(css) {
+  let h = css;
+  if (typeof h === 'number') h = h.toString(16).padStart(6, '0');
+  else if (typeof h === 'string' && h[0] === '#') h = h.slice(1);
+  const n = parseInt(h, 16) || 0;
+  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+}
 /* ============ main builder ============ */
 
 /**
@@ -293,10 +319,10 @@ export function buildNightCity(THREE, scene, env) {
   }
 
   /* ============================================================
-     5. neonBlades — vertical district blade signs + glow sprites
+     5. neonBlades — vertical district blade signs (glow sprites CUT 2026-09-19:
+     blade canvas textures bake neon glow via shadowBlur, so the 11 additive
+     sprites were redundant; the flicker tick is cut with them)
      ============================================================ */
-  const flickerGroups = [[], [], []]; // 3 shared flicker phases
-
   function bladeTexture(text, accentCss) {
     return canvasTex(256, 768, (g, w, h) => {
       g.clearRect(0, 0, w, h);
@@ -333,7 +359,7 @@ export function buildNightCity(THREE, scene, env) {
       heroBlade: { text: d.name || d.id, accent: d.accent },
       wallSigns: []
     }));
-    blades.forEach((b, i) => {
+    blades.forEach((b) => {
       const d = districtDefs.find((dd) => dd.id === b.districtId);
       if (!d) return;
       const accentCss = cssOf((b.heroBlade && b.heroBlade.accent) || d.accent || NIGHT_PALETTE.neonPink);
@@ -352,32 +378,6 @@ export function buildNightCity(THREE, scene, env) {
       blade.rotation.y = Math.atan2(tx, tz);
       blade.position.set(d.x, BLADE_MOUNT_Y, d.z);
       scene.add(blade);
-
-      // additive glow sprite behind the blade
-      const smat = new THREE.SpriteMaterial({
-        map: glowTex(accentCss),
-        color: accentCss,
-        transparent: true,
-        opacity: 0.5,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-      });
-      smat.userData.base = 0.5;
-      const glow = new THREE.Sprite(smat);
-      glow.scale.set(8, 16, 1);
-      glow.position.set(d.x - tx * 0.8, BLADE_MOUNT_Y, d.z - tz * 0.8);
-      scene.add(glow);
-
-      // round-robin into 3 shared flicker phases
-      flickerGroups[i % FLICKER_GROUP_COUNT].push(smat);
-    });
-
-    // shared flicker tick: only glow sprites flicker, blades stay steady
-    anims.push((t) => {
-      for (let gi = 0; gi < FLICKER_GROUP_COUNT; gi++) {
-        const o = 0.80 + 0.20 * Math.sin(t * (6 + gi) + gi * 2.4);
-        for (const m of flickerGroups[gi]) m.opacity = m.userData.base * o;
-      }
     });
   }
 
@@ -458,8 +458,7 @@ export function buildNightCity(THREE, scene, env) {
   }
 
   /* ============================================================
-     7. dataPalms — instanced trunks + per-palm swaying fronds
-     ============================================================ */
+     7. dataPalms — instanced trunks + merged static crowns (sway CUT 2026-09-19)     ============================================================ */
   function frondTexture() {
     return canvasTex(128, 64, (g, w, h) => {
       g.clearRect(0, 0, w, h);
@@ -487,19 +486,13 @@ export function buildNightCity(THREE, scene, env) {
     if (palms.length === 0) return;
     const frondTex = frondTexture();
 
-    // trunks: one instanced draw
+    // trunks: one instanced draw (kept)
     const trunkGeo = new THREE.CylinderGeometry(TRUNK_R_TOP, TRUNK_R_BOT, TRUNK_H, 7);
     const trunkMat = new THREE.MeshStandardMaterial({
       color: 0x0a0e12, roughness: 0.9, metalness: 0.1
     });
     const trunks = new THREE.InstancedMesh(trunkGeo, trunkMat, palms.length);
     trunks.frustumCulled = false;
-
-    const frondMat = new THREE.MeshBasicMaterial({
-      map: frondTex, transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, depthWrite: false
-    });
-    const frondGeo = new THREE.PlaneGeometry(FROND_W, FROND_H);
-    const sway = [];
 
     palms.forEach((p, i) => {
       const s = p.s || 1;
@@ -508,28 +501,46 @@ export function buildNightCity(THREE, scene, env) {
       dummy.rotation.set(0, 0, 0);
       dummy.updateMatrix();
       trunks.setMatrixAt(i, dummy.matrix);
-
-      // frond crown: 2 crossed planes in a swaying group
-      const crown = new THREE.Group();
-      crown.position.set(p.x, STREET_Y + TRUNK_H * s, p.z);
-      crown.scale.setScalar(s);
-      const f1 = new THREE.Mesh(frondGeo, frondMat);
-      const f2 = new THREE.Mesh(frondGeo, frondMat);
-      f2.rotation.y = Math.PI / 2;
-      f1.position.y = 0.4; f2.position.y = 0.4;
-      crown.add(f1, f2);
-      scene.add(crown);
-      sway.push({ crown, phase: Math.random() * TWO_PI });
     });
     trunks.instanceMatrix.needsUpdate = true;
     scene.add(trunks);
 
-    anims.push((t) => {
-      for (const s of sway) {
-        s.crown.rotation.z = SWAY_AMPL * Math.sin(t * SWAY_FREQ + s.phase);
-        s.crown.rotation.x = SWAY_AMPL * 0.6 * Math.cos(t * SWAY_FREQ * 0.9 + s.phase);
-      }
+    // crowns: ALL fronds baked into ONE static merged mesh (1 draw call).
+    // The per-palm sway anim is CUT 2026-09-19 (48 meshes + per-frame matrix
+    // churn for pure decoration). World transforms are baked analytically:
+    // crown center (p.x, STREET_Y + TRUNK_H*s + 0.4*s, p.z), scale s,
+    // f2 crossed at rotY(PI/2) -> (x,y,0) maps to (0,y,-x). Fronds use
+    // unlit MeshBasicMaterial, so normals are omitted (positions + uvs only).
+    const frondMat = new THREE.MeshBasicMaterial({
+      map: frondTex, transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, depthWrite: false
     });
+    const q = quadArrays(FROND_W, FROND_H);
+    const per = 6, quads = palms.length * 2;
+    const positions = new Float32Array(quads * per * 3);
+    const uvs = new Float32Array(quads * per * 2);
+    let qi = 0;
+    for (const p of palms) {
+      const s = p.s || 1;
+      const cy = STREET_Y + TRUNK_H * s + 0.4 * s;
+      for (let r = 0; r < 2; r++) {
+        const crossed = r === 1;
+        for (let i = 0; i < per; i++) {
+          const x = q.pos[i * 3], y = q.pos[i * 3 + 1];
+          const o = (qi * per + i);
+          positions[o * 3]     = p.x + (crossed ? 0 : x) * s;
+          positions[o * 3 + 1] = cy + y * s;
+          positions[o * 3 + 2] = p.z + (crossed ? -x : 0) * s;
+          uvs[o * 2]     = q.uv[i * 2];
+          uvs[o * 2 + 1] = q.uv[i * 2 + 1];
+        }
+        qi++;
+      }
+    }
+    const crownGeo = new THREE.BufferGeometry();
+    crownGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    crownGeo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+    const crowns = new THREE.Mesh(crownGeo, frondMat);
+    scene.add(crowns);
   }
 
   /* ============================================================
@@ -630,7 +641,11 @@ export function buildNightCity(THREE, scene, env) {
      9. reflectionStreaks — additive neon streaks on the street
      ============================================================ */
   function reflectionStreaks() {
-    // shared vertical gradient: bright top fading down, tinted per district
+    // shared vertical gradient texture; per-district tint is baked as vertex
+    // colors into ONE merged mesh (1 draw call) with a single additive
+    // vertexColors material. Transform bake matches the old euler
+    // (rotation.x=-PI/2, rotation.z=a): Rz applied first, then Rx(-PI/2),
+    // i.e. (x,y,0) -> (x*cosA - y*sinA, 0, -(x*sinA + y*cosA)) + position.
     const streakTex = canvasTex(64, 256, (g, w, h) => {
       const grad = g.createLinearGradient(0, 0, 0, h);
       grad.addColorStop(0, 'rgba(255,255,255,0.95)');
@@ -639,26 +654,47 @@ export function buildNightCity(THREE, scene, env) {
       g.fillStyle = grad;
       g.fillRect(0, 0, w, h);
     });
-    for (const d of districtDefs) {
+    const q = quadArrays(BLADE_W, STREAK_LENGTH);
+    const per = 6, n = districtDefs.length;
+    const positions = new Float32Array(n * per * 3);
+    const uvs = new Float32Array(n * per * 2);
+    const colors = new Float32Array(n * per * 3);
+    districtDefs.forEach((d, di) => {
       const accentCss = cssOf(d.accent || NIGHT_PALETTE.neonPink);
-      const mat = new THREE.MeshBasicMaterial({
-        map: streakTex,
-        color: accentCss,
-        transparent: true,
-        opacity: STREAK_OPACITY,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        side: THREE.DoubleSide
-      });
-      const streak = new THREE.Mesh(new THREE.PlaneGeometry(BLADE_W, STREAK_LENGTH), mat);
-      streak.rotation.x = -Math.PI / 2;
-      // radial orientation: streak runs outward from under the blade
+      const [cr, cg, cb] = hexRgb(accentCss);
       const rl = Math.hypot(d.x, d.z) || 1;
       const rx = d.x / rl, rz = d.z / rl;
-      streak.rotation.z = Math.atan2(rx, rz) + Math.PI / 2;
-      streak.position.set(d.x + rx * (STREAK_LENGTH / 2 - 1), STREAK_Y, d.z + rz * (STREAK_LENGTH / 2 - 1));
-      scene.add(streak);
-    }
+      const a = Math.atan2(rx, rz) + Math.PI / 2;
+      const cosA = Math.cos(a), sinA = Math.sin(a);
+      const px = d.x + rx * (STREAK_LENGTH / 2 - 1);
+      const pz = d.z + rz * (STREAK_LENGTH / 2 - 1);
+      for (let i = 0; i < per; i++) {
+        const x = q.pos[i * 3], y = q.pos[i * 3 + 1];
+        const o = di * per + i;
+        positions[o * 3]     = px + (x * cosA - y * sinA);
+        positions[o * 3 + 1] = STREAK_Y;
+        positions[o * 3 + 2] = pz - (x * sinA + y * cosA);
+        uvs[o * 2]     = q.uv[i * 2];
+        uvs[o * 2 + 1] = q.uv[i * 2 + 1];
+        colors[o * 3] = cr; colors[o * 3 + 1] = cg; colors[o * 3 + 2] = cb;
+      }
+    });
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const mat = new THREE.MeshBasicMaterial({
+      map: streakTex,
+      vertexColors: true,
+      transparent: true,
+      opacity: STREAK_OPACITY,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+    const streaks = new THREE.Mesh(geo, mat);
+    streaks.frustumCulled = false;
+    scene.add(streaks);
   }
 
   /* ============ build order ============ */
