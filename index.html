@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Gear Ledger — 3D Archipelago (Concept Mockup)</title>
+<title>Gear Ledger — Neon District (Concept Mockup)</title>
 <script>
 /* Boot diagnostics: collects page errors so a stuck loader can report them in-DOM. */
 window.__glerrs=[];
@@ -27,7 +27,7 @@ window.__glStore={
 setTimeout(function(){
   var l=document.getElementById('loader'),m=document.getElementById('lmsg');
   if(l&&!l.classList.contains('done')&&m){
-    m.textContent=window.__glerrs.length?('Build error: '+window.__glerrs[0]):'Still building — the ocean is big today.';
+    m.textContent=window.__glerrs.length?('Build error: '+window.__glerrs[0]):'Still building — the city is waking up.';
     if(window.__glerrs.length)m.style.color='#ff9a9a';
   }
 },15000);
@@ -220,13 +220,13 @@ setTimeout(function(){
 </style>
 </head>
 <body>
-<div id="scene" role="application" tabindex="0" aria-label="3D Gear Ledger archipelago. Use arrow keys to choose an island, Enter to visit it."></div>
+<div id="scene" role="application" tabindex="0" aria-label="3D Gear Ledger neon district. Use arrow keys to choose an island, Enter to visit it."></div>
 <div id="vig" aria-hidden="true"></div>
 
 <div id="loader" aria-hidden="true">
   <div class="mark"></div>
   <h1>GEAR LEDGER</h1>
-  <p id="lmsg">Building the archipelago…</p>
+  <p id="lmsg">Building the Neon District…</p>
   <div id="lbar"><i></i></div>
 </div>
 
@@ -241,6 +241,7 @@ setTimeout(function(){
     <button class="hbtn" id="b-info" title="About this mockup (I)">ⓘ <span class="lbl">Info</span></button>
     <button class="hbtn" id="b-music" title="That Boy Hi Hat catalog playlist (Spotify)">♪ <span class="lbl">Music</span></button>
     <button class="hbtn" id="b-agents" title="Agents (A)">👥 <span class="lbl">Agents</span></button>
+    <button class="hbtn" id="b-night" title="Day/night (N)">🌃 <span class="lbl">Night</span></button>
   </div>
   <div id="musicticker" title="Simulated music taste of the SAMPLE cast"><span id="mt-note">♪</span><span id="mt-text">warming up the decks…</span><span class="svtag">SIM</span></div>
   <div id="bcast-mark">CWI · CUMULATIVE WEB INC</div>
@@ -339,6 +340,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import * as BGU from 'three/addons/utils/BufferGeometryUtils.js';
 import { classifyAgent, deriveLinks, proceduralForm, ROBOT_PARTS, BODY_ANCHORS, identityMounts, constructPlan, AUTO_COLOR, AUTO_CORE } from './stage-logic.js?v=20260917w2';
+/* Night-city environment plans (Athena, 2026-09-19) — internal names; user-facing copy says Neon District */
+import { nightCityPlan, signagePlan } from './nightcity.js?v=20260919n1';
+import { buildNightCity } from './nightcity-scene.js?v=20260919n1';
 /* Honest activity layer (2026-09-17): pure snapshot differ — flares, pulses, ribbons fire ONLY on real new ledger events */
 import { diffPointers, deriveCollabMoments, recentEvents, MAX_CONCURRENT_EFFECTS } from './activity.js?v=20260917a1';
 /* Athena districts (2026-09-17): home-district layout + data-driven district life */
@@ -350,7 +354,7 @@ import { cityPlan, towerTiers } from './city.js?v=20260917w4';
    0. CONFIG — palette, layout, fixed SAMPLE data
    ============================================================ */
 const P = {
-  skyTop:0x3FB6F2, skyHor:0xCDEFFF, fog:0xCDEFFF,
+  skyTop:0x060a10, skyHor:0x0b1e26, fog:0x0b1e26,
   water:0x2FB8C4, waterDeep:0x0E7C96, sand:0xEAD9A8,
   platTop:0xF7FAFC, platMetal:0xC9D6E0, platUnder:0x8FA3B5, trim:0xE8EEF3,
   wood:0xC89B6A, woodDark:0xA97F52, sandPatch:0xF2E3B8, grass:0x55C96B,
@@ -517,9 +521,8 @@ const TEX={ ocean:loadTex('textures/ocean.jpg'), sand:loadTex('textures/sand.jpg
 TEX.ocean.wrapS=TEX.ocean.wrapT=THREE.RepeatWrapping; TEX.ocean.repeat.set(10,10);
 
 /* ============================================================
-   3. SKY / HILLS / CLOUDS / SUN
+   3. SKY / HILLS / SUN  — night sky + stars come from buildNightCity
    ============================================================ */
-const clouds=[];
 let skyMatRef=null, sunSprRef=null;
 {
   const skyMat=new THREE.MeshBasicMaterial({map:TEX.sky,side:THREE.BackSide,fog:false});
@@ -551,53 +554,12 @@ let skyMatRef=null, sunSprRef=null;
       new THREE.MeshStandardMaterial({color:0x6FB377,roughness:1,flatShading:true}));
     hill.position.set(Math.cos(a)*r,4,Math.sin(a)*r); scene.add(hill);
   }
-  const cloudT=canvasTex(256,128,(g)=>{
-    for(let i=0;i<14;i++){
-      const x=40+Math.random()*176,y=45+Math.random()*40,r=18+Math.random()*26;
-      const gr=g.createRadialGradient(x,y,2,x,y,r);
-      gr.addColorStop(0,'rgba(255,255,255,.85)'); gr.addColorStop(1,'rgba(255,255,255,0)');
-      g.fillStyle=gr; g.beginPath(); g.arc(x,y,r,0,7); g.fill();
-    }
-  });
-  for(let i=0;i<8;i++){
-    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:cloudT,transparent:true,opacity:.85,depthWrite:false,fog:false}));
-    const a=Math.random()*Math.PI*2, r=150+Math.random()*120;
-    s.position.set(Math.cos(a)*r,70+Math.random()*40,Math.sin(a)*r);
-    const sc=40+Math.random()*40; s.scale.set(sc,sc*.45,1);
-    s.userData.v=.3+Math.random()*.4; scene.add(s); clouds.push(s);
-  }
 }
 
 /* ============================================================
-   4. WATER / SEABED
+   4. WATER / SEABED — REMOVED (Athena, 2026-09-19): wet street +
+   night sky come from buildNightCity; TEX.ocean key kept unused above.
    ============================================================ */
-let waterGeo, waterBase;
-{
-  waterGeo=new THREE.PlaneGeometry(400,400,96,96);
-  waterGeo.rotateX(-Math.PI/2);
-  waterBase=waterGeo.attributes.position.array.slice();
-  const water=new THREE.Mesh(waterGeo,new THREE.MeshStandardMaterial({color:P.water,
-    transparent:true,opacity:.82,roughness:.15,metalness:0,map:TEX.ocean}));
-  water.position.y=0; scene.add(water);
-
-  const depth=new THREE.Mesh(new THREE.PlaneGeometry(400,400),
-    new THREE.MeshBasicMaterial({color:P.waterDeep}));
-  depth.rotation.x=-Math.PI/2; depth.position.y=-6; scene.add(depth);
-
-  const seaMat=new THREE.MeshBasicMaterial({color:0xEAD9A8});
-  const seabed=new THREE.Mesh(new THREE.PlaneGeometry(400,400),seaMat);
-  seabed.rotation.x=-Math.PI/2; seabed.position.y=-5.5; scene.add(seabed);
-  new THREE.TextureLoader().load('textures/sand.jpg',t=>{
-    const c=document.createElement('canvas'); c.width=c.height=1024;
-    const g=c.getContext('2d'); g.drawImage(t.image,0,0,1024,1024);
-    for(let i=0;i<16;i++){
-      g.fillStyle=['#FF7E5F','#FFB27E','#D9C08A'][i%3]; g.globalAlpha=.8;
-      g.beginPath(); g.ellipse(Math.random()*1024,Math.random()*1024,20+Math.random()*40,14+Math.random()*26,Math.random()*3,0,7); g.fill();
-    }
-    const t2=new THREE.CanvasTexture(c); t2.colorSpace=THREE.SRGBColorSpace;
-    seaMat.map=t2; seaMat.needsUpdate=true;
-  });
-}
 
 /* ============================================================
    5. SHARED MATERIALS + GEOMETRY BATCH HELPER
@@ -656,16 +618,7 @@ function regSel(mesh,island,kind,title,rows){
   mesh.userData.sel=s; selectables.push(s); hitMeshes.push(mesh);
   return s;
 }
-const foamTex=canvasTex(256,256,(g,w,h)=>{
-  g.clearRect(0,0,w,h);
-  for(let i=0;i<60;i++){
-    const x=Math.random()*w,y=Math.random()*h,r=4+Math.random()*16;
-    const gr=g.createRadialGradient(x,y,1,x,y,r);
-    gr.addColorStop(0,'rgba(255,255,255,.9)'); gr.addColorStop(1,'rgba(255,255,255,0)');
-    g.fillStyle=gr; g.beginPath(); g.arc(x,y,r,0,7); g.fill();
-  }
-},{repeat:true});
-const foamMats=[];
+/* foam texture + materials REMOVED (Athena, 2026-09-19): curb glow replaces foam; wet street is built by buildNightCity */
 const islandById={};
 const signBoards={};
 const palmSpots=[]; // world {x,z,s}
@@ -688,15 +641,9 @@ function buildIsland(cfg){
   trim.rotation.x=Math.PI/2; trim.position.y=1.5; trim.scale.x=sx; g.add(trim);
   const glow=new THREE.Mesh(new THREE.CylinderGeometry((R-.15)*sx,(R-.15)*sx,.28,24,1,true),MAT.glowStrip);
   glow.position.y=-.6; g.add(glow);
-  // foam ring
-  const fm=new THREE.MeshBasicMaterial({map:foamTex.clone(),transparent:true,opacity:.85,depthWrite:false});
-  fm.map.wrapS=fm.map.wrapT=THREE.RepeatWrapping; fm.map.repeat.set(3,1); fm.map.needsUpdate=true; foamMats.push(fm);
-  const foam=new THREE.Mesh(new THREE.RingGeometry((R+.3)*sx,(R+1.5)*sx,48),fm);
-  foam.rotation.x=-Math.PI/2; foam.position.y=.02; g.add(foam);
-  // reflection fake
-  const refl=new THREE.Mesh(new THREE.CylinderGeometry(R*.85*sx,R*.45*sx,3,20),
-    new THREE.MeshBasicMaterial({color:0x0a4a5e,transparent:true,opacity:.12,depthWrite:false}));
-  refl.position.y=-2.2; g.add(refl);
+  // curb glow — emissive ring at island edge (Athena, 2026-09-19): night-street curb light
+  const curb=new THREE.Mesh(new THREE.RingGeometry((R+.3)*sx,(R+1.5)*sx,48), new THREE.MeshBasicMaterial({color:new THREE.Color(cfg.accent||'#35C4FF'),transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+  curb.rotation.x=-Math.PI/2; curb.position.y=.02; g.add(curb);
   // CWI logo decal, facing outward from hub
   const dir=_v1.set(cfg.x,cfg.z).normalize();
   if(cfg.id==='hub') dir.set(52,68).normalize();
@@ -1883,6 +1830,19 @@ for(const d of DISTRICT_DEFS){
   DISTRICT_NAMEPLATES.push(spr);
 }
 
+/* ===== NEON DISTRICT ENVIRONMENT (Athena, 2026-09-19) — studied from CD Projekt Red
+   (Night City visual language) and Ubisoft (urban pipelines); studied as masters,
+   no endorsement claimed. Data layer untouched: decks/beacons/forms/signs keep
+   their positions and live bindings. */
+const NC_PLAN = nightCityPlan(20260919);
+const NC_SIGNAGE = signagePlan(DISTRICT_DEFS);
+const NC = buildNightCity(THREE, scene, { anims, canvasTex, glowTex, plan: NC_PLAN,
+  signage: NC_SIGNAGE, districtDefs: DISTRICT_DEFS, islandById, reduced, renderer,
+  getMode: () => (window.WorldClient && window.WorldClient.mode === 'LIVE') ? 'LIVE' : 'SAMPLE' });
+let NC_NIGHT = 1, NC_NIGHT_TARGET = 1;
+anims.push((t, dt) => { const k = Math.min(1, (dt || 0.016) * 2); NC_NIGHT += (NC_NIGHT_TARGET - NC_NIGHT) * k; NC.setNight(NC_NIGHT); });
+window.__liveUpgradeHooks.push(() => { NC.setRingBadge((window.WorldClient && window.WorldClient.mode === 'LIVE') ? 'LIVE' : 'SAMPLE'); });
+
 /* ===== EARTH FRAME + PRIME (Athena, 2026-09-17) — digital-age Earth, founding city =====
    Twenty Minds decision: founding-city-prime-20minds.md. Pure plans come from
    earth.js / city.js (deterministic, abstract landforms — inspired by Earth's
@@ -1890,12 +1850,13 @@ for(const d of DISTRICT_DEFS){
    driven by the mean of the districts' live beacon targets — the city breathes
    with real ledger work, never timer-faked. */
 const EARTH = earthPlan();
+EARTH.ocean.y = -34; // abyss below the city (Athena, 2026-09-19): Earth becomes the dark depth plane
 const EARTH_BEACONS = [];
 {
   const ocean = new THREE.Mesh(
     new THREE.PlaneGeometry(EARTH.ocean.size, EARTH.ocean.size),
     new THREE.MeshBasicMaterial({ color: EARTH.ocean.color }));
-  ocean.rotation.x = -Math.PI/2; ocean.position.y = EARTH.ocean.y; scene.add(ocean);
+  ocean.rotation.x = -Math.PI/2; ocean.position.y = EARTH.ocean.y; ocean.material.color.set(0x04060a); scene.add(ocean);
   const grid = new THREE.GridHelper(EARTH.ocean.size, 65, 0x0e3a4a, 0x0a2530);
   grid.position.y = EARTH.ocean.y + 0.05;
   grid.material.transparent = true; grid.material.opacity = 0.35; scene.add(grid);
@@ -1907,15 +1868,15 @@ for (const p of EARTH.plates) {
   geo.rotateX(-Math.PI/2);
   const plate = new THREE.Mesh(geo,
     new THREE.MeshStandardMaterial({ color: 0x0e1a26, roughness: .9, metalness: .05 }));
-  plate.position.set(p.cx, 0.2, p.cz); scene.add(plate);
-  const coastPts = p.polygon.map(([x, z]) => new THREE.Vector3(x, 2.9, z));
+  plate.position.set(p.cx, -40, p.cz); scene.add(plate);
+  const coastPts = p.polygon.map(([x, z]) => new THREE.Vector3(x, -37, z));
   scene.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(coastPts),
     new THREE.LineBasicMaterial({ color: 0x35C4FF, transparent: true, opacity: .8 })));
   for (const b of p.beacons) {
     const m = new THREE.Mesh(new THREE.SphereGeometry(.9, 10, 10),
       new THREE.MeshBasicMaterial({ color: 0x35C4FF, transparent: true, opacity: .5,
         blending: THREE.AdditiveBlending, depthWrite: false }));
-    m.position.set(b.x, 3.4, b.z); scene.add(m);
+    m.position.set(b.x, -36.5, b.z); scene.add(m);
     EARTH_BEACONS.push({ mesh: m, ph: (b.x * 13.7 + b.z * 7.3) % 6.28 });
   }
 }
@@ -2898,6 +2859,8 @@ function hideHint(){ if(hintHidden) return; hintHidden=true;
   document.getElementById('hint').classList.remove('open'); }
 document.getElementById('hint-explore').onclick=hideHint;
 document.getElementById('hint-tour').onclick=()=>{ hideHint(); startTour(); };
+/* Day/night toggle (Athena, 2026-09-19): eases the Neon District env between night (1) and day (0) */
+document.getElementById('b-night').onclick=()=>{ NC_NIGHT_TARGET = NC_NIGHT_TARGET > .5 ? 0 : 1; document.getElementById('b-night').querySelector('.lbl').textContent = NC_NIGHT_TARGET > .5 ? 'Night' : 'Day'; };
 
 const clock=new THREE.Clock();
 let firstFrame=true;
@@ -2917,16 +2880,7 @@ function animate(){
     renderer.toneMappingExposure=.65+.5*e;
     if(k>=1) bootRamp=false;
   }
-  if(!reduced){
-    const wp=waterGeo.attributes.position;
-    for(let i=0;i<wp.count;i++){
-      const x=waterBase[i*3], z=waterBase[i*3+2];
-      wp.array[i*3+1]=Math.sin(x*.08+t*1.1)*.5+Math.cos(z*.06+t*.8)*.5+Math.sin((x+z)*.03+t*.5)*.3;
-    }
-    wp.needsUpdate=true; waterGeo.computeVertexNormals();
-  }
-  foamMats.forEach(f=>{ f.map.offset.x+=dt*.03; });
-  for(const c of clouds){ c.position.x+=c.userData.v*dt; if(c.position.x>320) c.position.x=-320; }
+  /* water waves / foam drift / cloud drift REMOVED (Athena, 2026-09-19): night env drives the loop via anims */
   for(const f of anims) f(t,dt);
   simTick(dt);
   if(tour.active&&tour.phase==='dwell'){
@@ -2945,7 +2899,7 @@ function animate(){
   if(firstFrame){ firstFrame=false; runLoader(); }
 }
 function runLoader(){
-  const msgs=['Building the archipelago…','Planting the palms…','Lighting the SAMPLE data…'];
+  const msgs=['Building the Neon District…','Raising the towers…','Lighting the SAMPLE data…'];
   msgs.forEach((m,i)=>setTimeout(()=>{ lmsg.textContent=m; lfill.style.width=(55+i*22)+'%'; },i*350));
   setTimeout(()=>{
     lfill.style.width='100%';
@@ -2963,7 +2917,7 @@ function runLoader(){
     },350);
   },1150);
 }
-setTimeout(()=>{ if(!loader.classList.contains('done')) lmsg.textContent='Still building — the ocean is big today.'; },12000);
+setTimeout(()=>{ if(!loader.classList.contains('done')) lmsg.textContent='Still building — the city is waking up.'; },12000);
 animate();
 </script>
 </body>
