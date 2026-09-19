@@ -220,7 +220,7 @@ setTimeout(function(){
 </style>
 </head>
 <body>
-<div id="scene" role="application" tabindex="0" aria-label="3D Gear Ledger neon district. Use arrow keys to choose an island, Enter to visit it."></div>
+<div id="scene" role="application" tabindex="0" aria-label="3D Gear Ledger neon district. Use arrow keys to choose a plaza, Enter to visit it."></div>
 <div id="vig" aria-hidden="true"></div>
 
 <div id="loader" aria-hidden="true">
@@ -273,13 +273,13 @@ setTimeout(function(){
 <div class="sheet" id="legend" role="dialog" aria-label="Legend">
   <button class="x" data-close="legend" aria-label="Close">✕</button>
   <h2>What the colors mean</h2>
-  <div class="li"><i>🟢</i><span><b>Green pavilion glow</b> — department pavilion (DISTRIBUTION island). One per CWI department.</span></div>
-  <div class="li"><i>🟡</i><span><b>Gold monument</b> — most-traveled gear pedestal (LEGENDS island). Taller glow = more handoffs (SAMPLE scale).</span></div>
-  <div class="li"><i>🔵</i><span><b>Blue podium tower</b> — overall leaderboard rank (LEADERBOARDS island). Height = rank position.</span></div>
-  <div class="li"><i>🟣</i><span><b>Purple arc</b> — gear currently in transit (HANDOFFS island). Animated dash = live-sample movement.</span></div>
-  <div class="li"><i>⚪</i><span><b>White walkway plaque</b> — one handoff record in chronological order (CHAIN island).</span></div>
-  <div class="li"><i>🌉</i><span><b>Bridge</b> — a handoff relationship between two islands' domains.</span></div>
-  <div class="li"><i>🏙️</i><span><b>PRIME, the founding city</b> — the first city the agents built for themselves, raised on light above the hub island. Its brightness follows live ledger work. The world frame is inspired by Earth's geography — built for agents, not a replica of any real place.</span></div>
+  <div class="li"><i>🟢</i><span><b>Green pavilion glow</b> — department pavilion (DISTRIBUTION plaza). One per CWI department.</span></div>
+  <div class="li"><i>🟡</i><span><b>Gold monument</b> — most-traveled gear pedestal (LEGENDS plaza). Taller glow = more handoffs (SAMPLE scale).</span></div>
+  <div class="li"><i>🔵</i><span><b>Blue podium tower</b> — overall leaderboard rank (LEADERBOARDS plaza). Height = rank position.</span></div>
+  <div class="li"><i>🟣</i><span><b>Purple arc</b> — gear currently in transit (HANDOFFS plaza). Animated dash = live-sample movement.</span></div>
+  <div class="li"><i>⚪</i><span><b>White walkway plaque</b> — one handoff record in chronological order (CHAIN plaza).</span></div>
+  <div class="li"><i>🌉</i><span><b>Bridge</b> — a handoff relationship between two districts' domains.</span></div>
+  <div class="li"><i>🏙️</i><span><b>PRIME, the founding city</b> — the first city the agents built for themselves, raised on light above the hub plaza. Its brightness follows live ledger work. The world frame is inspired by Earth's geography — built for agents, not a replica of any real place.</span></div>
   <p style="color:#bfe9ff;font-size:12px">All colors describe mockup semantics. All underlying figures are SAMPLE data.</p>
 </div>
 
@@ -293,7 +293,7 @@ setTimeout(function(){
 <div class="sheet" id="info" role="dialog" aria-label="About">
   <button class="x" data-close="info" aria-label="Close">✕</button>
   <h2>Concept mockup — not the live ledger.</h2>
-  <p>This 3D archipelago is a design concept for the CWI Gear Ledger. All figures are illustrative sample data, not live ledger values. Departments, agents, gear items, counts, routes, and timelines shown here are invented for the mockup and do not represent real CWI operations.</p>
+  <p>This 3D Neon District is a design concept for the CWI Gear Ledger. All figures are illustrative sample data, not live ledger values. Departments, agents, gear items, counts, routes, and timelines shown here are invented for the mockup and do not represent real CWI operations.</p>
   <p>In the live product, each figure would link to a signed, verifiable handoff record. Here, "View evidence" explains what that link would do.</p>
   <p>Built as a UX exploration — nothing here sends, posts, or signs anything.</p>
   <p>PRIME is the founding city the agents built for themselves. The world frame is inspired by Earth's geography — it is not a replica of any real place, and no humans live here.</p>
@@ -308,9 +308,9 @@ setTimeout(function(){
 </div>
 
 <div class="sheet" id="hint" role="dialog" aria-label="Welcome">
-  <h2>Welcome to the Gear Ledger archipelago.</h2>
-  <p>Drag to orbit · Pinch or scroll to zoom · Tap an island to visit.<br>
-  Every number you see is SAMPLE data — a concept mockup, not the live ledger.</p>
+  <h2>Welcome to the Neon District.</h2>
+  <p>Drag to orbit · Pinch or scroll to zoom · Tap a plaza to visit.<br>
+    Every number you see is SAMPLE data — a concept mockup, not the live ledger.</p>
   <div class="row">
     <button class="ibtn" id="hint-explore">Start exploring</button>
     <button class="ibtn ghost" id="hint-tour">Take the auto-tour</button>
@@ -342,7 +342,7 @@ import * as BGU from 'three/addons/utils/BufferGeometryUtils.js';
 import { classifyAgent, deriveLinks, proceduralForm, ROBOT_PARTS, BODY_ANCHORS, identityMounts, constructPlan, AUTO_COLOR, AUTO_CORE } from './stage-logic.js?v=20260917w2';
 /* Night-city environment plans (Athena, 2026-09-19) — internal names; user-facing copy says Neon District */
 import { nightCityPlan, signagePlan } from './nightcity.js?v=20260919n1';
-import { buildNightCity } from './nightcity-scene.js?v=20260919n1';
+import { buildNightCity } from './nightcity-scene.js?v=20260919n3';
 /* Honest activity layer (2026-09-17): pure snapshot differ — flares, pulses, ribbons fire ONLY on real new ledger events */
 import { diffPointers, deriveCollabMoments, recentEvents, MAX_CONCURRENT_EFFECTS } from './activity.js?v=20260917a1';
 /* Athena districts (2026-09-17): home-district layout + data-driven district life */
@@ -353,15 +353,13 @@ import { cityPlan, towerTiers } from './city.js?v=20260917w4';
 /* ============================================================
    0. CONFIG — palette, layout, fixed SAMPLE data
    ============================================================ */
+/* Neon District palette (2026-09-19): night-city darks + neon accents. */
 const P = {
-  skyTop:0x060a10, skyHor:0x0b1e26, fog:0x0b1e26,
-  water:0x2FB8C4, waterDeep:0x0E7C96, sand:0xEAD9A8,
-  platTop:0xF7FAFC, platMetal:0xC9D6E0, platUnder:0x8FA3B5, trim:0xE8EEF3,
-  wood:0xC89B6A, woodDark:0xA97F52, sandPatch:0xF2E3B8, grass:0x55C96B,
+  fog:0x0b1e26,
+  platTop:0x0D1620, platMetal:0x1A2634, platUnder:0x0A1018, trim:0x2A3A4A,
   glowBlue:0x35C4FF, holo:0x54D8FF, gold:0xFFC93C, goldDeep:0xE09E1F,
-  signBoard:0x101C26, signText:0xFFFFFF, signSub:0xBFE9FF,
-  palmTrunk:0x8A5A33, palmLight:0x4FD06E, palmDark:0x2E9E4F,
-  robotWhite:0xF4F7FA, manta:0x3A4A5A, coral:0xFF7E5F,
+  signBoard:0x0A141E, signText:0xFFFFFF, signSub:0xBFE9FF,
+  neonPink:0xFF3DF0, neonViolet:0xB388FF, amber:0xFFB224,
 };
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const nohint = /[?&]nohint=1/.test(location.search);
@@ -465,13 +463,12 @@ try{
 }catch(e){
   window.__glerrs.push('WEBGL: '+(e&&e.message||e));
   const lm=document.getElementById('lmsg');
-  if(lm){lm.style.color='#ffb020';lm.textContent='The 3D archipelago needs WebGL, which this browser has disabled. The concept: six islands visualizing the Gear Ledger\u2019s sections.';}
+  if(lm){lm.style.color='#ffb020';lm.textContent='The 3D Neon District needs WebGL, which this browser has disabled. The concept: six plazas visualizing the Gear Ledger\u2019s sections.';}
   throw e;
 }
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
 renderer.setSize(innerWidth,innerHeight);
-renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled=false;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=1.15;
 renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -497,99 +494,53 @@ controls.autoRotateSpeed=.5;
 /* Broadcast mode: camera is director-driven — no user input. */
 if(broadcast) controls.enabled=false;
 
-const sun=new THREE.DirectionalLight(0xFFF2D8,2.6);
-sun.position.set(-60,90,-40); sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);
-Object.assign(sun.shadow.camera,{left:-70,right:70,top:70,bottom:-70,far:260});
-sun.shadow.bias=-0.0005;
-scene.add(sun);
-const hemi=new THREE.HemisphereLight(0xBFE3FF,0x3E7C6B,.75); scene.add(hemi);
-scene.add(new THREE.AmbientLight(0xEAF6FF,.25));
-/* Design-masters review (A1): sunrise ramp state — world "wakes up" on boot. */
-if(!reduced){ sun.intensity=1.2; hemi.intensity=.35; renderer.toneMappingExposure=.65; }
-let bootT0=0, bootRamp=false;
-function pointLight(color,intensity,dist,x,y,z){
-  const l=new THREE.PointLight(color,intensity,dist,2); l.position.set(x,y,z); scene.add(l); return l;
-}
+/* Neon District night lighting (2026-09-19): no sun, no shadows, no point lights —
+   the buildNightCity night rig carries key/fill. Hemi + ambient keep unlit faces readable. */
+const hemi=new THREE.HemisphereLight(0x1E3A52,0x0A1018,.55); scene.add(hemi);
+scene.add(new THREE.AmbientLight(0x1A2A3A,.18));
 
 /* generated texture assets */
 const texLoader=new THREE.TextureLoader();
 function loadTex(path){
   const t=texLoader.load(path); t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=4; return t;
 }
-const TEX={ ocean:loadTex('textures/ocean.jpg'), sand:loadTex('textures/sand.jpg'), sky:loadTex('textures/sky.jpg'), logo:loadTex('textures/cwi-logo.jpg') };
-TEX.ocean.wrapS=TEX.ocean.wrapT=THREE.RepeatWrapping; TEX.ocean.repeat.set(10,10);
+const TEX={ logo:loadTex('textures/cwi-logo.jpg') };
 
-/* ============================================================
-   3. SKY / HILLS / SUN  — night sky + stars come from buildNightCity
-   ============================================================ */
-let skyMatRef=null, sunSprRef=null;
-{
-  const skyMat=new THREE.MeshBasicMaterial({map:TEX.sky,side:THREE.BackSide,fog:false});
-  skyMatRef=skyMat;
-  skyMat.color.set(0xdff2ff);
-  scene.add(new THREE.Mesh(new THREE.SphereGeometry(380,24,16),skyMat));
-
-  const sunSpr=new THREE.Sprite(new THREE.SpriteMaterial({
-    map:glowTex('#FFF3C4'),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.95,fog:false}));
-  sunSprRef=sunSpr;
-  sunSpr.position.set(-190,190,-140); sunSpr.scale.set(90,90,1); scene.add(sunSpr);
-
-  const hillTex=(color)=>canvasTex(1024,128,(g,w,h)=>{
-    g.clearRect(0,0,w,h); g.fillStyle=color;
-    g.beginPath(); g.moveTo(0,h);
-    for(let x=0;x<=w;x+=32){ const y=h*.35+Math.sin(x*.05)*22+Math.random()*18; g.lineTo(x,y); }
-    g.lineTo(w,h); g.closePath(); g.fill();
-  });
-  const mkHills=(r,color,op)=>{
-    const t=hillTex(color); t.wrapS=THREE.RepeatWrapping; t.repeat.set(6,1);
-    const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,60,48,1,true),
-      new THREE.MeshBasicMaterial({map:t,transparent:true,opacity:op,side:THREE.DoubleSide,fog:true}));
-    m.position.y=8; scene.add(m);
-  };
-  mkHills(300,'#5FA86B',.95); mkHills(340,'#8CC49A',.7);
-  for(let i=0;i<6;i++){
-    const a=i/6*Math.PI*2+.4, r=275+Math.random()*20;
-    const hill=new THREE.Mesh(new THREE.ConeGeometry(28+Math.random()*14,55+Math.random()*25,6),
-      new THREE.MeshStandardMaterial({color:0x6FB377,roughness:1,flatShading:true}));
-    hill.position.set(Math.cos(a)*r,4,Math.sin(a)*r); scene.add(hill);
-  }
-}
+/* §3 SKY/HILLS/SUN removed (2026-09-19): night sky, stars and sun rig now come from buildNightCity. */
 
 /* ============================================================
    4. WATER / SEABED — REMOVED (Athena, 2026-09-19): wet street +
-   night sky come from buildNightCity; TEX.ocean key kept unused above.
+   night sky come from buildNightCity; only the CWI logo decal texture remains.
    ============================================================ */
 
 /* ============================================================
    5. SHARED MATERIALS + GEOMETRY BATCH HELPER
    ============================================================ */
+/* Neon District materials (2026-09-19). Deleted legacy keys: wood, woodDark, sand,
+   grass, trunk, white, robotWhite, sandPatch — replaced by platform/platformDark/shell/robotShell. */
 const MAT={
-  top:new THREE.MeshStandardMaterial({color:P.platTop,roughness:.55,metalness:.15}),
+  top:new THREE.MeshStandardMaterial({color:P.platTop,roughness:.5,metalness:.3}),
   metal:new THREE.MeshStandardMaterial({color:P.platMetal,roughness:.35,metalness:.75}),
-  under:new THREE.MeshStandardMaterial({color:P.platUnder,roughness:.8,metalness:.3,flatShading:true}),
+  under:new THREE.MeshStandardMaterial({color:P.platUnder,roughness:.85,metalness:.3,flatShading:true}),
   trim:new THREE.MeshStandardMaterial({color:P.trim,roughness:.25,metalness:.9}),
   glowStrip:new THREE.MeshStandardMaterial({color:0x0B2536,emissive:P.glowBlue,emissiveIntensity:2.2,roughness:.4}),
-  wood:new THREE.MeshStandardMaterial({color:P.wood,roughness:.8}),
-  woodDark:new THREE.MeshStandardMaterial({color:P.woodDark,roughness:.85}),
-  sand:new THREE.MeshStandardMaterial({color:P.sandPatch,roughness:1}),
-  grass:new THREE.MeshStandardMaterial({color:P.grass,roughness:1}),
-  white:new THREE.MeshStandardMaterial({color:0xffffff,roughness:.5}),
-  robotWhite:new THREE.MeshStandardMaterial({color:P.robotWhite,roughness:.35,metalness:.25}),
+  platform:new THREE.MeshStandardMaterial({color:0x141E2A,roughness:.6,metalness:.4}),
+  platformDark:new THREE.MeshStandardMaterial({color:0x0C141D,roughness:.8,metalness:.2}),
+  shell:new THREE.MeshStandardMaterial({color:0x2A3644,roughness:.45,metalness:.5}),
+  robotShell:new THREE.MeshStandardMaterial({color:0x2A3644,roughness:.4,metalness:.3}),
   visor:new THREE.MeshStandardMaterial({color:0x101C26,emissive:P.glowBlue,emissiveIntensity:1.6,roughness:.15,metalness:.6}),
   gold:new THREE.MeshStandardMaterial({color:P.gold,emissive:P.goldDeep,emissiveIntensity:.6,roughness:.3,metalness:1}),
-  trunk:new THREE.MeshStandardMaterial({color:P.palmTrunk,roughness:.9}),
-  deck:new THREE.MeshStandardMaterial({color:P.platTop,roughness:.5,metalness:.3}),
+  deck:new THREE.MeshStandardMaterial({color:0x101820,roughness:.55,metalness:.35}),
 };
+/* dark asphalt deck texture — near-black fill + faint lane speckle (replaces the light deck) */
 MAT.deck.map=canvasTex(512,512,(g,w,h)=>{
-  g.fillStyle='#F7FAFC'; g.fillRect(0,0,w,h);
-  g.strokeStyle='rgba(160,175,190,.14)';
-  for(let i=0;i<1200;i++){ g.beginPath(); const x=Math.random()*w,y=Math.random()*h;
-    g.moveTo(x,y); g.lineTo(x+Math.random()*8-4,y+Math.random()*8-4); g.stroke(); }
-  g.strokeStyle='#E3EAF0'; g.lineWidth=2;
-  [40,120,200].forEach(r=>{ g.beginPath(); g.arc(w/2,h/2,r,0,7); g.stroke(); });
-  g.fillStyle='#C9D6E0';
-  g.beginPath(); g.moveTo(w/2,h/2-26); g.lineTo(w/2+7,h/2+10); g.lineTo(w/2-7,h/2+10); g.closePath(); g.fill();
+  g.fillStyle='#101820'; g.fillRect(0,0,w,h);
+  for(let i=0;i<1400;i++){
+    g.fillStyle=`rgba(120,150,180,${(Math.random()*.05).toFixed(3)})`;
+    g.fillRect(Math.random()*w,Math.random()*h,1.5,1.5);
+  }
+  g.strokeStyle='rgba(53,196,255,.10)'; g.lineWidth=2;
+  [60,140,220].forEach(r=>{ g.beginPath(); g.arc(w/2,h/2,r,0,7); g.stroke(); });
 },{repeat:true});
 
 function put(list,geo,x=0,y=0,z=0,rx=0,ry=0,rz=0,sx=1,sy,sz){
@@ -609,7 +560,10 @@ function buildMesh(list,material,shadow=true){
 const _v1=new THREE.Vector3(), _v2=new THREE.Vector3(), _v3=new THREE.Vector3();
 
 /* ============================================================
-   6. ISLAND FACTORY / SIGNS / BRIDGES
+   6. NEON PLAZA FACTORY / SIGNS / BRIDGES
+   Static plaza geometry is baked to world coords into module-level merge lists
+   and merged after the island loop — 6 draw calls for all 18 plazas.
+   Per-plaza groups keep the selection proxy + islandById registry.
    ============================================================ */
 const selectables=[];   // {root, island, kind, title, rows}
 const hitMeshes=[];
@@ -618,81 +572,83 @@ function regSel(mesh,island,kind,title,rows){
   mesh.userData.sel=s; selectables.push(s); hitMeshes.push(mesh);
   return s;
 }
-/* foam texture + materials REMOVED (Athena, 2026-09-19): curb glow replaces foam; wet street is built by buildNightCity */
+/* putC: put() + per-vertex color fill, for district-accent merged rings */
+function putC(list,geo,hex,x=0,y=0,z=0,rx=0,ry=0,rz=0,sx=1,sy,sz){
+  const g=put(list,geo,x,y,z,rx,ry,rz,sx,sy,sz);
+  const c=new THREE.Color(hex), n=g.attributes.position.count, a=new Float32Array(n*3);
+  for(let i=0;i<n;i++){ a[i*3]=c.r; a[i*3+1]=c.g; a[i*3+2]=c.b; }
+  g.setAttribute('color',new THREE.BufferAttribute(a,3));
+  return g;
+}
 const islandById={};
 const signBoards={};
-const palmSpots=[]; // world {x,z,s}
+/* Neon Plaza static-geometry merge lists — world-baked, merged after the island loop */
+const towerL=[], discL=[], deckL=[], trimL=[], curbL=[], logoL=[];
+const bladeL=[], poleL=[], collarL=[];
 
-function buildIsland(cfg){
+/* Neon Plaza factory — tapered dark tower + plaza disc + deck inset, all merged
+   globally after the loop. regSel rides on an invisible hit proxy per plaza
+   (kind 'ISLAND' kept: the inspector's focusIsland gate switches on it). */
+function buildPlaza(cfg){
   const g=new THREE.Group(); g.position.set(cfg.x,0,cfg.z);
-  const R=cfg.r, sx=cfg.sx||1;
-  const under=[], metal=[], topL=[];
-  put(under,new THREE.CylinderGeometry(R,R*.72,3.2,24),0,-1.6,0,0,0,0,sx,1,1);
-  put(metal,new THREE.CylinderGeometry(R,R,2.0,24),0,0,0,0,0,0,sx,1,1);
-  put(topL,new THREE.CylinderGeometry(R+.25,R+.25,.5,24),0,1.25,0,0,0,0,sx,1,1);
-  const mUnder=buildMesh(under,MAT.under), mMetal=buildMesh(metal,MAT.metal), mTop=buildMesh(topL,MAT.top);
-  g.add(mUnder,mMetal,mTop);
-  regSel(mTop,cfg.id,'ISLAND',cfg.name,[]); regSel(mMetal,cfg.id,'ISLAND',cfg.name,[]);
-  // deck inset
-  const deck=new THREE.Mesh(new THREE.CylinderGeometry((R-1.2)*sx,R-1.2,0.06,24),MAT.deck);
-  deck.position.y=1.53; deck.receiveShadow=true; g.add(deck);
-  // trim ring + underglow
-  const trim=new THREE.Mesh(new THREE.TorusGeometry((R+.25)*sx,.09,8,64),MAT.trim);
-  trim.rotation.x=Math.PI/2; trim.position.y=1.5; trim.scale.x=sx; g.add(trim);
-  const glow=new THREE.Mesh(new THREE.CylinderGeometry((R-.15)*sx,(R-.15)*sx,.28,24,1,true),MAT.glowStrip);
-  glow.position.y=-.6; g.add(glow);
-  // curb glow — emissive ring at island edge (Athena, 2026-09-19): night-street curb light
-  const curb=new THREE.Mesh(new THREE.RingGeometry((R+.3)*sx,(R+1.5)*sx,48), new THREE.MeshBasicMaterial({color:new THREE.Color(cfg.accent||'#35C4FF'),transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
-  curb.rotation.x=-Math.PI/2; curb.position.y=.02; g.add(curb);
-  // CWI logo decal, facing outward from hub
+  const R=cfg.r, sx=cfg.sx||1, accent=cfg.accent||'#35C4FF';
+  put(towerL,new THREE.CylinderGeometry(R,R*.72,4.2,24),cfg.x,-1.1,cfg.z,0,0,0,sx,1,1);
+  put(discL,new THREE.CylinderGeometry(R+.25,R+.25,.5,24),cfg.x,1.25,cfg.z,0,0,0,sx,1,1);
+  put(deckL,new THREE.CylinderGeometry((R-1.2)*sx,R-1.2,0.06,24),cfg.x,1.53,cfg.z);
+  putC(trimL,new THREE.TorusGeometry((R+.25)*sx,.09,8,64),accent,cfg.x,1.5,cfg.z,Math.PI/2,0,0,sx,1,1);
+  putC(curbL,new THREE.RingGeometry((R+.3)*sx,(R+1.5)*sx,48),accent,cfg.x,.02,cfg.z,-Math.PI/2,0,0);
+  /* CWI logo decal, facing outward from hub */
   const dir=_v1.set(cfg.x,cfg.z).normalize();
   if(cfg.id==='hub') dir.set(52,68).normalize();
-  const logo=new THREE.Mesh(new THREE.CircleGeometry(1.6,24),
-    new THREE.MeshBasicMaterial({map:TEX.logo,transparent:true}));
-  logo.position.set(dir.x*(R*sx+.06),0,dir.y*(R+.06));
-  logo.lookAt(cfg.x+dir.x*10,0,cfg.z+dir.y*10);
-  g.add(logo);
+  put(logoL,new THREE.CircleGeometry(1.6,24),
+    cfg.x+dir.x*(R*sx+.06),0,cfg.z+dir.y*(R+.06),0,Math.atan2(dir.x,dir.y),0);
+  /* selection proxy: invisible hit disc (material.visible=false keeps it out of
+     the render pass while raycast still hits it) */
+  const proxy=new THREE.Mesh(new THREE.CircleGeometry((R+.3)*sx,24),
+    new THREE.MeshBasicMaterial({visible:false}));
+  proxy.rotation.x=-Math.PI/2; proxy.position.y=1.55; g.add(proxy);
+  regSel(proxy,cfg.id,'ISLAND',cfg.name,[]);
   scene.add(g); islandById[cfg.id]={cfg,group:g};
   return g;
 }
-ISLANDS.forEach(buildIsland);
-
-/* palms spots per island (world coords) */
+ISLANDS.forEach(buildPlaza);
+/* merged plaza statics — 6 draw calls for all 18 plazas */
 {
-  const counts={hub:8,dist:8,leads:6,hands:7,chain:5,legends:8,stage:0};
-  for(const cfg of ISLANDS){
-    const n=(counts[cfg.id]!==undefined?counts[cfg.id]:6), sx=cfg.sx||1;
-    for(let i=0;i<n;i++){
-      const a=(i/n)*Math.PI*2+Math.random()*.5;
-      const rr=(cfg.r-2.6+Math.random()*1.6);
-      palmSpots.push({x:cfg.x+Math.cos(a)*rr*sx, z:cfg.z+Math.sin(a)*rr, s:.8+Math.random()*.5});
-    }
-  }
+  const towers=buildMesh(towerL,MAT.under,false); if(towers) scene.add(towers);
+  const discs=buildMesh(discL,MAT.top,false); if(discs) scene.add(discs);
+  const decks=buildMesh(deckL,MAT.deck,false); if(decks) scene.add(decks);
+  const trims=buildMesh(trimL,new THREE.MeshBasicMaterial({vertexColors:true}),false); if(trims) scene.add(trims);
+  const curbs=buildMesh(curbL,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:.5,
+    blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}),false); if(curbs) scene.add(curbs);
+  const logos=buildMesh(logoL,new THREE.MeshBasicMaterial({map:TEX.logo,transparent:true}),false); if(logos) scene.add(logos);
 }
 
-/* signage — badges are mode-aware (see refreshSignBadges below) */
+/* signage — dark neon blades (merged globally), one unique face texture per plaza.
+   lookAt orientation logic unchanged. Badges stay mode-aware via refreshSignBadges. */
 const SIGN_FACES=[];
 function buildSign(cfg){
   const grp=new THREE.Group();
-  const board=new THREE.Mesh(new RoundedBoxGeometry(10,5.6,.5,4,.35),
-    new THREE.MeshStandardMaterial({color:P.signBoard,transparent:true,opacity:.94,roughness:.3,metalness:.1}));
-  board.position.y=8.5; board.rotation.x=-.07; grp.add(board);
+  const dir=_v1.set(cfg.x,cfg.z);
+  if(cfg.id==='hub') dir.set(52,68); else dir.multiplyScalar(2);
+  const yaw=Math.atan2(dir.x-cfg.x,dir.y-cfg.z);
+  /* dark blade board — baked to world coords, merged globally */
+  const bg=new RoundedBoxGeometry(10,5.6,.5,4,.35);
+  bg.rotateX(-.07); bg.rotateY(yaw); bg.translate(cfg.x,8.5,cfg.z);
+  bladeL.push(bg);
+  /* face plane — individual per plaza, unique signTexture */
   const face=new THREE.Mesh(new THREE.PlaneGeometry(9.4,5.0),
     new THREE.MeshBasicMaterial({map:signTexture(cfg.name,cfg.tag,cfg.accent,'SAMPLE'),transparent:true}));
   face.position.set(0,8.5,.28); face.rotation.x=-.07; grp.add(face);
-  const poles=[];
-  put(poles,new THREE.CylinderGeometry(.18,.18,6,10),-3.2,4.5,-.3);
-  put(poles,new THREE.CylinderGeometry(.18,.18,6,10),3.2,4.5,-.3);
-  grp.add(buildMesh(poles,MAT.metal));
-  const collar=new THREE.Mesh(new THREE.TorusGeometry(.5,.09,8,20),MAT.glowStrip);
-  collar.rotation.x=Math.PI/2; collar.position.y=5.9; grp.add(collar);
-  const dir=_v1.set(cfg.x,cfg.z);
-  if(cfg.id==='hub') dir.set(52,68); else dir.multiplyScalar(2);
+  /* poles + collar — baked to world coords, merged globally */
+  const cy=Math.cos(yaw), sy=Math.sin(yaw);
+  for(const lx of [-3.2,3.2])
+    put(poleL,new THREE.CylinderGeometry(.18,.18,6,10),cfg.x+lx*cy-.3*sy,4.5,cfg.z-lx*sy-.3*cy);
+  put(collarL,new THREE.TorusGeometry(.5,.09,8,20),cfg.x,5.9,cfg.z,Math.PI/2,0,0);
   grp.position.set(cfg.x,0,cfg.z);
   grp.lookAt(dir.x,0,dir.y);
   scene.add(grp);
-  regSel(board,cfg.id,'ISLAND',cfg.name,[]);
-  signBoards[cfg.id]=board;
+  regSel(face,cfg.id,'ISLAND',cfg.name,[]);
+  signBoards[cfg.id]=face;
   SIGN_FACES.push({face,cfg});
   return grp;
 }
@@ -719,21 +675,27 @@ function refreshSignBadges(){
 }
 window.__liveUpgradeHooks.push(()=>{ refreshSignBadges(); });
 ISLANDS.forEach(buildSign);
-
-/* bridges */
+/* merged sign statics — 3 draw calls for all 18 signs (faces stay individual: 18) */
 {
-  const wood=[], rails=[], glowR=[], pilings=[];
-  const up=_v3.set(0,1,0);
-  function seg(a,b,w,h,mat4){
+  const blades=buildMesh(bladeL,new THREE.MeshStandardMaterial({color:P.signBoard,transparent:true,opacity:.94,roughness:.3,metalness:.1}),false);
+  if(blades) scene.add(blades);
+  const poles=buildMesh(poleL,MAT.metal,false); if(poles) scene.add(poles);
+  const collars=buildMesh(collarL,MAT.glowStrip,false); if(collars) scene.add(collars);
+}
+
+/* bridges — neon spans between plazas: deck / rails / rail glow, 3 draw calls total */
+{
+  const bdeck=[], brail=[], bglow=[];
+  function seg(a,b,w,h,list){
     const len=a.distanceTo(b);
     const mid=_v1.addVectors(a,b).multiplyScalar(.5);
     const yaw=Math.atan2(b.x-a.x,b.z-a.z);
-    put(mat4,new THREE.BoxGeometry(w,h,1),mid.x,mid.y,mid.z,0,yaw,0,1,1,len);
+    put(list,new THREE.BoxGeometry(w,h,1),mid.x,mid.y,mid.z,0,yaw,0,1,1,len);
   }
   for(const [aid,bid] of BRIDGES){
     const A=islandById[aid].cfg, B=islandById[bid].cfg;
     const a=new THREE.Vector3(A.x,0,A.z), b=new THREE.Vector3(B.x,0,B.z);
-    const d=_v1.subVectors(b,a); const dist=d.length(); d.normalize();
+    const d=_v1.subVectors(b,a); d.normalize();
     const p0=a.clone().addScaledVector(d,(A.r*(A.sx||1))*.92);
     const p1=b.clone().addScaledVector(d,-(B.r*(B.sx||1))*.92);
     const N=5;
@@ -744,27 +706,22 @@ ISLANDS.forEach(buildSign);
       const py=1.7+Math.sin(t*Math.PI)*1.2;
       const p=new THREE.Vector3(px,py,pz);
       if(prev){
-        seg(prev,p,2.6,.35,wood);
+        seg(prev,p,2.6,.35,bdeck);
         const side=new THREE.Vector3().subVectors(p,prev).normalize();
         const lat=new THREE.Vector3(-side.z,0,side.x);
         for(const s of [-1.25,1.25]){
           const r0=prev.clone().addScaledVector(lat,s).add(new THREE.Vector3(0,.55,0));
           const r1=p.clone().addScaledVector(lat,s).add(new THREE.Vector3(0,.55,0));
-          seg(r0,r1,.12,.5,wood);
-          seg(r0.clone().add(new THREE.Vector3(0,.32,0)),r1.clone().add(new THREE.Vector3(0,.32,0)),.1,.1,glowR);
+          seg(r0,r1,.12,.5,brail);
+          seg(r0.clone().add(new THREE.Vector3(0,.32,0)),r1.clone().add(new THREE.Vector3(0,.32,0)),.1,.1,bglow);
         }
       }
       prev=p;
     }
-    for(const t of [.25,.75]){
-      const px=p0.x+(p1.x-p0.x)*t, pz=p0.z+(p1.z-p0.z)*t;
-      put(pilings,new THREE.CylinderGeometry(.22,.26,3.4,8),px,-.6,pz);
-    }
   }
-  const bm=buildMesh(wood,MAT.wood); if(bm) scene.add(bm);
-  const rm=buildMesh(rails,MAT.woodDark); if(rm) scene.add(rm);
-  const gm=buildMesh(glowR,MAT.glowStrip,false); if(gm) scene.add(gm);
-  const pm=buildMesh(pilings,MAT.woodDark); if(pm) scene.add(pm);
+  const bm=buildMesh(bdeck,MAT.platformDark,false); if(bm) scene.add(bm);
+  const rm=buildMesh(brail,MAT.trim,false); if(rm) scene.add(rm);
+  const gm=buildMesh(bglow,MAT.glowStrip,false); if(gm) scene.add(gm);
 }
 
 /* ============================================================
@@ -777,10 +734,7 @@ function addGlow(x,y,z,size,color,op=.6){
     blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:op}));
   s.position.set(x,y,z); s.scale.set(size,size,1); scene.add(s); return s;
 }
-/* Design-masters review (A3): water sun-glint — one additive sprite on the sun azimuth. */
-const glint=addGlow(-46,1.2,-30,90,'#FFF3C4',.28);
-glint.scale.set(90,26,1);
-anims.push((t)=>{ glint.position.x=-46+Math.sin(t*.18)*10; glint.material.opacity=.22+.1*Math.sin(t*1.4); });
+/* (A3 legacy water sun-glint REMOVED 2026-09-19: no water, no sun — night env carries the light.) */
 const gearGlyph=(color)=>canvasTex(128,128,(g)=>{
   g.fillStyle=color; g.strokeStyle=color;
   g.translate(64,64);
@@ -816,7 +770,7 @@ function robotParts(L,x,y,z,ry,visorColor,form){
   put(L.base,new THREE.TorusGeometry(.5,.1,8,20),x,y+.15,z,Math.PI/2,0,0);
 }
 function finalizeRobots(L,parent){
-  const w=buildMesh(L.white,MAT.robotWhite); if(w) parent.add(w);
+  const w=buildMesh(L.white,MAT.robotShell); if(w) parent.add(w);
   for(const v of L.visor) parent.add(v);
   const b=buildMesh(L.base,MAT.visor,false); if(b) parent.add(b);
 }
@@ -857,7 +811,6 @@ function makeRobot(x,y,z,ry,{crown=false}={}){
   globeG.add(outer,wire,core);
   anims.push((t)=>{ globeG.rotation.y=t*.25; wire.rotation.y=-t*.12; });
   addGlow(0,6.1,0,11,'#54D8FF',.5);
-  pointLight(0x54D8FF,60,45,0,7,0);
 
   function drawBoard(g,w,h,rows,badge,badgeColor){
     g.fillStyle='#101C26'; g.fillRect(0,0,w,h);
@@ -936,8 +889,8 @@ function makeRobot(x,y,z,ry,{crown=false}={}){
     ]);
     psel.deptName=d.name; psel.liveKind='dept';
   });
-  group.add(buildMesh(posts,MAT.white),buildMesh(roofs,MAT.white),buildMesh(decks,MAT.wood),
-    buildMesh(desks,MAT.white),buildMesh(bodies,MAT.metal));
+  group.add(buildMesh(posts,MAT.shell),buildMesh(roofs,MAT.shell),buildMesh(decks,MAT.platform),
+    buildMesh(desks,MAT.shell),buildMesh(bodies,MAT.metal));
   finalizeRobots(RL,group);
   scrGeos.forEach((sg,i)=>{ if(sg.length) group.add(buildMesh(sg,scrMats[i],false)); });
   const totem=[]; put(totem,new THREE.CylinderGeometry(1.1,1.4,1.6,12),0,2.3,0);
@@ -980,15 +933,16 @@ function makeRobot(x,y,z,ry,{crown=false}={}){
   [[0,4.6,2.6],[0,6.4,-2.4]].forEach(([x,y,z])=>{
     const tg=new THREE.Group(); tg.position.set(x,y,z);
     tg.add(new THREE.Mesh(new THREE.TorusGeometry(1.1,.28,10,24),MAT.gold));
-    for(let i=0;i<6;i++){ const sp=new THREE.Mesh(new THREE.BoxGeometry(.3,1.9,.24),MAT.gold);
-      sp.rotation.z=i/6*Math.PI*2; tg.add(sp); }
+    /* Phase-2 (2026-09-19): 6 spoke meshes -> 1 merged (rotations baked; the
+       gear GROUP still spins, so the animation is unchanged). */
+    const dsp=[]; for(let i=0;i<6;i++) put(dsp,new THREE.BoxGeometry(.3,1.9,.24),0,0,0,0,0,i/6*Math.PI*2);
+    tg.add(buildMesh(dsp,MAT.gold));
     const hub=new THREE.Mesh(new THREE.CylinderGeometry(.4,.4,.5,12),MAT.gold);
     hub.rotation.x=Math.PI/2; tg.add(hub);
     group.add(tg); gears.push(tg);
   });
   anims.push((t)=>{ gears[0].rotation.z=t*.7; gears[1].rotation.z=-t*.5; });
   addGlow(-26,5,-6,12,'#B388FF',.4);
-  pointLight(0xB388FF,40,40,-26,8,-6);
 }
 
 /* ================= LEADERBOARDS ================= */
@@ -1062,7 +1016,6 @@ function makeRobot(x,y,z,ry,{crown=false}={}){
     });
   });
   addGlow(24,6,-10,10,'#FFD24D',.4);
-  pointLight(0xFFD24D,30,35,24,8,-10);
 }
 
 /* ================= HANDOFFS ================= */
@@ -1083,7 +1036,7 @@ const arcAnims=[];
     proxy.position.set(x,2.6,z); proxy.rotation.y=a; group.add(proxy);
     regSel(proxy,'hands','DOCK','Dock '+(i+1),[['Routes served','2'],['Status','ACTIVE']]);
   });
-  group.add(buildMesh(wood,MAT.wood),buildMesh(dark,MAT.woodDark),buildMesh(pylon,MAT.glowStrip,false));
+  group.add(buildMesh(wood,MAT.platform),buildMesh(dark,MAT.platformDark),buildMesh(pylon,MAT.glowStrip,false));
   const dashT=canvasTex(64,8,(g,w,h)=>{ g.fillStyle='#fff'; g.fillRect(0,0,32,h); });
   dashT.wrapS=THREE.RepeatWrapping; dashT.repeat.set(6,1);
   const arcMat=new THREE.MeshBasicMaterial({map:dashT,color:0xB388FF,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false});
@@ -1095,9 +1048,11 @@ const arcAnims=[];
     const tube=new THREE.Mesh(new THREE.TubeGeometry(curve,40,.09,6),arcMat);
     group.add(tube);
     const token=new THREE.Group();
-    token.add(new THREE.Mesh(new THREE.TorusGeometry(.34,.11,8,18),tokenMat));
-    const hb=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.2,8),tokenMat);
-    hb.rotation.x=Math.PI/2; token.add(hb);
+    /* Phase-2 (2026-09-19): token's 2 meshes -> 1 merged (rotation baked; the
+       token GROUP still rides the curve and spins, so the animation is unchanged). */
+    const tokG=[]; put(tokG,new THREE.TorusGeometry(.34,.11,8,18),0,0,0);
+    put(tokG,new THREE.CylinderGeometry(.12,.12,.2,8),0,0,0,Math.PI/2,0,0);
+    token.add(buildMesh(tokG,tokenMat));
     group.add(token);
     arcAnims.push({curve,token,t:Math.random(),speed:.12+Math.random()*.08,spin:1+Math.random()});
     const asel=regSel(tube,'hands','ARC',arc.from+' → '+arc.to,[['Gear in transit',arc.units+' units'],['Day',arc.day+' of 30']]);
@@ -1125,7 +1080,6 @@ const arcAnims=[];
   });
   anims.push((t)=>{ ribMats.forEach((m,i)=>{ if(i===13) m.emissiveIntensity=.7+Math.sin(t*3)*.35; }); });
   addGlow(-8,5,24,11,'#35C4FF',.35);
-  pointLight(0x35C4FF,35,40,-8,7,24);
 }
 
 /* ================= FULL CHAIN ================= */
@@ -1167,7 +1121,6 @@ const arcAnims=[];
   put(cm,new THREE.BoxGeometry(.5,2.8,.5),.75,.35,0,0,0,-.75);
   const check=buildMesh(cm,MAT.gold,false); check.position.set(12.6,3.6,-1.5); group.add(check);
   addGlow(16,5,22,9,'#7EF0C1',.4);
-  pointLight(0x7EF0C1,30,35,16,7,22);
 }
 
 /* ================= LEGENDS ================= */
@@ -1181,8 +1134,10 @@ const arcAnims=[];
     const gear=new THREE.Group(); gear.position.set(x,2.5+L.h,z);
     const R=2.2-i*.35;
     gear.add(new THREE.Mesh(new THREE.TorusGeometry(R,.35,12,32),MAT.gold));
-    for(let s=0;s<8;s++){ const sp=new THREE.Mesh(new THREE.BoxGeometry(.4,R*1.7,.3),MAT.gold);
-      sp.rotation.z=s/8*Math.PI*2; gear.add(sp); }
+    /* Phase-2 (2026-09-19): 8 spoke meshes -> 1 merged (rotations baked; the
+       gear GROUP still spins, so the animation is unchanged). */
+    const spokes=[]; for(let s=0;s<8;s++) put(spokes,new THREE.BoxGeometry(.4,R*1.7,.3),0,0,0,0,0,s/8*Math.PI*2);
+    gear.add(buildMesh(spokes,MAT.gold));
     const hub=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,.7,12),MAT.gold);
     hub.rotation.x=Math.PI/2; gear.add(hub);
     gear.rotation.x=.12; group.add(gear); spinners.push(gear);
@@ -1193,7 +1148,6 @@ const arcAnims=[];
     lsel.liveKind='legend';
   });
   anims.push((t)=>{ spinners.forEach((g,i)=>{ g.rotation.z=t*(i%2?-.4:.5); }); });
-  pointLight(0xFFC93C,45,40,34,8,8);
 }
 
 /* ================= AGENT STAGE — form from identity, expression from live data =================
@@ -1218,7 +1172,6 @@ const arcAnims=[];
   const daisLabel=labelSprite('AGENT STAGE',{size:34,fg:'#FFB224'});
   daisLabel.position.set(0,5.2,0); group.add(daisLabel);
   addGlow(cfg.x,4.4,cfg.z,10,'#FFB224',.35);
-  pointLight(0xFFB224,36,36,cfg.x,7,cfg.z);
 
   /* legend plaque: what the forms and states mean, honestly labeled */
   const legendTex=canvasTex(700,600,(g)=>{
@@ -1298,20 +1251,38 @@ const arcAnims=[];
       (p.parent&&groups[p.parent]?groups[p.parent]:body).add(g);
       groups[p.id]=g; joints[p.id]=g;
     }
-    const add=(mesh,parent)=>{ mesh.castShadow=true; (parent||body).add(mesh); return mesh; };
+    /* Phase-2 (2026-09-19): merge robot parts per (joint-parent, material) —
+       28 meshes -> 21 per robot. Articulation is preserved by construction:
+       merges never cross a joint boundary, so every joint group keeps its own
+       mesh(es) and keeps animating. The expression system is material-driven
+       (F.coreMats/F.shellMats), so shared material instances animate
+       identically to the old per-part instances. */
+    const buckets=new Map();
     const protoMat=(p)=> p.mat==='core' ? fmat(AUTO_CORE,.9) : smat(AUTO_COLOR,.32);
+    const stdMat=(p)=> p.mat==='core'?fmat(spec.core_color||c,1.5):p.mat==='accent'?smat(c,.7):smat(c,.45);
+    const effKey=(p)=> p.mat==='core'?'core':p.mat==='accent'?'accent':'base';
     for(const p of ROBOT_PARTS){
       if(p.joint) continue;
       const limb=PART_LIMB[p.id];
       if(opts.proto&&limb&&!(opts.assembled&&opts.assembled.has(limb))) continue; /* exposed: strut instead */
-      const mat=opts.proto?protoMat(p):(p.mat==='core'?fmat(spec.core_color||c,1.5):p.mat==='accent'?smat(c,.7):smat(c,.45));
-      const mesh=new THREE.Mesh(shapeGeo(p.shape,p.dims),mat);
-      if(p.parent&&groups[p.parent]){
-        const pv=PIVOTS[p.parent];
-        mesh.position.set(p.at[0]-pv[0],p.at[1]-pv[1],p.at[2]-pv[2]);
-        add(mesh,groups[p.parent]);
-      } else { mesh.position.set(p.at[0],p.at[1]+ROBOT_BASE,p.at[2]); add(mesh,body); }
-      if(p.isCore) F.core=mesh;
+      const parentId=(p.parent&&groups[p.parent])?p.parent:'body';
+      const matKind=opts.proto?(p.mat==='core'?'core':'base'):effKey(p);
+      const key=(opts.proto?'p':'')+parentId+'|'+matKind;
+      let b=buckets.get(key);
+      if(!b){
+        b={geos:[],mat:opts.proto?protoMat(p):stdMat(p),
+           parent:parentId==='body'?body:groups[parentId],isCore:false};
+        buckets.set(key,b);
+      }
+      const geo=shapeGeo(p.shape,p.dims);
+      if(parentId==='body') geo.translate(p.at[0],p.at[1]+ROBOT_BASE,p.at[2]);
+      else { const pv=PIVOTS[parentId]; geo.translate(p.at[0]-pv[0],p.at[1]-pv[1],p.at[2]-pv[2]); }
+      b.geos.push(geo);
+      if(p.isCore) b.isCore=true;
+    }
+    for(const b of buckets.values()){
+      const merged=buildMesh(b.geos,b.mat,false);
+      if(merged){ merged.castShadow=true; b.parent.add(merged); if(b.isCore) F.core=merged; }
     }
     if(opts.proto){ /* exposed frame: thin struts ride the joints so the frame articulates */
       const sm=smat(AUTO_COLOR,.3);
@@ -1728,12 +1699,9 @@ const arcAnims=[];
   });
 
   /* ---- day/night life: the world keeps local time ----
-     Night deepens the sky and lets the agent cores carry the scene.
-     Smooth dawn/dusk shoulders; skipped while the boot sunrise ramp runs. */
-  const SKY_DAY=new THREE.Color(0xdff2ff), SKY_NIGHT=new THREE.Color(0x0A1430);
+     Night deepens the fog and dims the wash so agent neon carries the scene. */
   const FOG_DAY=new THREE.Color(P.fog), FOG_NIGHT=new THREE.Color(0x060B18);
-  const HEMI_SKY_DAY=new THREE.Color(0xBFE3FF), HEMI_SKY_NIGHT=new THREE.Color(0x2A3D66);
-  const SUN_DAY=new THREE.Color(0xFFF2D8), SUN_NIGHT=new THREE.Color(0x8FA8FF);
+  const HEMI_SKY_DAY=new THREE.Color(0x1E3A52), HEMI_SKY_NIGHT=new THREE.Color(0x24344D);
   function nightFactor(d){
     const h=d.getHours()+d.getMinutes()/60;
     const f=(1-Math.cos(((h-12)/12)*Math.PI))/2; /* 0 at noon → 1 at midnight */
@@ -1741,16 +1709,12 @@ const arcAnims=[];
   }
   let lastDayNightMin=-1;
   anims.push(()=>{
-    if(bootRamp) return;
     const d=new Date(), m=d.getHours()*60+d.getMinutes();
     if(m===lastDayNightMin) return; lastDayNightMin=m;
     const nf=nightFactor(d);
-    if(skyMatRef) skyMatRef.color.copy(SKY_DAY).lerp(SKY_NIGHT,nf);
     scene.fog.color.copy(FOG_DAY).lerp(FOG_NIGHT,nf);
-    hemi.color.copy(HEMI_SKY_DAY).lerp(HEMI_SKY_NIGHT,nf); hemi.intensity=.75-.35*nf;
-    sun.color.copy(SUN_DAY).lerp(SUN_NIGHT,nf); sun.intensity=2.6-1.7*nf;
-    if(sunSprRef) sunSprRef.material.opacity=.95-.8*nf;
-    renderer.toneMappingExposure=1.15-.25*nf;
+    hemi.color.copy(HEMI_SKY_DAY).lerp(HEMI_SKY_NIGHT,nf); hemi.intensity=.55-.15*nf;
+    renderer.toneMappingExposure=1.0-.15*nf;
   });
 
   /* boot: forms.json is data — the scene builds every form from it */
@@ -1799,7 +1763,6 @@ const arcAnims=[];
       const hm=b.halo.material; hm.opacity+=(b.haloT-hm.opacity)*k;
     }
   });
-  pointLight(0xFFB224,30,30,cfg.x,9,cfg.z);
 }
 
 /* ===== DISTRICT NAMEPLATES (Athena, 2026-09-17) — billboarded district labels =====
@@ -1830,10 +1793,12 @@ for(const d of DISTRICT_DEFS){
   DISTRICT_NAMEPLATES.push(spr);
 }
 
-/* ===== NEON DISTRICT ENVIRONMENT (Athena, 2026-09-19) — studied from CD Projekt Red
-   (Night City visual language) and Ubisoft (urban pipelines); studied as masters,
-   no endorsement claimed. Data layer untouched: decks/beacons/forms/signs keep
-   their positions and live bindings. */
+/* ===== NEON DISTRICT ENVIRONMENT (Athena, 2026-09-19) — visual language studied
+   from best-in-class open-world night-city design masters (principles only:
+   layered neon signage, wet-street reflections, vertical silhouettes); studied
+   as masters, no endorsement, collaboration, or review claimed or implied, and
+   no borrowed assets, brands, locations, or names. Data layer untouched:
+   decks/beacons/forms/signs keep their positions and live bindings. */
 const NC_PLAN = nightCityPlan(20260919);
 const NC_SIGNAGE = signagePlan(DISTRICT_DEFS);
 const NC = buildNightCity(THREE, scene, { anims, canvasTex, glowTex, plan: NC_PLAN,
@@ -1861,24 +1826,35 @@ const EARTH_BEACONS = [];
   grid.position.y = EARTH.ocean.y + 0.05;
   grid.material.transparent = true; grid.material.opacity = 0.35; scene.add(grid);
 }
-for (const p of EARTH.plates) {
-  const shape = new THREE.Shape();
-  p.polygon.forEach(([x, z], i) => i ? shape.lineTo(x - p.cx, -(z - p.cz)) : shape.moveTo(x - p.cx, -(z - p.cz)));
-  const geo = new THREE.ExtrudeGeometry(shape, { depth: 2.5, bevelEnabled: false });
-  geo.rotateX(-Math.PI/2);
-  const plate = new THREE.Mesh(geo,
-    new THREE.MeshStandardMaterial({ color: 0x0e1a26, roughness: .9, metalness: .05 }));
-  plate.position.set(p.cx, -40, p.cz); scene.add(plate);
-  const coastPts = p.polygon.map(([x, z]) => new THREE.Vector3(x, -37, z));
-  scene.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(coastPts),
-    new THREE.LineBasicMaterial({ color: 0x35C4FF, transparent: true, opacity: .8 })));
-  for (const b of p.beacons) {
-    const m = new THREE.Mesh(new THREE.SphereGeometry(.9, 10, 10),
-      new THREE.MeshBasicMaterial({ color: 0x35C4FF, transparent: true, opacity: .5,
-        blending: THREE.AdditiveBlending, depthWrite: false }));
-    m.position.set(b.x, -36.5, b.z); scene.add(m);
-    EARTH_BEACONS.push({ mesh: m, ph: (b.x * 13.7 + b.z * 7.3) % 6.28 });
+/* Phase-2 (2026-09-19): earth frame merged — 6 plates + 6 coastlines + 18 beacons
+   were 32 draw calls; now 4 (merged plates, merged coastlines, instanced beacons). */
+{
+  const plateL=[], coastPts=[];
+  for (const p of EARTH.plates) {
+    const shape = new THREE.Shape();
+    p.polygon.forEach(([x, z], i) => i ? shape.lineTo(x - p.cx, -(z - p.cz)) : shape.moveTo(x - p.cx, -(z - p.cz)));
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: 2.5, bevelEnabled: false });
+    geo.rotateX(-Math.PI/2); geo.translate(p.cx, -40, p.cz);
+    plateL.push(geo);
+    const cp = p.polygon.map(([x, z]) => new THREE.Vector3(x, -37, z));
+    for (let i=0;i<cp.length;i++) coastPts.push(cp[i], cp[(i+1)%cp.length]);
+    for (const b of p.beacons) EARTH_BEACONS.push({ x:b.x, z:b.z, ph:(b.x*13.7+b.z*7.3)%6.28 });
   }
+  const plates = buildMesh(plateL, new THREE.MeshStandardMaterial({ color: 0x0e1a26, roughness: .9, metalness: .05 }), false);
+  if (plates) scene.add(plates);
+  scene.add(new THREE.LineSegments(
+    new THREE.BufferGeometry().setFromPoints(coastPts),
+    new THREE.LineBasicMaterial({ color: 0x35C4FF, transparent: true, opacity: .8 })));
+  const beacons = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(.9, 10, 10),
+    new THREE.MeshBasicMaterial({ color: 0x35C4FF, transparent: true, opacity: .5,
+      blending: THREE.AdditiveBlending, depthWrite: false }),
+    EARTH_BEACONS.length);
+  const bd = new THREE.Object3D();
+  EARTH_BEACONS.forEach((e,i)=>{ bd.position.set(e.x,-36.5,e.z); bd.scale.setScalar(1); bd.updateMatrix(); beacons.setMatrixAt(i,bd.matrix); });
+  beacons.instanceMatrix.needsUpdate = true;
+  scene.add(beacons);
+  EARTH_BEACONS.inst = beacons; EARTH_BEACONS.dummy = bd;
 }
 
 /* ================= PRIME — the founding city ================= */
@@ -1920,14 +1896,20 @@ const PRIME_RINGS = [];
     new THREE.LineBasicMaterial({ color: 0x2fb8c4, transparent: true, opacity: .35 })));
   for (const t of PRIME.towers) {
     const col = new THREE.Color(t.color);
-    /* Houdini-style two-tier setback massing — same plan data, richer silhouette */
+    /* Houdini-style two-tier setback massing — same plan data, richer silhouette.
+       Phase-2 (2026-09-19): a tower's tiers merged into 1 mesh (8 towers -> 8
+       calls, was 16). The per-tower emissive color and pulse are preserved via
+       the tower's single shared material. */
+    const tierGeos = [];
     for (const tier of towerTiers(t)) {
-      const mesh = new THREE.Mesh(new THREE.BoxGeometry(tier.w, tier.h, tier.w),
-        new THREE.MeshStandardMaterial({ color: 0x0d141d, roughness: .5, metalness: .4,
-          emissive: col, emissiveIntensity: .55 }));
-      mesh.position.set(t.x, dy + .6 + tier.y0 + tier.h / 2, t.z); scene.add(mesh);
-      PRIME_PULSE.push({ mat: mesh.material, base: .55, emissive: true });
+      const tg = new THREE.BoxGeometry(tier.w, tier.h, tier.w);
+      tg.translate(t.x, dy + .6 + tier.y0 + tier.h / 2, t.z);
+      tierGeos.push(tg);
     }
+    const towerMat = new THREE.MeshStandardMaterial({ color: 0x0d141d, roughness: .5, metalness: .4,
+      emissive: col, emissiveIntensity: .55 });
+    scene.add(new THREE.Mesh(BGU.mergeGeometries(tierGeos, false), towerMat));
+    PRIME_PULSE.push({ mat: towerMat, base: .55, emissive: true });
     const tip = new THREE.Mesh(new THREE.OctahedronGeometry(.8),
       new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: .95,
         blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
@@ -1995,8 +1977,7 @@ const PRIME_RINGS = [];
     beam.position.set(b.x, dy / 2, b.z); scene.add(beam);
     PRIME_PULSE.push({ mat: beam.material, base: .28 });
   }
-  pointLight(0xFFB224, 60, 90, 0, PRIME.discY + 18, 0);
-  pointLight(0x35C4FF, 40, 110, -40, PRIME.discY + 10, -30); /* cool rim opposite the warm key */
+  /* PRIME point lights removed (2026-09-19): key accents now ride on addGlow() sprites. */
   anims.push((t) => {
     let act = 0.4;
     if (DISTRICT_BEACONS.length) {
@@ -2010,82 +1991,15 @@ const PRIME_RINGS = [];
     }
     for (const r of PRIME_RINGS) r.mesh.rotation.z += r.speed * 0.016;
     crown.rotation.y += 0.004;
-    for (const e of EARTH_BEACONS) e.mesh.material.opacity = .3 + .25 * Math.sin(t * 1.4 + e.ph);
+    { const inst=EARTH_BEACONS.inst, d=EARTH_BEACONS.dummy;
+      EARTH_BEACONS.forEach((e,i)=>{ d.position.set(e.x,-36.5,e.z); d.scale.setScalar(1+.35*Math.sin(t*1.4+e.ph)); d.updateMatrix(); inst.setMatrixAt(i,d.matrix); });
+      inst.instanceMatrix.needsUpdate=true; }
   });
 }
 
-/* ================= PALMS (instanced) ================= */
-{
-  const trunkL=[];
-  for(let i=0;i<5;i++) put(trunkL,new THREE.CylinderGeometry(.16,.22,.85,7),i*.16,.4+i*.8,0,0,0,-.18);
-  const trunkGeo=BGU.mergeGeometries(trunkL,false);
-  const frondL=[],frondD=[];
-  for(let i=0;i<7;i++){
-    const c=new THREE.ConeGeometry(.5,2.7,5); c.scale(1,1,.32); c.translate(0,1.35,0);
-    c.rotateX(1.25); c.rotateY(i/7*Math.PI*2);
-    (i%2?frondL:frondD).push(c);
-  }
-  const N=palmSpots.length;
-  const trunkIM=new THREE.InstancedMesh(trunkGeo,MAT.trunk,N);
-  const frondIML=new THREE.InstancedMesh(BGU.mergeGeometries(frondL,false),
-    new THREE.MeshStandardMaterial({color:P.palmLight,roughness:.9,side:THREE.DoubleSide}),N);
-  const frondIMD=new THREE.InstancedMesh(BGU.mergeGeometries(frondD,false),
-    new THREE.MeshStandardMaterial({color:P.palmDark,roughness:.9,side:THREE.DoubleSide}),N);
-  const M=new THREE.Matrix4(),Q=new THREE.Quaternion(),S=new THREE.Vector3(),Pv=new THREE.Vector3(),E=new THREE.Euler();
-  palmSpots.forEach((p,i)=>{
-    E.set(0,Math.random()*Math.PI*2,0); Q.setFromEuler(E); S.set(p.s,p.s,p.s); Pv.set(p.x,1.5,p.z);
-    M.compose(Pv,Q,S); trunkIM.setMatrixAt(i,M);
-    Pv.y=1.5+3.55*p.s; M.compose(Pv,Q,S); frondIML.setMatrixAt(i,M); frondIMD.setMatrixAt(i,M);
-  });
-  trunkIM.castShadow=true; frondIML.castShadow=true;
-  scene.add(trunkIM,frondIML,frondIMD);
-}
+/* PALMS removed (2026-09-19): legacy island palms deleted; night-district planting comes from buildNightCity. */
 
-/* ================= BOATS / MANTA ================= */
-function makeBoat(){
-  const g=new THREE.Group();
-  const hull=new THREE.Mesh(new RoundedBoxGeometry(3.6,.9,1.6,3,.2),MAT.white);
-  hull.castShadow=true; g.add(hull);
-  const stripe=new THREE.Mesh(new THREE.BoxGeometry(3.65,.16,1.62),
-    new THREE.MeshStandardMaterial({color:0xC0392B,roughness:.5}));
-  stripe.position.y=.1; g.add(stripe);
-  const cab=new THREE.Mesh(new RoundedBoxGeometry(1.3,.9,1.1,2,.15),MAT.white);
-  cab.position.set(-.3,.85,0); g.add(cab);
-  const shield=new THREE.Mesh(new THREE.PlaneGeometry(1,.5),
-    new THREE.MeshStandardMaterial({color:0x101C26,roughness:.15,metalness:.4}));
-  shield.position.set(.38,1,.0); shield.rotation.y=Math.PI/2; shield.rotation.z=-.3; g.add(shield);
-  return g;
-}
-{
-  const routes=[{cx:0,cz:0,r:20,s:.05,ph:0},{cx:-26,cz:-6,r:19,s:-.04,ph:2},{cx:24,cz:-10,r:15,s:.06,ph:4}];
-  routes.forEach(rt=>{
-    const b=makeBoat(); scene.add(b);
-    anims.push((t)=>{
-      const a=t*rt.s+rt.ph;
-      b.position.set(rt.cx+Math.cos(a)*rt.r,Math.sin(t*1.3+rt.ph)*.25,rt.cz+Math.sin(a)*rt.r);
-      b.rotation.y=-a+(rt.s>0?0:Math.PI);
-    });
-  });
-  const manta=new THREE.Group();
-  const mMat=new THREE.MeshStandardMaterial({color:P.manta,roughness:.7});
-  const body=new THREE.Mesh(new THREE.SphereGeometry(1,12,10),mMat);
-  body.scale.set(1.5,.32,.9); manta.add(body);
-  const wL=new THREE.Mesh(new THREE.PlaneGeometry(1.9,1.2),new THREE.MeshStandardMaterial({color:P.manta,roughness:.7,side:THREE.DoubleSide}));
-  wL.position.x=-1.2; manta.add(wL);
-  const wR=wL.clone(); wR.position.x=1.2; manta.add(wR);
-  const tail=new THREE.Mesh(new THREE.CylinderGeometry(.05,.02,2.4,6),mMat);
-  tail.rotation.z=Math.PI/2.2; tail.position.x=1.8; manta.add(tail);
-  scene.add(manta);
-  anims.push((t)=>{
-    const a=t*.12;
-    const px=-2+Math.cos(a)*18, pz=2+Math.sin(a)*14;
-    manta.position.set(px,-2.5+Math.sin(t*.8)*.4,pz);
-    const a2=a+.05;
-    manta.lookAt(-2+Math.cos(a2)*18,-2.5,2+Math.sin(a2)*14);
-    const flap=Math.sin(t*4)*.45;
-    wL.rotation.y=flap; wR.rotation.y=-flap;
-  });
-}
+/* BOATS/MANTA removed (2026-09-19): no water in the Neon District; traffic comes from buildNightCity. */
 
 /* ============================================================
    8. SAMPLE AGENT SIMULATION — illustrative motion only, not live ops
@@ -2194,7 +2108,7 @@ function buildAgentBody(def,formName,visorColor){
   const form=FORMS[formName]||FORMS.classic;
   const grp=new THREE.Group();
   const L=robotLists(); robotParts(L,0,0,0,0,visorColor,form);
-  const bodyMat=MAT.robotWhite.clone(); bodyMat.color.set(def.tint);
+  const bodyMat=MAT.robotShell.clone(); bodyMat.color.set(def.tint);
   const bw=buildMesh(L.white,bodyMat); if(bw) grp.add(bw);
   for(const v of L.visor) grp.add(v);
   const bb=buildMesh(L.base,MAT.visor,false); if(bb) grp.add(bb);
@@ -2494,9 +2408,9 @@ window.__liveUpgrade=function(json){
   const q=s=>document.querySelector(s), qa=s=>document.querySelectorAll(s);
   const infoH2=q('#info h2'); if(infoH2) infoH2.textContent='Live ledger view.';
   const infoPs=qa('#info p');
-  if(infoPs[0]) infoPs[0].textContent='This 3D archipelago is wired to the live CWI Gear Ledger. Agents, departments, tasks, and every number badged LIVE come from the canonical ledger store, refreshed every 10 minutes. Traffic arcs, legends, and chain plaques are labeled concept visuals \u2014 sketches of what the live streams will look like.';
+  if(infoPs[0]) infoPs[0].textContent='This 3D Neon District is wired to the live CWI Gear Ledger. Agents, departments, tasks, and every number badged LIVE come from the canonical ledger store, refreshed every 10 minutes. Traffic arcs, legends, and chain plaques are labeled concept visuals \u2014 sketches of what the live streams will look like.';
   const hintPs=qa('#hint p');
-  if(hintPs[0]) hintPs[0].innerHTML='Drag to orbit \u00b7 Pinch or scroll to zoom \u00b7 Tap an island to visit.<br>Numbers badged LIVE come from the real Gear Ledger; concept visuals stay labeled.';
+  if(hintPs[0]) hintPs[0].innerHTML='Drag to orbit \u00b7 Pinch or scroll to zoom \u00b7 Tap a plaza to visit.<br>Numbers badged LIVE come from the real Gear Ledger; concept visuals stay labeled.';
   const mpFine=q('#musicpanel .fine');
   if(mpFine) mpFine.textContent='The real That Boy Hi Hat catalog playlist on Spotify \u2014 press play. Agent figures are the 11 registered ledger agents with live presence.';
   const evBtn=document.getElementById('i-evidence'); if(evBtn) evBtn.textContent='View evidence';
@@ -2527,7 +2441,6 @@ const easeIO=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 function startBootReveal(){
   document.body.classList.add('booted');
   if(reduced){ camera.position.copy(OVERVIEW.pos); controls.target.copy(OVERVIEW.tgt); return; }
-  bootT0=performance.now()/1000; bootRamp=true;
   flyTo(OVERVIEW.pos,OVERVIEW.tgt,2.8,()=>{ pulseSign('hub'); if(broadcast) startTour(); });
 }
 
@@ -2620,7 +2533,7 @@ window.__liveUpgradeHooks.push(()=>{
 });
 function openInspector(sel){
   currentSel=sel; inspOpen=true;
-  document.getElementById('i-tag').textContent=sel.kind;
+  document.getElementById('i-tag').textContent=(sel.kind==='ISLAND'?'PLAZA':sel.kind);
   document.getElementById('i-title').textContent=sel.title;
   renderRows(sel);
   const fly=document.getElementById('i-fly');
@@ -2757,9 +2670,9 @@ function toast(msg){
 /* ---------- auto-tour ---------- */
 const TOUR=[
   {id:'hub',title:'HUB — "The whole ledger, at a glance."',body:'This is the Gear Ledger\u2019s mission control: a holographic globe showing the fleet\u2019s world status. Total handoffs, chain integrity, and the SAMPLE badge reminding you every figure here is illustrative \u2014 not live ledger data.'},
-  {id:'prime',title:'PRIME — "The first city."',body:'The founding city the agents built for themselves, raised on light above the island where they first stood: light towers, data obelisks, and holographic rings over a glowing street grid. Its brightness follows real ledger work \u2014 the harder the agents work, the brighter PRIME burns. The districts below are its neighborhoods; the landmasses on the horizon are future ground, inspired by Earth\u2019s geography.'},
+  {id:'prime',title:'PRIME — "The first city."',body:'The founding city the agents built for themselves, raised on light above the plaza where they first stood: light towers, data obelisks, and holographic rings over a glowing street grid. Its brightness follows real ledger work \u2014 the harder the agents work, the brighter PRIME burns. The districts below are its neighborhoods; the data-landmasses on the horizon are future ground, inspired by Earth\u2019s geography.'},
   {id:'dist',title:'DISTRIBUTION — "Where the gear lives."',body:'Each pavilion is a CWI department \u2014 A&R, Sync & Licensing, Radio & Playlists, and five more \u2014 holding its share of the fleet. The pie between them is SAMPLE data: a stand-in for how gear would really be spread across the company.'},
-  {id:'leads',title:'LEADERBOARDS — "Who moves the most gear."',body:'Three podium towers rank the fleet overall, flanked by the top givers and top receivers. Every rank, name, and count on this island is SAMPLE \u2014 a sketch of how real handoff history would be celebrated.'},
+  {id:'leads',title:'LEADERBOARDS — "Who moves the most gear."',body:'Three podium towers rank the fleet overall, flanked by the top givers and top receivers. Every rank, name, and count on this plaza is SAMPLE \u2014 a sketch of how real handoff history would be celebrated.'},
   {id:'hands',title:'HANDOFFS — "Gear in motion, day by day."',body:'Watch glowing arcs carry gear between docks while the timeline ribbon scrolls thirty days of activity. The routes and daily counts are SAMPLE traffic \u2014 the real ledger\u2019s rhythm would look like this, with real numbers.'},
   {id:'chain',title:'FULL CHAIN — "The full story, oldest to newest."',body:'Walk the chronological record of every handoff, step by step. In the live product each plaque links to a signed record; here each plaque is SAMPLE text showing what the chain would feel like to stroll.'},
   {id:'legends',title:'LEGENDS — "The gear that\u2019s seen everything."',body:'Monuments to the most-traveled items in the fleet \u2014 gear that\u2019s changed hands more than anything else. The travel counts are SAMPLE legend-making; the real ledger would crown its own veterans here.'},
@@ -2873,13 +2786,7 @@ function animate(){
     controls.target.lerpVectors(tween.t0,tween.t1,e);
     if(k>=1){ const d=tween.done; tween=null; d&&d(); }
   }
-  /* Design-masters review (A1): sunrise ramp rides along with the boot sweep. */
-  if(bootRamp){
-    const k=Math.min(1,(now-bootT0)/2.8), e=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
-    sun.intensity=1.2+1.4*e; hemi.intensity=.35+.4*e;
-    renderer.toneMappingExposure=.65+.5*e;
-    if(k>=1) bootRamp=false;
-  }
+  /* sunrise ramp REMOVED (2026-09-19): night env is the constant baseline. */
   /* water waves / foam drift / cloud drift REMOVED (Athena, 2026-09-19): night env drives the loop via anims */
   for(const f of anims) f(t,dt);
   simTick(dt);
