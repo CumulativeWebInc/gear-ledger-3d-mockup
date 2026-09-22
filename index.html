@@ -202,7 +202,7 @@ setTimeout(function(){
 
   @media (max-width:899px){
     #title h1{font-size:15px}
-    #topright .hbtn span.lbl{display:none}
+    #topright .hbtn{display:none}   /* mobile: single nav lives in #thumbbar; keep only the LIVE/SAMPLE pill up top */
     #topright{gap:6px;right:10px}
     #title{left:10px}
     #inspector{top:auto;bottom:calc(76px + var(--safe-b));right:8px;left:8px;width:auto;max-height:42vh}
@@ -251,6 +251,8 @@ setTimeout(function(){
     <button class="hbtn" data-act="legend">?<br><span style="font-size:10px">Legend</span></button>
     <button class="hbtn" data-act="info">ⓘ<br><span style="font-size:10px">Info</span></button>
     <button class="hbtn" data-act="agents">👥<br><span style="font-size:10px">Agents</span></button>
+    <button class="hbtn" data-act="music">♪<br><span style="font-size:10px">Music</span></button>
+    <button class="hbtn" data-act="night">🌃<br><span style="font-size:10px">Night</span></button>
   </div>
 </div>
 
@@ -2459,7 +2461,9 @@ function islandView(id){
 }
 function pulseSign(id){
   const b=signBoards[id]; if(!b) return;
-  b.material.emissive=new THREE.Color(0xFFB020);
+  /* Sign faces are MeshBasicMaterial (no emissive channel): pulsing via
+     .emissive assignment throws in three's uniform refresh EVERY FRAME
+     (render-verify 2026-09-22). Pulse through .color instead — map*color. */
   pulses.push({mat:b.material,t0:performance.now()/1000});
 }
 function goOverview(){
@@ -2633,6 +2637,8 @@ document.querySelectorAll('#thumbbar .hbtn').forEach(b=>b.onclick=()=>{
   if(a==='legend')document.getElementById('legend').classList.add('open');
   if(a==='info')document.getElementById('info').classList.add('open');
   if(a==='agents')openAgentRoster();
+  if(a==='music')document.getElementById('b-music').click();
+  if(a==='night')document.getElementById('b-night').click();
 });
 /* ---------- agent roster: tap any agent to fly to its robot body + open its inspector.
    Athena and KingCode are spotlighted at the top. ---------- */
@@ -2797,8 +2803,12 @@ function animate(){
   }
   for(let i=pulses.length-1;i>=0;i--){
     const p=pulses[i], k=(now-p.t0)/.9;
-    p.mat.emissiveIntensity=Math.max(0,1-k)*1.5;
-    if(k>=1) pulses.splice(i,1);
+    /* Warm gold flash on the basic-material face: color multiplies the map.
+       Restored to white when the pulse ends. (Replaces the old glow-channel
+       write — see pulseSign note: basic materials have no emissive channel.) */
+    const g=Math.max(0,1-k)*1.5;
+    p.mat.color.setRGB(1+g*0.25,1+g*0.18,1);
+    if(k>=1){ p.mat.color.setRGB(1,1,1); pulses.splice(i,1); }
   }
   controls.autoRotate=!reduced&&!tour.active&&!inspOpen&&!tween&&(now-lastInteract>20);
   controls.update();
