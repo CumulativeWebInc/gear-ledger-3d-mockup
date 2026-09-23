@@ -1,0 +1,32 @@
+{
+  "schema": "cwi-command-prompts/v1",
+  "updated_at": "2026-09-23T17:53:12.511726+00:00",
+  "prompts": [
+    {
+      "id": "briefing",
+      "trigger": "morning briefing",
+      "text": "Give me the morning briefing.",
+      "hint": "Say: KingCode, morning briefing.",
+      "action": "ledger-status",
+      "say": "Morning briefing. "
+    },
+    {
+      "id": "go-hub",
+      "trigger": "take me to the hub",
+      "text": "Take me to the hub.",
+      "hint": "Say: KingCode, take me to the hub.",
+      "action": "navigate",
+      "island": "hub",
+      "say": "Taking you to the hub."
+    },
+    {
+      "id": "go-stage",
+      "trigger": "take me to the stage",
+      "text": "Take me to the agent stage.",
+      "hint": "Say: KingCode, take me to the stage.",
+      "action": "navigate",
+      "island": "stage",
+      "say": "Taking you to the agent stage."
+    }
+  ]
+}
