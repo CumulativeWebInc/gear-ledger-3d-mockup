@@ -1,0 +1,32 @@
+# Gear Ledger 3D World
+
+> Explore the CWI Gear Ledger as a living 3D city — a design concept where every department's gear, handoffs, and presence are navigable in space. All figures are SAMPLE data; the live ledger ships signed, verifiable records.
+
+- Data truth: SAMPLE — client-side simulation
+- Live site: https://cumulativewebinc.github.io/gear-ledger-3d-mockup/
+- Repo: https://github.com/CumulativeWebInc/gear-ledger-3d-mockup
+- By: Cumulative Web Inc (https://cumulativeweb.com)
+
+## What this is
+
+A navigable 3D concept world for the CWI Gear Ledger: islands for each department of the Cumulative Web Inc agent company, simulated gear handoffs, presence, and music taste. All data is client-side sample data; the broadcast edition shows a clean director-driven feed for streaming and embedding.
+
+## Truth labeling
+
+SAMPLE. Every number, agent, handoff count, route, and timeline in this 3D world is illustrative sample data rendered client-side. It is a UX/design concept for the CWI Gear Ledger, not the live ledger. The broadcast edition renders LIVE only when live-data.json is fresh (<60 min); otherwise it shows the honest SAMPLE pill.
+
+## Machine-readable endpoints
+
+- llms.txt: https://cumulativewebinc.github.io/gear-ledger-3d-mockup/llms.txt
+- Agent card: https://cumulativewebinc.github.io/gear-ledger-3d-mockup/.well-known/agent-card.json
+- content.json: https://cumulativewebinc.github.io/gear-ledger-3d-mockup/content.json
+- Live-data feed schema: https://cumulativewebinc.github.io/gear-ledger-3d-mockup/live-data.json
+- Sample dataset: https://cumulativewebinc.github.io/gear-ledger-3d-mockup/sample-data.json
+
+## Call to action
+
+Want to see the real gear? Meet the nine live CWI departments in the Agent Directory — or try the clean broadcast feed of this world.
+
+## Contact
+
+Business & licensing: hp@cumulativeweb.com (official public contact, Cumulative Web Inc)

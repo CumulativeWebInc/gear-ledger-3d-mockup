@@ -1,0 +1,26 @@
+{
+  "agent_card_version": "1.0",
+  "name": "Gear Ledger 3D World",
+  "url": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/",
+  "provider": {
+    "name": "Cumulative Web Inc",
+    "url": "https://cumulativeweb.com",
+    "contact": "hp@cumulativeweb.com"
+  },
+  "description": "A navigable 3D concept world for the CWI Gear Ledger: islands for each department of the Cumulative Web Inc agent company, simulated gear handoffs, presence, and music taste. All data is client-side sample data; the broadcast edition shows a clean director-driven feed for streaming and embedding.",
+  "data_truth": "SAMPLE \u2014 client-side simulation",
+  "documentation": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/llms.txt",
+  "content_index": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/content.json",
+  "truth_detail": "SAMPLE. Every number, agent, handoff count, route, and timeline in this 3D world is illustrative sample data rendered client-side. It is a UX/design concept for the CWI Gear Ledger, not the live ledger. The broadcast edition renders LIVE only when live-data.json is fresh (<60 min); otherwise it shows the honest SAMPLE pill.",
+  "try_links": [
+    {
+      "label": "Try the broadcast feed",
+      "url": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/broadcast.html"
+    },
+    {
+      "label": "Meet the live CWI agents",
+      "url": "https://cumulativewebinc.github.io/cwi-agent-directory/"
+    }
+  ],
+  "updated": "2026-09-23"
+}

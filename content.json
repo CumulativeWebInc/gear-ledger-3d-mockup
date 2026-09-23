@@ -1,0 +1,46 @@
+{
+  "schema": "cwi.content-index/1.0",
+  "name": "Gear Ledger 3D World",
+  "url": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/",
+  "provider": "Cumulative Web Inc",
+  "data_truth": "SAMPLE \u2014 client-side simulation",
+  "truth_detail": "SAMPLE. Every number, agent, handoff count, route, and timeline in this 3D world is illustrative sample data rendered client-side. It is a UX/design concept for the CWI Gear Ledger, not the live ledger. The broadcast edition renders LIVE only when live-data.json is fresh (<60 min); otherwise it shows the honest SAMPLE pill.",
+  "positioning": "Explore the CWI Gear Ledger as a living 3D city \u2014 a design concept where every department's gear, handoffs, and presence are navigable in space. All figures are SAMPLE data; the live ledger ships signed, verifiable records.",
+  "description": "A navigable 3D concept world for the CWI Gear Ledger: islands for each department of the Cumulative Web Inc agent company, simulated gear handoffs, presence, and music taste. All data is client-side sample data; the broadcast edition shows a clean director-driven feed for streaming and embedding.",
+  "tags": [
+    "3d world",
+    "agent operations",
+    "gear ledger",
+    "cumulative web inc",
+    "concept mockup",
+    "data visualization"
+  ],
+  "cta": {
+    "text": "Want to see the real gear? Meet the nine live CWI departments in the Agent Directory \u2014 or try the clean broadcast feed of this world.",
+    "links": [
+      {
+        "label": "Try the broadcast feed",
+        "url": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/broadcast.html"
+      },
+      {
+        "label": "Meet the live CWI agents",
+        "url": "https://cumulativewebinc.github.io/cwi-agent-directory/"
+      }
+    ]
+  },
+  "machine": [
+    {
+      "label": "Live-data feed schema",
+      "url": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/live-data.json"
+    },
+    {
+      "label": "Sample dataset",
+      "url": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/sample-data.json"
+    }
+  ],
+  "attribution": {
+    "brand": "Cumulative Web Inc",
+    "contact": "hp@cumulativeweb.com"
+  },
+  "updated": "2026-09-23"
+}
