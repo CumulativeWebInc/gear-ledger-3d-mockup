@@ -1,0 +1,14 @@
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Gear Ledger 3D World",
+  "url": "https://cumulativewebinc.github.io/gear-ledger-3d-mockup/",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "author": {
+    "@type": "Organization",
+    "name": "Cumulative Web Inc",
+    "url": "https://cumulativeweb.com/"
+  },
+  "description": "Client-side 3D simulation of the CWI gear ledger, with broadcast mode and live embed."
+}
