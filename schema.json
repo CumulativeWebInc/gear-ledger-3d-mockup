@@ -10,5 +10,6 @@
     "name": "Cumulative Web Inc",
     "url": "https://cumulativeweb.com/"
   },
-  "description": "Client-side 3D simulation of the CWI gear ledger, with broadcast mode and live embed."
+  "description": "Client-side 3D simulation of the CWI gear ledger, with broadcast mode and live embed.",
+  "schema_version": "1.0.0"
 }
